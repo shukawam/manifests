@@ -1,0 +1,19 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: chaos-dashboard
+  namespace: chaos-testing
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+spec:
+  rules:
+  - host: chaos-mesh.ochacafe-s5.cf
+    http:
+      paths:
+      - backend:
+          service:
+            name: chaos-dashboard
+            port:
+              number: 2333
+        path: /
+        pathType: Prefix

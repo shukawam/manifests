@@ -1,0 +1,19 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: jaeger
+  namespace: istio-system
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+spec:
+  rules:
+  - host: jaeger.ochacafe-s5.cf
+    http:
+      paths:
+      - backend:
+          service:
+            name: tracing
+            port:
+              number: 80
+        path: /
+        pathType: Prefix
