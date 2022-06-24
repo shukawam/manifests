@@ -1,0 +1,15 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: chaos-mesh
+spec:
+  destination:
+    name: ""
+    namespace: chaos-testing
+    server: "https://kubernetes.default.svc"
+  source:
+    path: ""
+    repoURL: "https://charts.chaos-mesh.org"
+    targetRevision: 2.2.0
+    chart: chaos-mesh
+  project: default

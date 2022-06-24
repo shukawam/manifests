@@ -10,7 +10,7 @@ metadata:
     nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
 spec:
   rules:
-    - host: argocd.ochacafe-s5.cf
+    - host: argocd.shukawam.com
       http:
         paths:
           - backend:
@@ -22,6 +22,6 @@ spec:
             pathType: Prefix
   tls:
     - hosts:
-        - argocd.ochacafe-s5.cf
+        - argocd.shukawam.com
 status:
   loadBalancer: {}
