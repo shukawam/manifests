@@ -4,11 +4,9 @@ metadata:
   name: falco-exporter
 spec:
   destination:
-    name: ''
     namespace: monitoring
     server: 'https://kubernetes.default.svc'
   source:
-    path: ''
     repoURL: 'https://falcosecurity.github.io/charts'
     targetRevision: 0.8.0
     chart: falco-exporter
