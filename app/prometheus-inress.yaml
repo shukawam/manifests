@@ -10,6 +10,6 @@ spec:
     targetRevision: HEAD
   destination:
     server: "https://kubernetes.default.svc"
-    namespace: prometheus
+    namespace: monitoring
   syncPolicy:
     automated: {}

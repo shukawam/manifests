@@ -4,7 +4,7 @@ metadata:
   name: grafana-ingress
 spec:
   destination:
-    namespace: prometheus
+    namespace: monitoring
     server: "https://kubernetes.default.svc"
   source:
     path: grafana
