@@ -11,6 +11,10 @@ spec:
       parameters:
         - name: ebpf.enabled
           value: "true"
+        - name: falco.grpc.enabled
+          value: "true"
+        - name: falco.grpc.Output.enabled
+          value: "true"
     chart: falco
   destination:
     server: "https://kubernetes.default.svc"
