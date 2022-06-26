@@ -1,20 +1,25 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: prometheus
+  name: falco-exporter
 spec:
-  project: default
+  destination:
+    name: ''
+    namespace: monitoring
+    server: 'https://kubernetes.default.svc'
   source:
+    path: ''
     repoURL: 'https://falcosecurity.github.io/charts'
     targetRevision: 0.8.0
     chart: falco-exporter
-  destination:
-    server: 'https://kubernetes.default.svc'
-    namespace: monitoring
+    helm:
+      parameters:
+        - name: grafanaDashboard.namespace
+          value: monitoring
+  project: default
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
-
