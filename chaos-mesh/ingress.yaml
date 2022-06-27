@@ -14,6 +14,6 @@ spec:
           service:
             name: chaos-dashboard
             port:
-              number: 80
+              number: 2333
         path: /
         pathType: Prefix
