@@ -3,7 +3,7 @@ kind: Application
 metadata:
   name: falco
 spec:
-  project: monitoring
+  project: default
   source:
     repoURL: "https://falcosecurity.github.io/charts"
     targetRevision: 1.19.4
@@ -18,7 +18,7 @@ spec:
     chart: falco
   destination:
     server: "https://kubernetes.default.svc"
-    namespace: default
+    namespace: monitoring
   syncPolicy:
     automated:
       prune: true

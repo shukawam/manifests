@@ -3,14 +3,14 @@ kind: Application
 metadata:
   name: prometheus-ingress
 spec:
-  project: monitoring
+  project: default
   source:
     repoURL: "https://github.com/shukawam/manifests"
     path: prometheus
     targetRevision: HEAD
   destination:
     server: "https://kubernetes.default.svc"
-    namespace: default
+    namespace: monitoring
   syncPolicy:
     automated:
       prune: true
