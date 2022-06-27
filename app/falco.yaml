@@ -18,7 +18,7 @@ spec:
     chart: falco
   destination:
     server: "https://kubernetes.default.svc"
-    namespace: monitoring
+    namespace: default
   syncPolicy:
     automated:
       prune: true

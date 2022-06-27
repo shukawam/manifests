@@ -14,7 +14,7 @@ spec:
       parameters:
         - name: grafanaDashboard.namespace
           value: monitoring
-  project: monitoring
+  project: default
   syncPolicy:
     automated:
       prune: true
