@@ -12,8 +12,12 @@ spec:
     chart: falco-exporter
     helm:
       parameters:
+        - name: grafana.dashboard.enabled
+          value: "true"
         - name: grafanaDashboard.namespace
           value: monitoring
+        - name: prometheusRules.enabled
+          value: "true"
   project: default
   syncPolicy:
     automated:
