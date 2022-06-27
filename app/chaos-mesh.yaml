@@ -14,6 +14,8 @@ spec:
       parameters:
         - name: chaosDaemon.runtime
           value: crio
+        - name: dashboard.service.type
+          value: ClusterIP
   project: default
   syncPolicy:
     automated:
