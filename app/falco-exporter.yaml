@@ -12,7 +12,7 @@ spec:
     chart: falco-exporter
     helm:
       parameters:
-        - name: grafana.dashboard.enabled
+        - name: grafanaDashboard.enabled
           value: "true"
         - name: grafanaDashboard.namespace
           value: monitoring
