@@ -3,7 +3,7 @@ kind: Application
 metadata:
   name: prometheus-ingress
 spec:
-  project: default
+  project: monitoring
   source:
     repoURL: "https://github.com/shukawam/manifests"
     path: prometheus

@@ -3,7 +3,7 @@ kind: Application
 metadata:
   name: falco
 spec:
-  project: default
+  project: monitoring
   source:
     repoURL: "https://falcosecurity.github.io/charts"
     targetRevision: 1.19.4
