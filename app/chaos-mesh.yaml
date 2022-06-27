@@ -1,0 +1,23 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: chaos-mesh
+spec:
+  destination:
+    namespace: chaos-testing
+    server: 'https://kubernetes.default.svc'
+  source:
+    repoURL: 'https://charts.chaos-mesh.org'
+    targetRevision: 2.3.0-alpha.1
+    chart: chaos-mesh
+    helm:
+      parameters:
+        - name: chaosDaemon.runtime
+          value: crio
+  project: default
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
