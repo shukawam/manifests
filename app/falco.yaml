@@ -15,6 +15,13 @@ spec:
           value: "true"
         - name: falco.grpc.Output.enabled
           value: "true"
+      fileParameters:
+        - name: certs.server.key
+          value: /tmp/certs/server.key
+        - name: certs.server.crt
+          value: /tmp/certs/server.crt
+        - name: certs.ca.crt
+          value: /tmp/certs/ca.crt
     chart: falco
   destination:
     server: "https://kubernetes.default.svc"
