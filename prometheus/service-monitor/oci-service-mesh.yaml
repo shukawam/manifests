@@ -8,7 +8,7 @@ metadata:
 spec:
   endpoints:
     - path: /stats/prometheus
-      port: "15006"
+      port: metrics
   selector:
     matchExpressions:
       - key: app
@@ -16,3 +16,6 @@ spec:
         values:
           - catalog
           - client
+  namespaceSelector:
+    matchNames:
+      - oci-sm-app
