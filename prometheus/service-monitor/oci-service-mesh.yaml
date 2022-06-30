@@ -1,11 +1,12 @@
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
-  name: oci-service-mesh-service-monitor
+  name: oci-service-mesh
   namespace: monitoring
 spec:
   endpoints:
     - path: /stats/prometheus
+      port: "15006"
   selector:
     matchExpressions:
       - key: app
