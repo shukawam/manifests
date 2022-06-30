@@ -1,0 +1,15 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: oci-service-mesh-service-monitor
+  namespace: monitoring
+spec:
+  endpoints:
+    - path: /stats/prometheus
+  selector:
+    matchExpressions:
+      - key: app
+        operator: In
+        values:
+          - catalog
+          - client
