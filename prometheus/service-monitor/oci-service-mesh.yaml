@@ -8,7 +8,7 @@ metadata:
 spec:
   endpoints:
     - path: /stats/prometheus
-      port: metrics
+      targetPort: 15006
   selector:
     matchExpressions:
       - key: app
