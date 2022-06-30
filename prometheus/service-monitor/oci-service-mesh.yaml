@@ -3,7 +3,7 @@ kind: ServiceMonitor
 metadata:
   name: oci-service-mesh
   namespace: monitoring
-  annotations:
+  labels:
     release: prometheus
 spec:
   endpoints:
