@@ -23,7 +23,7 @@ spec:
           mTLS:
             enabled: true
         certs:
-          server:
+          client:
             key: |
               -----BEGIN RSA PRIVATE KEY-----
               MIIJQgIBADANBgkqhkiG9w0BAQEFAASCCSwwggkoAgEAAoICAQCpWsqTR8j22l1Y
