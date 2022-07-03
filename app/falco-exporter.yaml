@@ -15,8 +15,6 @@ spec:
         grafanaDashboard:
           enabled: true
           namespace: monitoring
-        prometheusRules:
-          enabled: true
         serviceMonitor:
           enabled: true
           additionalLabels:
