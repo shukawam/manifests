@@ -18,8 +18,8 @@ spec:
             enabled: true
             Output:
               enabled: true
-        certs:
-          existingSecret: falco-certs
+        # certs:
+        #   existingSecret: falco-certs
     chart: falco
   destination:
     server: "https://kubernetes.default.svc"
