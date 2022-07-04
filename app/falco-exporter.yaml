@@ -19,9 +19,6 @@ spec:
           enabled: true
           additionalLabels:
             release: prometheus
-        server:
-          mTLS:
-            enabled: true
   project: default
   syncPolicy:
     automated:
