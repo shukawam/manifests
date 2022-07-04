@@ -19,8 +19,8 @@ spec:
           enabled: true
           additionalLabels:
             release: prometheus
-        certs:
-          existingSecret: falco-exporter-certs
+        # certs:
+        #   existingSecret: falco-exporter-certs
   project: default
   syncPolicy:
     automated:
