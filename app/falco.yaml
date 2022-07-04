@@ -12,6 +12,8 @@ spec:
         ebpf:
           enabled: true
         falco:
+          webserver:
+            sslEnabled: true
           grpc:
             enabled: true
             Output:
