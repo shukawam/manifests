@@ -7,7 +7,7 @@ spec:
   refreshInterval: 0.03m
   secretStoreRef:
     kind: SecretStore
-    name: secretstore-auth
+    name: secretstore-auth-monitoring
   target:
     name: falco-exporter-certs
     creationPolicy: Owner
