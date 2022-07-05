@@ -1,0 +1,14 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: helidon-pod-monitor
+  namespace: monitoring
+  labels:
+    release: prometheus
+spec:
+  podMetricsEndpoints:
+    - port: api
+      path: /metrics
+  selector:
+    matchLabels:
+      prometheus.io/scrape: 'true'

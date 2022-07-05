@@ -1,0 +1,17 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: oci-service-mesh-pod-monitor
+spec:
+  project: default
+  source:
+    repoURL: "https://github.com/shukawam/manifests"
+    path: prometheus/pod-monitor
+    targetRevision: HEAD
+  destination:
+    server: "https://kubernetes.default.svc"
+    namespace: monitoring
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
