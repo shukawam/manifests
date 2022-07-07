@@ -16,7 +16,7 @@ spec:
           value: crio
         - name: dashboard.service.type
           value: ClusterIP
-  project: default
+  project: chaos-engineering
   syncPolicy:
     automated:
       prune: true

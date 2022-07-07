@@ -19,7 +19,7 @@ spec:
           enabled: true
           additionalLabels:
             release: prometheus
-  project: default
+  project: monitoring
   syncPolicy:
     automated:
       prune: true

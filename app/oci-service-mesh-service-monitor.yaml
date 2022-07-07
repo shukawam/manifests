@@ -3,7 +3,7 @@ kind: Application
 metadata:
   name: oci-service-mesh-service-monitor
 spec:
-  project: default
+  project: monitoring
   source:
     repoURL: "https://github.com/shukawam/manifests"
     path: prometheus/service-monitor
