@@ -7,8 +7,13 @@ metadata:
     release: prometheus
 spec:
   podMetricsEndpoints:
-    - port: api
+    - targetPort: 8080
       path: /metrics
+  namespaceSelector:
+    matchNames:
+      - oci-sm-app
+      - monitoring
+      - k8s-helidon-app
   selector:
     matchLabels:
       prometheus.io/scrape: 'true'
