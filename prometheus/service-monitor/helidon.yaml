@@ -1,19 +1,16 @@
 apiVersion: monitoring.coreos.com/v1
-kind: PodMonitor
+kind: ServiceMonitor
 metadata:
-  name: helidon-pod-monitor
+  name: helidon
   namespace: monitoring
   labels:
     release: prometheus
 spec:
-  podMetricsEndpoints:
-    - targetPort: 8080
-      path: /metrics
   namespaceSelector:
-    matchNames:
-      - oci-sm-app
-      - monitoring
-      - k8s-helidon-app
+    any: true
+  endpoints:
+    - port: http
+      path: /metrics
   selector:
     matchLabels:
       prometheus.io/scrape: 'true'
