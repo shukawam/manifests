@@ -1,7 +1,7 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: influxdb
+  name: influxdb-ingress
   namespace: monitoring
   annotations:
     kubernetes.io/ingress.class: "nginx"
