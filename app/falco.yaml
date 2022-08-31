@@ -7,6 +7,7 @@ spec:
   source:
     repoURL: "https://falcosecurity.github.io/charts"
     targetRevision: 2.0.16
+    chart: falco
     helm:
       values: |
         driver:
@@ -18,9 +19,8 @@ spec:
             enabled: true
         certs:
           existingSecret: falco-certs
-        # falcosidekick:
-        #   enabled: true
-    chart: falco
+        falcosidekick:
+          enabled: true
   destination:
     server: "https://kubernetes.default.svc"
     namespace: monitoring
