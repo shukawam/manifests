@@ -1,0 +1,52 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: falco
+spec:
+  project: monitoring
+  source:
+    repoURL: 'https://falcosecurity.github.io/charts'
+    chart: falcosidekick
+    targetRevision: 0.5.8
+    helm:
+      values: |
+        config:
+          slack:
+            webhookurl: https://hooks.slack.com/services/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
+            footer: "This is a Footer."
+            outputformat: "all"
+            grafana:
+              hostport: "http://grafana.shukawam.com"
+        service:
+          type: ClusterIP
+          port: 2801
+        ingress:
+          enabled: true
+          annotations: {}
+            kubernetes.io/ingress.class: nginx
+          hosts:
+            - host: falcosidekick.shukawam.com
+              paths:
+                - path: /
+                  pathType: Prefix
+        webui:
+          enabled: true
+          service:
+            type: ClusterIP
+            port: 2802
+            targetPort: 2802
+          ingress:
+            enabled: true
+            annotations: {}
+              kubernetes.io/ingress.class: nginx
+            hosts:
+              - host: falcosidekick-ui.shukawam.com
+                paths:
+                - path: /
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: monitoring
+  syncPolicy:
+    automated:
+      prune: true
+
