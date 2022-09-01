@@ -10,13 +10,6 @@ spec:
     targetRevision: 0.5.8
     helm:
       values: |
-        config:
-          slack:
-            webhookurl: https://hooks.slack.com/services/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
-            footer: "This is a Footer."
-            outputformat: "all"
-            grafana:
-              hostport: "http://grafana.shukawam.com"
         service:
           type: ClusterIP
           port: 2801
