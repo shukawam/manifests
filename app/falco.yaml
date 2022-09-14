@@ -24,8 +24,6 @@ spec:
             url: "http://falco-sidekick-falcosidekick:2801"
         certs:
           existingSecret: falco-certs
-        falcosidekick:
-          enabled: true
   destination:
     server: "https://kubernetes.default.svc"
     namespace: monitoring

@@ -10,24 +10,8 @@ spec:
     targetRevision: 0.5.8
     helm:
       values: |
-        service:
-          type: ClusterIP
-          port: 2801
-        ingress:
-          enabled: true
-          annotations:
-            kubernetes.io/ingress.class: nginx
-          hosts:
-            - host: falcosidekick.shukawam.com
-              paths:
-                - path: /
-                  pathType: Prefix
         webui:
           enabled: true
-          service:
-            type: ClusterIP
-            port: 2802
-            targetPort: 2802
           ingress:
             enabled: true
             annotations:
