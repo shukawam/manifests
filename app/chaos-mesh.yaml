@@ -8,14 +8,22 @@ spec:
     server: 'https://kubernetes.default.svc'
   source:
     repoURL: 'https://charts.chaos-mesh.org'
-    targetRevision: 2.3.0-alpha.1
+    targetRevision: 2.3.1
     chart: chaos-mesh
     helm:
-      parameters:
-        - name: chaosDaemon.runtime
-          value: crio
-        - name: dashboard.service.type
-          value: ClusterIP
+      values: |
+        chaosDaemon:
+          runtime: crio
+        dashboard:
+          service:
+            type: ClusterIP
+        timezone: JTC
+        # Enabled DNS Chaos
+        dnsServer:
+          create: true
+        # Enabled Chaos Kernel
+        bpfki:
+          create: true
   project: chaos-engineering
   syncPolicy:
     automated:
