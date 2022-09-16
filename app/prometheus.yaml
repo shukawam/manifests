@@ -10,6 +10,13 @@ spec:
     repoURL: "https://prometheus-community.github.io/helm-charts"
     targetRevision: 36.2.0
     chart: kube-prometheus-stack
+    helm:
+      values: |
+        grafana:
+          ingress:
+            enabled: true
+            hosts:
+              - grafana.shukawam.com
   project: monitoring
   syncPolicy:
     automated:
