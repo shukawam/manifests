@@ -17,6 +17,38 @@ spec:
             enabled: true
             hosts:
               - grafana.shukawam.com
+          dashboardProviders:
+            dashboardproviders.yaml:
+              apiVersion: 1
+              providers:
+                - name: 'default'
+                  orgId: 1
+                  folder: ''
+                  type: file
+                  disableDeletion: false
+                  editable: true
+                  options:
+                    path: /var/lib/grafana/dashboards/default
+                - name: 'public'
+                  orgId: 1
+                  folder: 'public'
+                  type: file
+                  disableDetetion: false
+                  editable: true
+                  options:
+                    path: /var/lib/grafana/dashboards/public
+                - name: 'private'
+                  orgId: 1
+                  folder: 'private'
+                  type: file
+                  disableDetetion: false
+                  editable: true
+                  options:
+                    path: /var/lib/grafana/dashboards/private
+          dashboards:
+            public:
+              prometheus-stats:
+                gnetId: 14584
   project: monitoring
   syncPolicy:
     automated:
