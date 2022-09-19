@@ -49,6 +49,9 @@ spec:
             public:
               prometheus-stats:
                 gnetId: 14584
+            private:
+              falco:
+                gnetId: 11914
   project: monitoring
   syncPolicy:
     automated:
