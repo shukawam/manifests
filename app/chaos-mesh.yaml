@@ -17,6 +17,10 @@ spec:
         dashboard:
           service:
             type: ClusterIP
+        ingress:
+          enabled: true
+          hosts:
+            - chaos-mesh.shukawam.com
         timezone: JTC
         # Enabled DNS Chaos
         dnsServer:
