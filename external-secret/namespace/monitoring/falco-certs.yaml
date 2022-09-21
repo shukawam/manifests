@@ -1,23 +1,23 @@
 apiVersion: external-secrets.io/v1beta1
 kind: ExternalSecret
 metadata:
-  name: falco-exporter-certs
+  name: falco-certs
   namespace: monitoring
 spec:
-  refreshInterval: 0.03m
+  refreshInterval: 10m
   secretStoreRef:
-    kind: SecretStore
-    name: secretstore-auth-monitoring
+    kind: ClusterSecretStore
+    name: cluster-secretstore
   target:
-    name: falco-exporter-certs
+    name: falco-certs
     creationPolicy: Owner
   data:
-    - secretKey: client.key
+    - secretKey: server.key
       remoteRef:
-        key: client.key
-    - secretKey: client.crt
+        key: server.key
+    - secretKey: server.crt
       remoteRef:
-        key: client.crt
+        key: server.crt
     - secretKey: ca.crt
       remoteRef:
         key: ca.crt
