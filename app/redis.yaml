@@ -12,7 +12,7 @@ spec:
       values: |
         auth:
           enabled: true
-          existingSecret: redis-secret
+          existingSecret: redis-password
         externalMaster:
           enabled: true
           host: redis.shukawam.com
