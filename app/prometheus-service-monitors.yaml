@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: ptometheus-service-monitors
+  name: prometheus-service-monitors
 spec:
   project: monitoring
   source:
