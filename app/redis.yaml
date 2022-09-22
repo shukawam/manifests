@@ -13,12 +13,29 @@ spec:
         auth:
           enabled: true
           existingSecret: redis-password
-        externalMaster:
-          enabled: true
-          host: redis.shukawam.com
   destination:
     server: "https://kubernetes.default.svc"
     namespace: oci
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: redis-ingress
+spec:
+  destination:
+    namespace: oci
+    server: 'https://kubernetes.default.svc'
+  source:
+    repoURL: 'https://github.com/shukawam/manifests'
+    path: redis
+    targetRevision: HEAD
+  project: oci
   syncPolicy:
     automated:
       prune: true
