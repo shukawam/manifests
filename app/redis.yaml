@@ -1,0 +1,27 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: redis
+spec:
+  project: oci
+  source:
+    repoURL: "https://charts.bitnami.com/bitnami"
+    targetRevision: 17.1.8
+    chart: redis
+    helm:
+      values: |
+        auth:
+          enabled: true
+          existingSecret: redis-secret
+        externalMaster:
+          enabled: true
+          host: redis.shukawam.com
+  destination:
+    server: "https://kubernetes.default.svc"
+    namespace: oci
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
