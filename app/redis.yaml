@@ -12,7 +12,7 @@ spec:
       values: |
         auth:
           enabled: true
-          password: shukawam-secret # temp
+          password: shukawam-secret
           # existingSecret: redis-password
   destination:
     server: "https://kubernetes.default.svc"
