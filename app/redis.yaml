@@ -12,7 +12,8 @@ spec:
       values: |
         auth:
           enabled: true
-          existingSecret: redis-password
+          password: shukawam-secret # temp
+          # existingSecret: redis-password
   destination:
     server: "https://kubernetes.default.svc"
     namespace: oci
