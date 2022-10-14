@@ -22,6 +22,6 @@ spec:
             pathType: Prefix
   tls:
     - hosts:
-        - argocd.shukawam.com
+        - argocd.shukawam.me
 status:
   loadBalancer: {}
