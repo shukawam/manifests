@@ -19,7 +19,7 @@ spec:
         ingress:
           enabled: true
           hosts:
-            - pushgateway.shukawam.com
+            - pushgateway.shukawam.me
         persistentVolume:
           enabled: true
   syncPolicy:

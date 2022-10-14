@@ -10,7 +10,7 @@ metadata:
     nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
 spec:
   rules:
-    - host: argocd.shukawam.com
+    - host: argocd.shukawam.me
       http:
         paths:
           - backend:

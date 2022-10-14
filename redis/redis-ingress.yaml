@@ -7,7 +7,7 @@ metadata:
     kubernetes.io/ingress.class: "nginx"
 spec:
   rules:
-  - host: redis.shukawam.com
+  - host: redis.shukawam.me
     http:
       paths:
       - backend:

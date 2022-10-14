@@ -20,7 +20,7 @@ spec:
         ingress:
           enabled: true
           hosts:
-            - chaos-mesh.shukawam.com
+            - chaos-mesh.shukawam.me
         timezone: JTC
         # Enabled DNS Chaos
         dnsServer:
