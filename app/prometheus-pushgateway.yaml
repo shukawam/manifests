@@ -17,6 +17,8 @@ spec:
           enabled: true
           interval: 5s
         ingress:
+          annotations:
+            kubernetes.io/ingress.class: "nginx"
           enabled: true
           hosts:
             - pushgateway.shukawam.me
