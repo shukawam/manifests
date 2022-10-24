@@ -1,14 +1,14 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: argocd-ingress
+  name: ingress
 spec:
   destination:
     namespace: argocd
     server: 'https://kubernetes.default.svc'
   source:
     repoURL: 'https://github.com/shukawam/manifests'
-    path: argocd
+    path: ingress
     targetRevision: HEAD
   project: oci
   syncPolicy:
