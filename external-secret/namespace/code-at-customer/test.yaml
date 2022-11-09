@@ -1,7 +1,7 @@
 apiVersion: external-secrets.io/v1beta1
 kind: ExternalSecret
 metadata:
-  name: idcs-secret
+  name: test-secret
   namespace: code-at-customer
 spec:
   refreshInterval: 10m
@@ -9,18 +9,15 @@ spec:
     kind: ClusterSecretStore
     name: cluster-secretstore
   target:
-    name: idcs-secret
+    name: atp-secret
     creationPolicy: Owner
   data:
-    - secretKey: 'uri'
+    - secretKey: url
       remoteRef:
-        key: idcs.uri
-    - secretKey: 'client-id'
+        key: countryDS.url
+    - secretKey: user
       remoteRef:
-        key: idcs.clint-id
-    - secretKey: 'client-secret'
+        key: countryDS.user
+    - secretKey: password
       remoteRef:
-        key: idcs.client-secret
-    - secretKey: 'frontend-uri'
-      remoteRef:
-        key: idcs.frontend-uri
+        key: countryDS.password
