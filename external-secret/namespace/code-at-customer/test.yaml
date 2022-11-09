@@ -9,7 +9,7 @@ spec:
     kind: ClusterSecretStore
     name: cluster-secretstore
   target:
-    name: atp-secret
+    name: test-secret
     creationPolicy: Owner
   data:
     - secretKey: url
