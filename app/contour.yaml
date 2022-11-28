@@ -1,0 +1,29 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: countour
+spec:
+  destination:
+    namespace: projectcontour
+    server: "https://kubernetes.default.svc"
+  source:
+    repoURL: "https://charts.bitnami.com/bitnami"
+    targetRevision: 10.0.0
+    chart: contour
+    helm:
+      values: |
+        envoy:
+          enabled: true
+          service:
+            annotations:
+              oci.oraclecloud.com/load-balancer-type: "lb"
+              service.beta.kubernetes.io/oci-load-balancer-shape: "flexible"
+              service.beta.kubernetes.io/oci-load-balancer-shape-flex-min: "10"
+              service.beta.kubernetes.io/oci-load-balancer-shape-flex-max: "100"
+  project: contour
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
