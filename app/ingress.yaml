@@ -10,7 +10,7 @@ spec:
     repoURL: 'https://github.com/shukawam/manifests'
     path: ingress
     targetRevision: HEAD
-  project: oci
+  project: ingress
   syncPolicy:
     automated:
       prune: true
