@@ -1,0 +1,12 @@
+apiVersion: projectcontour.io/v1
+kind: HTTPProxy
+metadata:
+  name: jaeger
+  namespace: istio-system
+spec:
+  virtualhost:
+    fqdn: jaeger.shukawam.me
+  routes:
+  - services:
+    - name: tracing
+      port: 80
