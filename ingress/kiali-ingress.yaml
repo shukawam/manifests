@@ -7,6 +7,6 @@ spec:
   virtualhost:
     fqdn: kiali.shukawam.me
   routes:
-  - services:
-    - name: kiali
-      port: 20001
+    - services:
+        - name: kiali
+          port: 9090

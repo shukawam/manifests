@@ -7,6 +7,6 @@ spec:
   virtualhost:
     fqdn: jaeger.shukawam.me
   routes:
-  - services:
-    - name: tracing
-      port: 80
+    - services:
+        - name: tracing
+          port: 80
