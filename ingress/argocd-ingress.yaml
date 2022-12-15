@@ -1,5 +1,5 @@
-apiVersion: projectcontour.io/v1
-kind: HTTPProxy
+apiVersion: networking.k8s.io/v1
+kind: Ingress
 metadata:
   name: argocd-ingress
   namespace: argocd
@@ -8,9 +8,17 @@ metadata:
     nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
     nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
 spec:
-  virtualhost:
-    fqdn: argocd.shukawam.me
-  routes:
-    - services:
-        - name: argocd-server
-          port: 443
+  rules:
+    - host: argocd.shukawam.me
+      http:
+        paths:
+          - backend:
+              service:
+                name: argocd-server
+                port:
+                  number: 443
+            path: /
+            pathType: Prefix
+  tls:
+    - hosts:
+        - argocd.shukawam.me
