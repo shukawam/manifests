@@ -8,8 +8,40 @@ spec:
     server: "https://kubernetes.default.svc"
   source:
     repoURL: "https://argoproj.github.io/argo-helm"
-    targetRevision: 5.16.1
+    targetRevision: 5.24.0
     chart: argo-cd
+    helm:
+      values: |
+        ingress:
+          enabled: true
+          ingressClassName: nginx
+          annotations:
+            kubernetes.io/ingress.class: "nginx"
+            cert-manager.io/cluster-issuer: letsencrypt-prod
+            nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+            nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+          hosts:
+            - argocd.shukawam.me
+          tls:
+            - hosts:
+              - argocd.shukawam.me
+        configs:
+          url: https://argocd.shukawam.me
+          oidc.config: |
+            name: Auth0
+            issuer: https://dev-l0fbo32k.jp.auth0.com/
+            clientID: TNW0iqFECOsCsjBroMoTv9wyL4uDEUXr
+            clientSecret: $oidc.auth0.clientSecret
+            requestedScopes:
+              - openid
+              - profile
+              - email
+              - https://dev-l0fbo32k.jp.auth0.com/groups
+          policy.csv: |
+            policy.default: role:admin
+            scopes:
+              - https://dev-l0fbo32k.jp.auth0.com/groups
+              - email
   project: "argocd"
   syncPolicy:
     automated:
