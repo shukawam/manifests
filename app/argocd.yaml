@@ -26,22 +26,25 @@ spec:
             - hosts:
               - argocd.shukawam.me
         configs:
-          url: https://argocd.shukawam.me
-          oidc.config: |
-            name: Auth0
-            issuer: https://dev-l0fbo32k.jp.auth0.com/
-            clientID: TNW0iqFECOsCsjBroMoTv9wyL4uDEUXr
-            clientSecret: $oidc.auth0.clientSecret
-            requestedScopes:
-              - openid
-              - profile
-              - email
-              - https://dev-l0fbo32k.jp.auth0.com/groups
-          policy.csv: |
-            policy.default: role:admin
-            scopes:
-              - https://dev-l0fbo32k.jp.auth0.com/groups
-              - email
+          cm:
+            url: "https://argocd.shukawam.me/"
+            application.instanceLabelKey: argocd.argoproj.io/instance
+            oidc.config: |
+              name: Auth0
+              issuer: https://dev-l0fbo32k.jp.auth0.com/
+              clientID: TNW0iqFECOsCsjBroMoTv9wyL4uDEUXr
+              clientSecret: $argocd-auth0-secret:oidc.auth0.clientSecret
+              requestedIDTokenClaims:
+                groups:
+                  essential: true
+              requestedScopes:
+                - openid
+                - profile
+                - email
+                - https://argocd.shukawam.me/groups
+            policy.csv: |
+              g, argo-admins, role:admin
+            scopes: '[https://argocd.shukawam.me/groups, email]'
   project: "argocd"
   syncPolicy:
     automated:
