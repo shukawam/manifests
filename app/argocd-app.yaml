@@ -73,7 +73,7 @@ spec:
             destinations:
               - server: https://kubernetes.default.svc
                 name: '*'
-                namespace: monitoring
+                namespace: '*'
             clusterResourceWhitelist:
               - kind: '*'
                 group: '*'      
