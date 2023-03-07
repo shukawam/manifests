@@ -45,7 +45,7 @@ spec:
             policy.csv: |
               g, argo-admins, role:admin
             scopes: '[https://argocd.shukawam.me/groups, email]'
-  project: "argocd"
+  project: default
   syncPolicy:
     automated:
       prune: true

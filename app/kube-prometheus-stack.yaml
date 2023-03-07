@@ -21,7 +21,7 @@ spec:
               kubernetes.io/ingress.class: "nginx"
             hosts:
               - grafana.shukawam.me
-  project: monitoring
+  project: default
   syncPolicy:
     automated:
       prune: true
