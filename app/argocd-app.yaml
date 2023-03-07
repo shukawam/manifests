@@ -77,6 +77,23 @@ spec:
             clusterResourceWhitelist:
               - kind: '*'
                 group: '*'
+          - name: examples
+            namespace: examples
+            additionalLabels: {}
+            additionalAnnotations: {}
+            finalizers:
+              - resources-finalizer.argocd.argoproj.io
+            description: for examples resources.
+            sourceRepos:
+              - '*'
+            destinations:
+              - server: https://kubernetes.default.svc
+                name: '*'
+                namespace: '*'
+            clusterResourceWhitelist:
+              - kind: '*'
+                group: '*' 
+  project: default
   syncPolicy:
     automated:
       prune: true
