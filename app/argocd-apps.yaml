@@ -77,13 +77,13 @@ spec:
             clusterResourceWhitelist:
               - kind: '*'
                 group: '*'
-          - name: examples
-            namespace: examples
+          - name: samples
+            namespace: samples
             additionalLabels: {}
             additionalAnnotations: {}
             finalizers:
               - resources-finalizer.argocd.argoproj.io
-            description: for examples resources.
+            description: for samples resources.
             sourceRepos:
               - '*'
             destinations:
