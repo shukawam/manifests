@@ -4,7 +4,7 @@ metadata:
   name: shukawam-cluster-app
   namespace: argocd
 spec:
-  project: argocd
+  project: default
   source:
     repoURL: "https://github.com/shukawam/manifests"
     path: app
