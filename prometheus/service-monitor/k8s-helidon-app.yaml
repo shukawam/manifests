@@ -1,0 +1,17 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: k8s-helidon-app-helidon
+  namespace: monitoring
+  labels:
+    release: kube-prometheus-stack
+spec:
+  namespaceSelector:
+    matchNames:
+      - examples
+  endpoints:
+    - port: http
+      path: /metrics
+  selector:
+    matchLabels:
+      prometheus.io/scrape: "true"
