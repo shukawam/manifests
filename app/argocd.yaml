@@ -17,35 +17,14 @@ spec:
           ingressClassName: nginx
           annotations:
             kubernetes.io/ingress.class: "nginx"
-            cert-manager.io/cluster-issuer: letsencrypt-staging
+            cert-manager.io/cluster-issuer: letsencrypt-prod
             nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
             nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
           hosts:
             - argocd.shukawam.me
           tls:
-            - secretName: shukawam-tls-secret
-              hosts:
+            - hosts:
                 - argocd.shukawam.me
-        configs:
-          cm:
-            url: "https://argocd.shukawam.me/"
-            application.instanceLabelKey: argocd.argoproj.io/instance
-            oidc.config: |
-              name: Auth0
-              issuer: https://dev-l0fbo32k.jp.auth0.com/
-              clientID: TNW0iqFECOsCsjBroMoTv9wyL4uDEUXr
-              clientSecret: $argocd-auth0-secret:oidc.auth0.clientSecret
-              requestedIDTokenClaims:
-                groups:
-                  essential: true
-              requestedScopes:
-                - openid
-                - profile
-                - email
-                - https://argocd.shukawam.me/groups
-            policy.csv: |
-              g, argo-admins, role:admin
-            scopes: '[https://argocd.shukawam.me/groups, email]'
   project: default
   syncPolicy:
     automated:

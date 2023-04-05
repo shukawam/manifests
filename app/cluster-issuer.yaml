@@ -3,7 +3,7 @@ kind: Application
 metadata:
   name: cluster-issuer
 spec:
-  project: default
+  project: management
   source:
     repoURL: "https://github.com/shukawam/manifests"
     path: cert-manager/issuer

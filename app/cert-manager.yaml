@@ -13,7 +13,7 @@ spec:
     helm:
       values: |
         installCRDs: true
-  project: default
+  project: management
   syncPolicy:
     automated:
       prune: true
