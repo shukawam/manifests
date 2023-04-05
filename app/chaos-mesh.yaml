@@ -1,0 +1,34 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: argocd
+spec:
+  destination:
+    namespace: argocd
+    server: "https://kubernetes.default.svc"
+  source:
+    repoURL: "https://charts.chaos-mesh.org"
+    targetRevision: 2.5.1
+    chart: chaos-mesh
+    helm:
+      values: |
+        chaosDaemon:
+          runtime: crio
+        ingress:
+          enabled: true
+          certManager: true
+          annotations:
+            kubernetes.io/ingress.class: nginx
+          hosts:
+            - name: chaosmesh.shukawam.me
+              tls: true
+              tlsHosts:
+                - chaosmesh.shukawam.me
+              tlsSecret: shukawam-tls-secret
+  project: default
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - ServerSideApply=true
