@@ -1,10 +1,10 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: argocd
+  name: chaos-mesh
 spec:
   destination:
-    namespace: argocd
+    namespace: chaos-mesh
     server: "https://kubernetes.default.svc"
   source:
     repoURL: "https://charts.chaos-mesh.org"
