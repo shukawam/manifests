@@ -14,10 +14,12 @@ spec:
       values: |
         chaosDaemon:
           runtime: crio
-        dashnoard:
+        dashboard:
+          service:
+            type: ClusterIP
           ingress:
             enabled: true
-            certManager: true
+            certManager: false
             annotations:
               kubernetes.io/ingress.class: nginx
               cert-manager.io/cluster-issuer: letsencrypt-staging
@@ -25,7 +27,7 @@ spec:
               - name: chaosmesh.shukawam.me
                 tls: true
                 tlsHosts:
-                  - chaosmesh.shukawam.me
+                - chaosmesh.shukawam.me
                 tlsSecret: shukawam-tls-secret
   project: management
   syncPolicy:
