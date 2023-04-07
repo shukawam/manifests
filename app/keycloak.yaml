@@ -14,7 +14,7 @@ spec:
       values: |
         tls:
           enabled: true
-          existingSecret: shukawam-tls-secret
+          existingSecret: keycloak.shukawam.me-tls
         service:
           type: ClusterIP
         ingress:
