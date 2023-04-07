@@ -13,7 +13,7 @@ spec:
     helm:
       values: |
         tls:
-          enabled: enabled
+          enabled: true
           existingSecret: shukawam-tls-secret
         service:
           type: ClusterIP
