@@ -27,13 +27,6 @@ spec:
             kubernetes.io/ingress.class: nginx
             cert-manager.io/cluster-issuer: letsencrypt-prod
           tls: true
-        postgresql:
-          enabled: true
-          auth:
-            postgresPassword: "Wellcome#123"
-            username: bn_keycloak
-            password: "Wellcome#123"
-            database: bitnami_keycloak
   project: management
   syncPolicy:
     automated:
