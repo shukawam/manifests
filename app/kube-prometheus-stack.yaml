@@ -13,6 +13,7 @@ spec:
     helm:
       values: |
         grafana:
+          defaultDashboardsEnabled: false
           defaultDashboardsTimezone: jst
           ingress:
             enabled: true
