@@ -26,6 +26,31 @@ spec:
             - secretName: shukawam-tls-secret
               hosts:
               - grafana.shukawam.me
+          dashboardProviders:
+            dashboardproviders.yaml:
+              apiVersion: 1
+              providers:
+                - name: 'public'
+                  orgId: 1
+                  folder: 'public'
+                  type: file
+                  disableDeletion: false
+                  editable: true
+                  options:
+                    path: /var/lib/grafana/dashboards/public
+                - name: 'private'
+                  orgId: 1
+                  folder: 'private'
+                  type: file
+                  disableDeletion: false
+                  editable: true
+                  options:
+                    path: /var/lib/grafana/dashboards/private
+          dashboards:
+            public:
+              helidon-monitoring:
+                url: https://raw.githubusercontent.com/shukawam/manifests/main/dashboards/helidon-monitoring.json
+                datasource: Prometheus
   project: management
   syncPolicy:
     automated:
