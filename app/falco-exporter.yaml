@@ -16,11 +16,6 @@ spec:
           enabled: true
           additionalLabels:
             release: kube-prometheus-stack
-        grafanaDashboard:
-          enabled: true
-          folder: 'private'
-          namespace: monitoring
-          prometheusDatasourceName: Prometheus
   project: management
   syncPolicy:
     automated:
