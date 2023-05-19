@@ -1,0 +1,112 @@
+{
+    "annotations": {
+        "list": [
+            {
+                "builtIn": 1,
+                "datasource": {
+                    "type": "grafana",
+                    "uid": "-- Grafana --"
+                },
+                "enable": true,
+                "hide": true,
+                "iconColor": "rgba(0, 211, 255, 1)",
+                "name": "Annotations & Alerts",
+                "type": "dashboard"
+            }
+        ]
+    },
+    "editable": true,
+    "fiscalYearStartMonth": 0,
+    "graphTooltip": 0,
+    "id": 5,
+    "links": [],
+    "liveNow": false,
+    "panels": [
+        {
+            "datasource": {
+                "type": "oci-logs-datasource",
+                "uid": "be71ae1f-4933-4357-9588-92832cf70027"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "custom": {
+                        "align": "auto",
+                        "cellOptions": {
+                            "type": "auto"
+                        },
+                        "inspect": false
+                    },
+                    "mappings": [],
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            },
+                            {
+                                "color": "red",
+                                "value": 80
+                            }
+                        ]
+                    }
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 19,
+                "w": 24,
+                "x": 0,
+                "y": 0
+            },
+            "id": 1,
+            "options": {
+                "cellHeight": "sm",
+                "footer": {
+                    "countRows": false,
+                    "fields": "",
+                    "reducer": [
+                        "sum"
+                    ],
+                    "show": false
+                },
+                "showHeader": true
+            },
+            "pluginVersion": "9.5.2",
+            "targets": [
+                {
+                    "compartment": "select compartment",
+                    "datasource": {
+                        "type": "oci-logs-datasource",
+                        "uid": "be71ae1f-4933-4357-9588-92832cf70027"
+                    },
+                    "key": "Q-4d4da1ce-c2d2-4881-959c-c94832d17eb5-0",
+                    "refId": "A",
+                    "region": "us-phoenix-1",
+                    "searchQuery": "search \"ocid1.compartment.oc1..aaaaaaaanjtbllhqxcg67dq7em3vto2mvsbc6pbgk4pw6cx37afzk3tngmoa/ocid1.loggroup.oc1.phx.amaaaaaassl65iqaok6fkpe6mb3rut2bqajzul7evjqio65uqwfu2zbouuia/ocid1.log.oc1.phx.amaaaaaassl65iqa3jh7um25ej2ay2dr7ymqadwiat3sybrdsafogermi7oq\" | sort by datetime desc",
+                    "tenancy": "select tenancy config",
+                    "tenancymode": "single"
+                }
+            ],
+            "title": "OKE Worker Node Logs",
+            "type": "table"
+        }
+    ],
+    "refresh": "",
+    "schemaVersion": 38,
+    "style": "dark",
+    "tags": [],
+    "templating": {
+        "list": []
+    },
+    "time": {
+        "from": "now-6h",
+        "to": "now"
+    },
+    "timepicker": {},
+    "timezone": "",
+    "title": "OCI Logging",
+    "uid": "b58285b7-31ec-4de0-8182-704f5f71906a",
+    "version": 1,
+    "weekStart": ""
+}
