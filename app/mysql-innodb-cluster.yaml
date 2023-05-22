@@ -1,10 +1,10 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: mysql-operator
+  name: mysql-innodb-cluster
 spec:
   destination:
-    namespace: mysql-innodb-cluster
+    namespace: mysql-operator
     server: "https://kubernetes.default.svc"
   source:
     repoURL: "https://mysql.github.io/mysql-operator/"
