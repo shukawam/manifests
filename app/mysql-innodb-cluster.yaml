@@ -4,7 +4,7 @@ metadata:
   name: mysql-operator
 spec:
   destination:
-    namespace: mysql-operator
+    namespace: mysql-innodb-cluster
     server: "https://kubernetes.default.svc"
   source:
     repoURL: "https://mysql.github.io/mysql-operator/"
