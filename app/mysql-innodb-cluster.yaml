@@ -1,0 +1,26 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: mysql-innodb-cluster
+spec:
+  destination:
+    namespace: mysql-operator
+    server: "https://kubernetes.default.svc"
+  source:
+    repoURL: "https://mysql.github.io/mysql-operator/"
+    targetRevision: 2.0.10
+    chart: mysql-innodbcluster
+    helm:
+      values: |
+        credentials:
+          root:
+            password: sakila
+        tls:
+          useSelfSigned: true
+  project: management
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
