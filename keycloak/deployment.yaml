@@ -20,9 +20,15 @@ spec:
           args: ["start-dev"]
           env:
             - name: KEYCLOAK_ADMIN
-              value: "admin"
+              valueFrom:
+                secretKeyRef:
+                  key: user
+                  name: keycloak-secret
             - name: KEYCLOAK_ADMIN_PASSWORD
-              value: "admin"
+              valueFrom:
+                secretKeyRef:
+                  key: password
+                  name: keycloak-secret
             - name: KC_PROXY
               value: "edge"
           ports:
