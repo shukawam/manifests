@@ -13,10 +13,11 @@ spec:
     metadata:
       labels:
         app: keycloak
+        tier: frontend
     spec:
       containers:
         - name: keycloak
-          image: quay.io/keycloak/keycloak:21.1.1
+          image: quay.io/keycloak/keycloak:20.0.1
           args: ["start-dev"]
           env:
             - name: KEYCLOAK_ADMIN
@@ -31,6 +32,20 @@ spec:
                   name: keycloak-secret
             - name: KC_PROXY
               value: "edge"
+            - name: KC_DB
+              value: mysql
+            - name: KC_DB_URL
+              value: jdbc:mysql://mysql/keycloak
+            - name: KC_DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: user
+            - name: KC_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: password
           ports:
             - name: http
               containerPort: 8080

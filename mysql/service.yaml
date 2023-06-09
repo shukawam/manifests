@@ -1,15 +1,14 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: keycloak
+  namespace: keycloak
+  name: mysql
   labels:
     app: keycloak
 spec:
   ports:
-    - name: http
-      port: 8080
-      targetPort: 8080
+    - port: 3306
   selector:
     app: keycloak
-    tier: frontend
-  type: ClusterIP
+    tier: mysql
+  clusterIP: None
