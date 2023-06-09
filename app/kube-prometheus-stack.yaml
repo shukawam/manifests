@@ -56,6 +56,8 @@ spec:
                 url: https://raw.githubusercontent.com/shukawam/manifests/main/dashboards/oci-logging.json
                 datasource: "Oracle Cloud Infrastructure Logs"
           grafana.ini:
+            server:
+              root_url: https://grafana.shukawam.me
             auth.generic.oauth:
               enabled: true
               name: Keycloak
