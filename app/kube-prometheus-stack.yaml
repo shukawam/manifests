@@ -55,6 +55,17 @@ spec:
               oci-logging:
                 url: https://raw.githubusercontent.com/shukawam/manifests/main/dashboards/oci-logging.json
                 datasource: "Oracle Cloud Infrastructure Logs"
+          grafana.ini:
+            auth.generic.oauth:
+              enabled: true
+              name: Keycloak
+              allow_sign_up: true
+              scopes: profile,email,groups
+              client_id: grafana
+              client_secret: CJc7Z5XP6HXlUXmgR7vLSDramvtaQt4L
+              auth_url: https://keycloak.shukawam.me/auth/realms/generic/protocol/openid-connect/auth
+              token_url: https://keycloak.shukawam.me/auth/realms/generic/protocol/openid-connect/token
+              api_url: https://keycloak.shukawam.me/auth/realms/generic/protocol/openid-connect/userinfo
   project: management
   syncPolicy:
     automated:
