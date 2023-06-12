@@ -68,6 +68,7 @@ spec:
               auth_url: https://keycloak.shukawam.me/realms/shukawam/protocol/openid-connect/auth
               token_url: https://keycloak.shukawam.me/realms/shukawam/protocol/openid-connect/token
               api_url: https://keycloak.shukawam.me/realms/shukawam/protocol/openid-connect/userinfo
+              role_attribute_path: contains(groups[*], 'admin') && 'Admin' || contains(groups[*], 'guest') && 'Editor' || 'Viewer'
   project: management
   syncPolicy:
     automated:
