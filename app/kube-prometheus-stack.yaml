@@ -65,9 +65,9 @@ spec:
               scopes: profile groups
               client_id: grafana
               client_secret: CJc7Z5XP6HXlUXmgR7vLSDramvtaQt4L
-              auth_url: https://keycloak.shukawam.me/realms/general/protocol/openid-connect/auth
-              token_url: https://keycloak.shukawam.me/realms/general/protocol/openid-connect/token
-              api_url: https://keycloak.shukawam.me/realms/general/protocol/openid-connect/userinfo
+              auth_url: https://keycloak.shukawam.me/realms/shukawam/protocol/openid-connect/auth
+              token_url: https://keycloak.shukawam.me/realms/shukawam/protocol/openid-connect/token
+              api_url: https://keycloak.shukawam.me/realms/shukawam/protocol/openid-connect/userinfo
   project: management
   syncPolicy:
     automated:
