@@ -58,7 +58,7 @@ spec:
           grafana.ini:
             server:
               root_url: https://grafana.shukawam.me
-            auth.generic.oauth:
+            auth.generic_oauth:
               enabled: true
               name: Keycloak
               allow_sign_up: true
