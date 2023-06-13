@@ -62,7 +62,7 @@ spec:
               enabled: true
               name: Keycloak
               allow_sign_up: true
-              scopes: profile groups email
+              scopes: profile,groups,email
               client_id: grafana
               client_secret: CJc7Z5XP6HXlUXmgR7vLSDramvtaQt4L
               auth_url: https://keycloak.shukawam.me/realms/shukawam/protocol/openid-connect/auth
