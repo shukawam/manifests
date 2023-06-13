@@ -66,11 +66,11 @@ spec:
           envValueFrom:
             GF_AUTH_GENERIC_OAUTH_CLIENT_ID:
               secretKeyRef:
-                name: keycloak-secret
+                name: grafana-keycloak-secret
                 key: client_id
             GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET:
               secretKeyRef:
-                name: keycloak-secret
+                name: grafana-keycloak-secret
                 key: client_secret
   project: management
   syncPolicy:
