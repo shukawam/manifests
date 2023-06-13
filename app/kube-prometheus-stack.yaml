@@ -59,14 +59,19 @@ spec:
               name: Keycloak
               allow_sign_up: true
               scopes: openid profile groups email
-              client_id: grafana
-              client_secret: CJc7Z5XP6HXlUXmgR7vLSDramvtaQt4L
               auth_url: https://keycloak.shukawam.me/realms/shukawam/protocol/openid-connect/auth
               token_url: https://keycloak.shukawam.me/realms/shukawam/protocol/openid-connect/token
               api_url: https://keycloak.shukawam.me/realms/shukawam/protocol/openid-connect/userinfo
-              email_attribute_path: email
-              email_attribute_name: email
               role_attribute_path: contains(groups[*], 'admin') && 'Admin' || contains(groups[*], 'guest') && 'Editor' || 'Viewer'
+          envValueFrom:
+            GF_AUTH_GENERIC_OAUTH_CLIENT_ID:
+              secretKeyRef:
+                name: keycloak-secret
+                key: client_id
+            GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET:
+              secretKeyRef:
+                name: keycloak-secret
+                key: client_secret
   project: management
   syncPolicy:
     automated:
