@@ -51,10 +51,6 @@ spec:
               helidon-monitoring:
                 url: https://raw.githubusercontent.com/shukawam/manifests/main/dashboards/helidon-monitoring.json
                 datasource: Prometheus
-            private:
-              oci-logging:
-                url: https://raw.githubusercontent.com/shukawam/manifests/main/dashboards/oci-logging.json
-                datasource: "Oracle Cloud Infrastructure Logs"
           grafana.ini:
             server:
               root_url: https://grafana.shukawam.me
