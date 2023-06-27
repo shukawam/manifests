@@ -10,7 +10,7 @@ spec:
   tls:
     - hosts:
         - openobserve.shukawam.me
-      secretName: shukawam-tls-secret
+      secretName: shukawam-tls-secret-openobserve
   rules:
     - host: openobserve.shukawam.me
       http:
