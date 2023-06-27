@@ -9,10 +9,10 @@ metadata:
 spec:
   tls:
     - hosts:
-        - openobserve.dev.shukawam.me
+        - openobserve.shukawam.me
       secretName: shukawam-tls-secret
   rules:
-    - host: openobserve.dev.shukawam.me
+    - host: openobserve.shukawam.me
       http:
         paths:
           - path: /
