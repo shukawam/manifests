@@ -23,6 +23,7 @@ spec:
                   password:
                     name: openobserve-secret
                     key: openobserve.root_user_password
+            remoteWriteDashboards: true
         grafana:
           defaultDashboardsEnabled: false
           defaultDashboardsTimezone: jst
