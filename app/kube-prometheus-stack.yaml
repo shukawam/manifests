@@ -17,12 +17,8 @@ spec:
             remoteWrite:
               - url: https://openobserve.shukawam.me/api/default/prometheus/api/v1/write
                 basic_auth:
-                  username:
-                    name: openobserve-secret
-                    key: root_user_email
-                  password:
-                    name: openobserve-secret
-                    key: openobserve.root_user_password
+                  username: shukawam@gmail.com
+                  password: SPlwz7kmpwcS3lVn
             remoteWriteDashboards: true
         grafana:
           defaultDashboardsEnabled: false
