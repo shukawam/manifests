@@ -1,7 +1,7 @@
 #####
 # Realm
 resource "keycloak_realm" "realm" {
-  realm = local.realm_id
+  realm = var.realm_id
 }
 
 #####
