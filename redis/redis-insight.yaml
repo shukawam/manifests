@@ -17,8 +17,10 @@ spec:
           ports:
             - containerPort: 8001
           env:
-            - name: REDISINSIGHT_HOST
+            - name: RIHOST
               value: redis-insight.shukawam.me
+            - name: RIPORT
+              value: "443"
 ---
 apiVersion: v1
 kind: Service
