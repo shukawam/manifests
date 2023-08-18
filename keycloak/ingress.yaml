@@ -9,7 +9,7 @@ spec:
   tls:
     - hosts:
         - keycloak.shukawam.me
-      secretName: shukawam-tls-secret
+      secretName: shukawam-tls-secret-keycloak
   rules:
     - host: keycloak.shukawam.me
       http:

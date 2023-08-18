@@ -9,6 +9,6 @@ server:
     hosts:
       - argocd.shukawam.me
     tls:
-      - secretName: shukawam-tls-secret
+      - secretName: shukawam-tls-secret-argocd
         hosts:
           - argocd.shukawam.me

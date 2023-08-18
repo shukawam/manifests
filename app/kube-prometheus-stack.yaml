@@ -31,7 +31,7 @@ spec:
             hosts:
               - grafana.shukawam.me
             tls:
-            - secretName: shukawam-tls-secret
+            - secretName: shukawam-tls-secret-grafana
               hosts:
               - grafana.shukawam.me
           dashboardProviders:
