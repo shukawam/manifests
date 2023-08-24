@@ -16,6 +16,9 @@ spec:
           image: redislabs/redisinsight:latest
           ports:
             - containerPort: 8001
+          env:
+            - name: RITRUSTEDORIGINS
+              value: https://redisinsight.shukawam.me
 ---
 apiVersion: v1
 kind: Service
