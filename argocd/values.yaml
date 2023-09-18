@@ -12,3 +12,16 @@ server:
       - secretName: shukawam-tls-secret-argocd
         hosts:
           - argocd.shukawam.me
+configs:
+  cm:
+    url: https://argocd.shukawam.me
+    oidc.config: |
+      name: keycloak
+      issuer: https://keycloak.shukawam.me/realms/shukawam
+      clientID: ffa050ff-85c2-478a-9e44-d54c2a06b870
+      clientSecret: $argocd.keycloak.clientSecret
+      requestedScopes:
+        - openid
+        - profile
+        - email
+        - groups
