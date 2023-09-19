@@ -15,13 +15,16 @@ server:
 configs:
   cm:
     url: https://argocd.shukawam.me
+    admin.enabled: false
     oidc.config: |
       name: keycloak
       issuer: https://keycloak.shukawam.me/realms/shukawam
-      clientID: ffa050ff-85c2-478a-9e44-d54c2a06b870
+      clientID: argocd
       clientSecret: $argocd.keycloak.clientSecret
       requestedScopes:
         - openid
         - profile
         - email
         - groups
+    secret:
+      createSecret: false
