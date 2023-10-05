@@ -18,14 +18,11 @@ spec:
             kubernetes.io/ingress.class: nginx
             cert-manager.io/cluster-issuer: letsencrypt-prod
           hosts:
-            - host: 'pyroscope.shukawam.me'
-              paths:
-                - path: /
-                  pathType: Prefix
+            - pyroscope.shukawam.me
           tls:
             - secretName: shukawam-tls-secret-pyroscope
               hosts:
-                - 'pyroscope.shukawam.me'
+                - pyroscope.shukawam.me
   project: management
   syncPolicy:
     automated:
