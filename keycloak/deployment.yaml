@@ -35,7 +35,10 @@ spec:
             - name: KC_DB
               value: mysql
             - name: KC_DB_URL
-              value: jdbc:mysql://192.168.1.115:3306/keycloak
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: url
             - name: KC_DB_USERNAME
               valueFrom:
                 secretKeyRef:
