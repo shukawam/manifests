@@ -12,16 +12,8 @@ spec:
     chart: kube-prometheus-stack
     helm:
       values: |
-        prometheusOperator:
-          prometheusSpec:
-            remoteWrite:
-              - url: https://openobserve.shukawam.me/api/default/prometheus/api/v1/write
-                basic_auth:
-                  username: shukawam@gmail.com
-                  password: SPlwz7kmpwcS3lVn
-            remoteWriteDashboards: true
         grafana:
-          defaultDashboardsEnabled: false
+          defaultDashboardsEnabled: true
           defaultDashboardsTimezone: jst
           ingress:
             enabled: true
@@ -54,11 +46,6 @@ spec:
                   editable: true
                   options:
                     path: /var/lib/grafana/dashboards/private
-          dashboards:
-            public:
-              helidon-monitoring:
-                url: https://raw.githubusercontent.com/shukawam/manifests/main/dashboards/helidon-monitoring.json
-                datasource: Prometheus
           grafana.ini:
             server:
               root_url: https://grafana.shukawam.me
