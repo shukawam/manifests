@@ -7,9 +7,13 @@
     "dependencies"
   ],
   "kubernetes": {
-    "fileMatch": ["\\.yaml$", "app/.+\\.yaml$"]
+    "fileMatch": [
+      "\\.yaml$"
+    ]
   },
   "argocd": {
-    "fileMatch": []
+    "fileMatch": [
+      "app/.+\\.yaml$"
+    ]
   }
 }
