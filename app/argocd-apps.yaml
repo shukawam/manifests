@@ -61,6 +61,22 @@ spec:
             clusterResourceWhitelist:
               - kind: '*'
                 group: '*'
+          - name: ochacafe
+            namespace: argocd
+            additionalLabels: {}
+            additionalAnnotations: {}
+            finalizers:
+              - resources-finalizer.argocd.argoproj.io
+            description: for example resources.
+            sourceRepos:
+              - '*'
+            destinations:
+              - server: https://kubernetes.default.svc
+                name: '*'
+                namespace: '*'
+            clusterResourceWhitelist:
+              - kind: '*'
+                group: '*'
   project: default
   syncPolicy:
     automated:
