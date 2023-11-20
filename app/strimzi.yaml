@@ -1,0 +1,20 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: strimzi
+spec:
+  destination:
+    namespace: kafka
+    server: https://kubernetes.default.svc
+  source:
+    repoURL: https://strimzi.io/charts/
+    targetRevision: 0.38.0
+    chart: strimzi-kafka-operator
+  project: ochacafe
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - ServerSideApply=true
+      - CreateNamespace=true
