@@ -61,12 +61,13 @@ spec:
               headers:
                 Authorization: ${env:AUTHORIZATION_HEADER}
                 stream-name: shukawam
-          pipelines:
-            logs/oke:
-              exporters:
-                - otlphttp/openobserve
-              receivers:
-                - filelog
+          service:
+            pipelines:
+              logs/oke:
+                exporters:
+                  - otlphttp/openobserve
+                receivers:
+                  - filelog
         extraEnvsFrom:
           - secretRef:
               name: opentelemetry-collector-secret
