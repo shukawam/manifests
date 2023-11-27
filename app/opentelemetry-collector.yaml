@@ -9,7 +9,7 @@ spec:
   source:
     repoURL: https://open-telemetry.github.io/opentelemetry-helm-charts
     targetRevision: 0.74.1
-    chart: open-telemetry
+    chart: opentelemetry-collector
     helm:
       values: |
         mode: daemonset
