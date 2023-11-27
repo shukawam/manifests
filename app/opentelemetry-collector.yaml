@@ -61,7 +61,7 @@ spec:
                   to: resource["k8s.pod.uid"]
           exporters:
             otlphttp/openobserve:
-              endpoint: http://openobserve:5080
+              endpoint: http://openobserve:5080/api/default
               headers:
                 Authorization: ${env:AUTHORIZATION_HEADER}
                 stream-name: shukawam
