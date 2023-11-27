@@ -17,7 +17,7 @@ spec:
           receivers:
             filelog:
               include:
-                - /var/log/containers/*.log
+                - /var/log/containers/**/*.log
               start_at: beginning
               operators:
                 - type: router
