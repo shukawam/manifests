@@ -66,6 +66,9 @@ spec:
               logs/oke:
                 exporters:
                   - otlphttp/openobserve
+                processors:
+                  - memory_limiter
+                  - batch
                 receivers:
                   - filelog
         extraEnvsFrom:
