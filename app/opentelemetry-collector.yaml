@@ -15,6 +15,18 @@ spec:
         mode: daemonset
         service:
           enabled: true
+        ingress:
+          enabled: true
+          hosts:
+            - host: collector.shukawam.me
+              paths:
+                - path: /
+                  pathType: Prefix
+                  port: 4318
+          tls:
+            - secretName: shukawam-tls-secret-collector
+              hosts:
+                - collector.shukawam.me
         config:
           receivers:
             filelog:
