@@ -13,6 +13,8 @@ spec:
     helm:
       values: |
         mode: daemonset
+        service:
+          enabled: true
         config:
           receivers:
             filelog:
