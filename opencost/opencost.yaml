@@ -197,6 +197,7 @@ metadata:
   name: opencost
   labels:
     name: opencost
+    namespace: opencost
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt-prod
 spec:
