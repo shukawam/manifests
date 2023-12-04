@@ -200,9 +200,10 @@ metadata:
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt-prod
 spec:
+  ingressClassName: nginx
   tls:
     - hosts:
-      - opencost.shukawam.me
+        - opencost.shukawam.me
       secretName: shukawam-tls-secret-opencost
   rules:
     - host: opencost.shukawam.me
