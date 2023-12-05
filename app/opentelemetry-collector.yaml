@@ -37,7 +37,7 @@ spec:
                 - /var/log/pods/*/*/*.log
                 - /var/log/containers/*.log
                 - /var/log/**/*.log
-              start_at: end
+              start_at: start
               operators:
                 # Parse CRI-O format
                 - type: regex_parser
