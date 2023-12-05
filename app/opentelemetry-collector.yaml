@@ -36,17 +36,9 @@ spec:
               include:
                 - /var/log/pods/*/*/*.log
                 - /var/log/containers/*.log
-              start_at: beginning
+                - /var/log/**/*.log
+              start_at: end
               operators:
-                - type: router
-                  id: get-format
-                  routes:
-                    - output: parser-docker
-                      expr: 'body matches "^\\{"'
-                    - output: parser-crio
-                      expr: 'body matches "^[^ Z]+ "'
-                    - output: parser-containerd
-                      expr: 'body matches "^[^ Z]+Z"'
                 # Parse CRI-O format
                 - type: regex_parser
                   id: parser-crio
@@ -58,23 +50,6 @@ spec:
                     parse_from: attributes.time
                     layout_type: gotime
                     layout: '2006-01-02T15:04:05.999999999Z07:00'
-                # Parse CRI-Containerd format
-                - type: regex_parser
-                  id: parser-containerd
-                  regex:
-                    '^(?P<time>[^ ^Z]+Z) (?P<stream>stdout|stderr) (?P<logtag>[^ ]*)
-                    ?(?P<log>.*)$'
-                  output: extract_metadata_from_filepath
-                  timestamp:
-                    parse_from: attributes.time
-                    layout: '%Y-%m-%dT%H:%M:%S.%LZ'
-                # Parse Docker format
-                - type: json_parser
-                  id: parser-docker
-                  output: extract_metadata_from_filepath
-                  timestamp:
-                    parse_from: attributes.time
-                    layout: '%Y-%m-%dT%H:%M:%S.%LZ'
                 - type: move
                   from: attributes.log
                   to: body
