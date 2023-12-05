@@ -1,0 +1,697 @@
+{
+    "version": 2,
+    "dashboardId": "7135120105918300160TbbEiD",
+    "title": "Kubernetes / Compute Resources / Cluster",
+    "description": "",
+    "role": "",
+    "owner": "",
+    "created": "2023-11-28T04:19:57.058Z",
+    "panels": [
+        {
+            "id": "Panel_ID8159510",
+            "type": "metric",
+            "title": "CPU Utilisation",
+            "description": "",
+            "config": {
+                "show_legends": true,
+                "legends_position": null,
+                "unit": "custom",
+                "unit_custom": "%",
+                "base_map": null,
+                "map_view": null
+            },
+            "queryType": "promql",
+            "queries": [
+                {
+                    "query": "cluster:node_cpu:ratio_rate5m{cluster=\"$cluster\"}*100",
+                    "customQuery": true,
+                    "fields": {
+                        "stream": ":node_memory_MemAvailable_bytes:sum",
+                        "stream_type": "metrics",
+                        "x": [],
+                        "y": [],
+                        "z": [],
+                        "filter": []
+                    },
+                    "config": {
+                        "promql_legend": ""
+                    }
+                }
+            ],
+            "layout": {
+                "x": 0,
+                "y": 0,
+                "w": 2,
+                "h": 3,
+                "i": 1
+            }
+        },
+        {
+            "id": "Panel_ID7606710",
+            "type": "metric",
+            "title": "CPU Requests Commitment",
+            "description": "",
+            "config": {
+                "show_legends": true,
+                "legends_position": null,
+                "unit": "custom",
+                "unit_custom": "%",
+                "base_map": null,
+                "map_view": null
+            },
+            "queryType": "promql",
+            "queries": [
+                {
+                    "query": "(sum(namespace_cpu:kube_pod_container_resource_requests:sum{cluster=\"$cluster\"}) / sum(kube_node_status_allocatable{job=\"kube-state-metrics\",resource=\"cpu\",cluster=\"$cluster\"}))*100",
+                    "customQuery": true,
+                    "fields": {
+                        "stream": ":node_memory_MemAvailable_bytes:sum",
+                        "stream_type": "metrics",
+                        "x": [],
+                        "y": [],
+                        "z": [],
+                        "filter": []
+                    },
+                    "config": {
+                        "promql_legend": ""
+                    }
+                }
+            ],
+            "layout": {
+                "x": 2,
+                "y": 0,
+                "w": 2,
+                "h": 3,
+                "i": 2
+            }
+        },
+        {
+            "id": "Panel_ID4396310",
+            "type": "metric",
+            "title": "CPU Limits Commitment",
+            "description": "",
+            "config": {
+                "show_legends": true,
+                "legends_position": null,
+                "unit": "custom",
+                "unit_custom": "%",
+                "base_map": null,
+                "map_view": null
+            },
+            "queryType": "promql",
+            "queries": [
+                {
+                    "query": "(sum(namespace_cpu:kube_pod_container_resource_limits:sum{cluster=\"$cluster\"}) / sum(kube_node_status_allocatable{job=\"kube-state-metrics\",resource=\"cpu\",cluster=\"$cluster\"}))*100",
+                    "customQuery": true,
+                    "fields": {
+                        "stream": ":node_memory_MemAvailable_bytes:sum",
+                        "stream_type": "metrics",
+                        "x": [],
+                        "y": [],
+                        "z": [],
+                        "filter": []
+                    },
+                    "config": {
+                        "promql_legend": ""
+                    }
+                }
+            ],
+            "layout": {
+                "x": 4,
+                "y": 0,
+                "w": 2,
+                "h": 3,
+                "i": 3
+            }
+        },
+        {
+            "id": "Panel_ID9565210",
+            "type": "metric",
+            "title": "Memory Utilisation",
+            "description": "",
+            "config": {
+                "show_legends": true,
+                "legends_position": null,
+                "unit": "custom",
+                "unit_custom": "%",
+                "base_map": null,
+                "map_view": null
+            },
+            "queryType": "promql",
+            "queries": [
+                {
+                    "query": "(1 - sum(:node_memory_MemAvailable_bytes:sum{cluster=\"$cluster\"}) / sum(node_memory_MemTotal_bytes{job=\"node-exporter\",cluster=\"$cluster\"}))*100",
+                    "customQuery": true,
+                    "fields": {
+                        "stream": ":node_memory_MemAvailable_bytes:sum",
+                        "stream_type": "metrics",
+                        "x": [],
+                        "y": [],
+                        "z": [],
+                        "filter": []
+                    },
+                    "config": {
+                        "promql_legend": ""
+                    }
+                }
+            ],
+            "layout": {
+                "x": 6,
+                "y": 0,
+                "w": 2,
+                "h": 3,
+                "i": 4
+            }
+        },
+        {
+            "id": "Panel_ID9435810",
+            "type": "metric",
+            "title": "Memory Requests Commitment",
+            "description": "",
+            "config": {
+                "show_legends": true,
+                "legends_position": null,
+                "unit": "custom",
+                "unit_custom": "%",
+                "base_map": null,
+                "map_view": null
+            },
+            "queryType": "promql",
+            "queries": [
+                {
+                    "query": "(sum(namespace_memory:kube_pod_container_resource_requests:sum{cluster=\"$cluster\"}) / sum(kube_node_status_allocatable{job=\"kube-state-metrics\",resource=\"memory\",cluster=\"$cluster\"}))*100",
+                    "customQuery": true,
+                    "fields": {
+                        "stream": ":node_memory_MemAvailable_bytes:sum",
+                        "stream_type": "metrics",
+                        "x": [],
+                        "y": [],
+                        "z": [],
+                        "filter": []
+                    },
+                    "config": {
+                        "promql_legend": ""
+                    }
+                }
+            ],
+            "layout": {
+                "x": 8,
+                "y": 0,
+                "w": 2,
+                "h": 3,
+                "i": 5
+            }
+        },
+        {
+            "id": "Panel_ID5750710",
+            "type": "metric",
+            "title": "Memory Limits Commitment",
+            "description": "",
+            "config": {
+                "show_legends": true,
+                "legends_position": null,
+                "unit": "custom",
+                "unit_custom": "%",
+                "base_map": null,
+                "map_view": null
+            },
+            "queryType": "promql",
+            "queries": [
+                {
+                    "query": "(sum(namespace_memory:kube_pod_container_resource_limits:sum{cluster=\"$cluster\"}) / sum(kube_node_status_allocatable{job=\"kube-state-metrics\",resource=\"memory\",cluster=\"$cluster\"}))*100",
+                    "customQuery": true,
+                    "fields": {
+                        "stream": ":node_memory_MemAvailable_bytes:sum",
+                        "stream_type": "metrics",
+                        "x": [],
+                        "y": [],
+                        "z": [],
+                        "filter": []
+                    },
+                    "config": {
+                        "promql_legend": ""
+                    }
+                }
+            ],
+            "layout": {
+                "x": 10,
+                "y": 0,
+                "w": 2,
+                "h": 3,
+                "i": 6
+            }
+        },
+        {
+            "id": "Panel_ID4272010",
+            "type": "area-stacked",
+            "title": "CPU Usage",
+            "description": "",
+            "config": {
+                "show_legends": true,
+                "legends_position": "right",
+                "unit": "percent-1",
+                "base_map": null,
+                "map_view": null
+            },
+            "queryType": "promql",
+            "queries": [
+                {
+                    "query": "sum(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{cluster=\"$cluster\"}) by (namespace)",
+                    "customQuery": true,
+                    "fields": {
+                        "stream": ":node_memory_MemAvailable_bytes:sum",
+                        "stream_type": "metrics",
+                        "x": [],
+                        "y": [],
+                        "z": [],
+                        "filter": []
+                    },
+                    "config": {
+                        "promql_legend": "{namespace}"
+                    }
+                }
+            ],
+            "layout": {
+                "x": 0,
+                "y": 3,
+                "w": 6,
+                "h": 6,
+                "i": 7
+            }
+        },
+        {
+            "id": "Panel_ID5511010",
+            "type": "area-stacked",
+            "title": "Memory Usage (w/o cache)",
+            "description": "",
+            "config": {
+                "show_legends": true,
+                "legends_position": "right",
+                "unit": "bytes",
+                "base_map": null,
+                "map_view": null
+            },
+            "queryType": "promql",
+            "queries": [
+                {
+                    "query": "sum(container_memory_rss{job=\"kubelet\", metrics_path=\"/metrics/cadvisor\", cluster=\"$cluster\", container!=\"\"}) by (namespace)",
+                    "customQuery": true,
+                    "fields": {
+                        "stream": ":node_memory_MemAvailable_bytes:sum",
+                        "stream_type": "metrics",
+                        "x": [],
+                        "y": [],
+                        "z": [],
+                        "filter": []
+                    },
+                    "config": {
+                        "promql_legend": "{namespace}"
+                    }
+                }
+            ],
+            "layout": {
+                "x": 6,
+                "y": 3,
+                "w": 6,
+                "h": 6,
+                "i": 8
+            }
+        },
+        {
+            "id": "Panel_ID771610",
+            "type": "area-stacked",
+            "title": "Receive bandwidth",
+            "description": "",
+            "config": {
+                "show_legends": true,
+                "legends_position": "right",
+                "unit": "bps",
+                "base_map": null,
+                "map_view": null
+            },
+            "queryType": "promql",
+            "queries": [
+                {
+                    "query": "sum(irate(container_network_receive_bytes_total{job=\"kubelet\", metrics_path=\"/metrics/cadvisor\", cluster=\"$cluster\", namespace=~\".+\"}[5m])) by (namespace)",
+                    "customQuery": true,
+                    "fields": {
+                        "stream": ":node_memory_MemAvailable_bytes:sum",
+                        "stream_type": "metrics",
+                        "x": [],
+                        "y": [],
+                        "z": [],
+                        "filter": []
+                    },
+                    "config": {
+                        "promql_legend": "{namespace}"
+                    }
+                }
+            ],
+            "layout": {
+                "x": 0,
+                "y": 9,
+                "w": 6,
+                "h": 6,
+                "i": 9
+            }
+        },
+        {
+            "id": "Panel_ID6924510",
+            "type": "area-stacked",
+            "title": "Transmit Bandwidth",
+            "description": "",
+            "config": {
+                "show_legends": true,
+                "legends_position": "right",
+                "unit": "bps",
+                "base_map": null,
+                "map_view": null
+            },
+            "queryType": "promql",
+            "queries": [
+                {
+                    "query": "sum(irate(container_network_transmit_bytes_total{job=\"kubelet\", metrics_path=\"/metrics/cadvisor\", cluster=\"$cluster\", namespace=~\".+\"}[5m])) by (namespace)",
+                    "customQuery": true,
+                    "fields": {
+                        "stream": ":node_memory_MemAvailable_bytes:sum",
+                        "stream_type": "metrics",
+                        "x": [],
+                        "y": [],
+                        "z": [],
+                        "filter": []
+                    },
+                    "config": {
+                        "promql_legend": "{namespace}"
+                    }
+                }
+            ],
+            "layout": {
+                "x": 6,
+                "y": 9,
+                "w": 6,
+                "h": 6,
+                "i": 10
+            }
+        },
+        {
+            "id": "Panel_ID2296110",
+            "type": "area-stacked",
+            "title": "Average Container Bandwidth by Namespace: Received",
+            "description": "",
+            "config": {
+                "show_legends": true,
+                "legends_position": "right",
+                "unit": "bps",
+                "base_map": null,
+                "map_view": null
+            },
+            "queryType": "promql",
+            "queries": [
+                {
+                    "query": "avg(irate(container_network_receive_bytes_total{job=\"kubelet\", metrics_path=\"/metrics/cadvisor\", cluster=\"$cluster\", namespace=~\".+\"}[5m])) by (namespace)",
+                    "customQuery": true,
+                    "fields": {
+                        "stream": ":node_memory_MemAvailable_bytes:sum",
+                        "stream_type": "metrics",
+                        "x": [],
+                        "y": [],
+                        "z": [],
+                        "filter": []
+                    },
+                    "config": {
+                        "promql_legend": "{namespace}"
+                    }
+                }
+            ],
+            "layout": {
+                "x": 0,
+                "y": 15,
+                "w": 6,
+                "h": 6,
+                "i": 11
+            }
+        },
+        {
+            "id": "Panel_ID2428510",
+            "type": "area-stacked",
+            "title": "Average Container Bandwidth by Namespace: Transmitted",
+            "description": "",
+            "config": {
+                "show_legends": true,
+                "legends_position": "right",
+                "unit": "bps",
+                "base_map": null,
+                "map_view": null
+            },
+            "queryType": "promql",
+            "queries": [
+                {
+                    "query": "avg(irate(container_network_transmit_bytes_total{job=\"kubelet\", metrics_path=\"/metrics/cadvisor\", cluster=\"$cluster\", namespace=~\".+\"}[5m])) by (namespace)",
+                    "customQuery": true,
+                    "fields": {
+                        "stream": ":node_memory_MemAvailable_bytes:sum",
+                        "stream_type": "metrics",
+                        "x": [],
+                        "y": [],
+                        "z": [],
+                        "filter": []
+                    },
+                    "config": {
+                        "promql_legend": "{namespace}"
+                    }
+                }
+            ],
+            "layout": {
+                "x": 6,
+                "y": 15,
+                "w": 6,
+                "h": 6,
+                "i": 12
+            }
+        },
+        {
+            "id": "Panel_ID2704410",
+            "type": "area-stacked",
+            "title": "Rate of Received Packets",
+            "description": "",
+            "config": {
+                "show_legends": true,
+                "legends_position": "right",
+                "base_map": null,
+                "map_view": null
+            },
+            "queryType": "promql",
+            "queries": [
+                {
+                    "query": "sum(irate(container_network_receive_packets_total{job=\"kubelet\", metrics_path=\"/metrics/cadvisor\", cluster=\"$cluster\", namespace=~\".+\"}[5m])) by (namespace)",
+                    "customQuery": true,
+                    "fields": {
+                        "stream": ":node_memory_MemAvailable_bytes:sum",
+                        "stream_type": "metrics",
+                        "x": [],
+                        "y": [],
+                        "z": [],
+                        "filter": []
+                    },
+                    "config": {
+                        "promql_legend": "{namespace}"
+                    }
+                }
+            ],
+            "layout": {
+                "x": 0,
+                "y": 21,
+                "w": 6,
+                "h": 7,
+                "i": 13
+            }
+        },
+        {
+            "id": "Panel_ID8108710",
+            "type": "area-stacked",
+            "title": "Rate of Transmitted Packets",
+            "description": "",
+            "config": {
+                "show_legends": true,
+                "legends_position": "right",
+                "base_map": null,
+                "map_view": null
+            },
+            "queryType": "promql",
+            "queries": [
+                {
+                    "query": "sum(irate(container_network_transmit_packets_total{job=\"kubelet\", metrics_path=\"/metrics/cadvisor\", cluster=\"$cluster\", namespace=~\".+\"}[5m])) by (namespace)",
+                    "customQuery": true,
+                    "fields": {
+                        "stream": ":node_memory_MemAvailable_bytes:sum",
+                        "stream_type": "metrics",
+                        "x": [],
+                        "y": [],
+                        "z": [],
+                        "filter": []
+                    },
+                    "config": {
+                        "promql_legend": "{namespace}"
+                    }
+                }
+            ],
+            "layout": {
+                "x": 6,
+                "y": 21,
+                "w": 6,
+                "h": 7,
+                "i": 14
+            }
+        },
+        {
+            "id": "Panel_ID992010",
+            "type": "area-stacked",
+            "title": "Rate of Received Packets Dropped",
+            "description": "",
+            "config": {
+                "show_legends": true,
+                "legends_position": "right",
+                "base_map": null,
+                "map_view": null
+            },
+            "queryType": "promql",
+            "queries": [
+                {
+                    "query": "sum(irate(container_network_receive_packets_dropped_total{job=\"kubelet\", metrics_path=\"/metrics/cadvisor\", cluster=\"$cluster\", namespace=~\".+\"}[5m])) by (namespace)",
+                    "customQuery": true,
+                    "fields": {
+                        "stream": ":node_memory_MemAvailable_bytes:sum",
+                        "stream_type": "metrics",
+                        "x": [],
+                        "y": [],
+                        "z": [],
+                        "filter": []
+                    },
+                    "config": {
+                        "promql_legend": "{namespace}"
+                    }
+                }
+            ],
+            "layout": {
+                "x": 0,
+                "y": 28,
+                "w": 6,
+                "h": 6,
+                "i": 15
+            }
+        },
+        {
+            "id": "Panel_ID1443510",
+            "type": "area-stacked",
+            "title": "Rate of Transmitted Packets Dropped",
+            "description": "",
+            "config": {
+                "show_legends": true,
+                "legends_position": "right",
+                "base_map": null,
+                "map_view": null
+            },
+            "queryType": "promql",
+            "queries": [
+                {
+                    "query": "sum(irate(container_network_transmit_packets_dropped_total{job=\"kubelet\", metrics_path=\"/metrics/cadvisor\", cluster=\"$cluster\", namespace=~\".+\"}[5m])) by (namespace)",
+                    "customQuery": true,
+                    "fields": {
+                        "stream": ":node_memory_MemAvailable_bytes:sum",
+                        "stream_type": "metrics",
+                        "x": [],
+                        "y": [],
+                        "z": [],
+                        "filter": []
+                    },
+                    "config": {
+                        "promql_legend": "{namespace}"
+                    }
+                }
+            ],
+            "layout": {
+                "x": 6,
+                "y": 28,
+                "w": 6,
+                "h": 6,
+                "i": 16
+            }
+        },
+        {
+            "id": "Panel_ID7028310",
+            "type": "area-stacked",
+            "title": "IOPS(Reads+Writes)",
+            "description": "",
+            "config": {
+                "show_legends": true,
+                "legends_position": "right",
+                "base_map": null,
+                "map_view": null
+            },
+            "queryType": "promql",
+            "queries": [
+                {
+                    "query": "ceil(sum by(namespace) (rate(container_fs_reads_total{job=\"kubelet\", metrics_path=\"/metrics/cadvisor\", container!=\"\", device=~\"(/dev/)?(mmcblk.p.+|nvme.+|rbd.+|sd.+|vd.+|xvd.+|dm-.+|md.+|dasd.+)\", cluster=\"$cluster\", namespace!=\"\"}[5m]) + rate(container_fs_writes_total{job=\"kubelet\", metrics_path=\"/metrics/cadvisor\", container!=\"\", cluster=\"$cluster\", namespace!=\"\"}[5m])))",
+                    "customQuery": true,
+                    "fields": {
+                        "stream": ":node_memory_MemAvailable_bytes:sum",
+                        "stream_type": "metrics",
+                        "x": [],
+                        "y": [],
+                        "z": [],
+                        "filter": []
+                    },
+                    "config": {
+                        "promql_legend": "{namespace}"
+                    }
+                }
+            ],
+            "layout": {
+                "x": 0,
+                "y": 34,
+                "w": 6,
+                "h": 7,
+                "i": 17
+            }
+        },
+        {
+            "id": "Panel_ID2193110",
+            "type": "area-stacked",
+            "title": "ThroughPut(Read+Write)",
+            "description": "",
+            "config": {
+                "show_legends": true,
+                "legends_position": null,
+                "unit": "bps",
+                "base_map": null,
+                "map_view": null
+            },
+            "queryType": "promql",
+            "queries": [
+                {
+                    "query": "sum by(namespace) (rate(container_fs_reads_bytes_total{job=\"kubelet\", metrics_path=\"/metrics/cadvisor\", container!=\"\", device=~\"(/dev/)?(mmcblk.p.+|nvme.+|rbd.+|sd.+|vd.+|xvd.+|dm-.+|md.+|dasd.+)\", cluster=\"$cluster\", namespace!=\"\"}[5m]) + rate(container_fs_writes_bytes_total{job=\"kubelet\", metrics_path=\"/metrics/cadvisor\", container!=\"\", cluster=\"$cluster\", namespace!=\"\"}[5m]))",
+                    "customQuery": true,
+                    "fields": {
+                        "stream": ":node_memory_MemAvailable_bytes:sum",
+                        "stream_type": "metrics",
+                        "x": [],
+                        "y": [],
+                        "z": [],
+                        "filter": []
+                    },
+                    "config": {
+                        "promql_legend": ""
+                    }
+                }
+            ],
+            "layout": {
+                "x": 6,
+                "y": 34,
+                "w": 6,
+                "h": 7,
+                "i": 18
+            }
+        }
+    ],
+    "variables": null
+}
