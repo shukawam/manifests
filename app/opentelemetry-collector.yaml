@@ -35,7 +35,7 @@ spec:
             filelog:
               include:
                 - /var/log/**/*.log
-              start_at: start
+              start_at: beginning
               operators:
                 # Parse CRI-O format
                 - type: regex_parser
