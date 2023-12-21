@@ -18,9 +18,10 @@ spec:
       containers:
         - name: instance-capacity-observer
           image: nrt.ocir.io/orasejapan/shukawam/instance-capacity-observer:1.0.0
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Always
           ports:
-            - containerPort: 8080
+            - name: api
+              containerPort: 8080
           readinessProbe:
             httpGet:
               path: /health/ready
