@@ -1,0 +1,15 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: instance-capacity-observer
+  labels:
+    app: instance-capacity-observer
+    prometheus.io/scrape: "true"
+spec:
+  type: NodePort
+  selector:
+    app: instance-capacity-observer
+  ports:
+  - port: 8080
+    targetPort: 8080
+    name: http

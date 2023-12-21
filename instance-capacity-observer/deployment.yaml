@@ -1,0 +1,37 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: instance-capacity-observer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: instance-capacity-observer
+  template:
+    metadata:
+      labels:
+        app: instance-capacity-observer
+        version: v1
+      annotations:
+        instrumentation.opentelemetry.io/inject-java: "true"
+    spec:
+      containers:
+        - name: instance-capacity-observer
+          image: nrt.ocir.io/orasejapan/shukawam/instance-capacity-observer:1.0.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: api
+            initialDelaySeconds: 30
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: api
+            initialDelaySeconds: 30
+            periodSeconds: 5
+      imagePullSecrets:
+        - name: ocir-secret
