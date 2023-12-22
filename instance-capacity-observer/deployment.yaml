@@ -17,11 +17,14 @@ spec:
     spec:
       containers:
         - name: instance-capacity-observer
-          image: nrt.ocir.io/orasejapan/shukawam/instance-capacity-observer:1.0.0
+          image: nrt.ocir.io/orasejapan/shukawam/instance-capacity-observer:1.0.2
           imagePullPolicy: Always
           ports:
             - name: api
               containerPort: 8080
+          env:
+            - name: OTEL_SERVICE_NAME
+              value: instance-capacity-observer
           readinessProbe:
             httpGet:
               path: /health/ready
