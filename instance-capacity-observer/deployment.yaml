@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: instance-capacity-observer
-          image: nrt.ocir.io/orasejapan/shukawam/instance-capacity-observer:1.0.3
+          image: nrt.ocir.io/orasejapan/shukawam/instance-capacity-observer:1.0.4
           imagePullPolicy: Always
           ports:
             - name: api
