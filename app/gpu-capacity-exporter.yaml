@@ -1,12 +1,12 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: instance-capacity-observer
+  name: gpu-capacity-exporter
 spec:
   project: management
   source:
     repoURL: "https://github.com/shukawam/manifests"
-    path: instance-capacity-observer
+    path: gpu-capacity-exporter
     targetRevision: HEAD
   destination:
     server: "https://kubernetes.default.svc"
