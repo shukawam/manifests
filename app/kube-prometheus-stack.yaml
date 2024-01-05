@@ -69,6 +69,9 @@ spec:
               token_url: https://keycloak.shukawam.me/realms/shukawam/protocol/openid-connect/token
               api_url: https://keycloak.shukawam.me/realms/shukawam/protocol/openid-connect/userinfo
               role_attribute_path: contains(groups[*], 'admin') && 'Admin' || contains(groups[*], 'guest') && 'Editor' || 'Viewer'
+          env:
+            name: GF_INSTALL_PLUGINS
+            value: oci-logs-datasource
           envValueFrom:
             GF_AUTH_GENERIC_OAUTH_CLIENT_ID:
               secretKeyRef:
