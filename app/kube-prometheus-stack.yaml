@@ -31,8 +31,8 @@ spec:
           defaultDashboardsTimezone: jst
           ingress:
             enabled: true
+            ingressClassName: nginx
             annotations:
-              kubernetes.io/ingress.class: nginx
               cert-manager.io/cluster-issuer: letsencrypt-prod
             hosts:
               - grafana.shukawam.me
