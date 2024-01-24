@@ -1,7 +1,7 @@
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
-  name: instance-capacity-monitoring
+  name: gpu-capacity-exporter
   namespace: monitoring
   labels:
     release: kube-prometheus-stack
@@ -12,6 +12,6 @@ spec:
   selector:
     matchLabels:
       prometheus.io/scrape: "true"
-      app: instance-capacity-observer
+      app: gpu-capacity-exporter
   namespaceSelector:
     any: true

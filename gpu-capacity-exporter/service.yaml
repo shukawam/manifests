@@ -1,14 +1,14 @@
 kind: Service
 apiVersion: v1
 metadata:
-  name: instance-capacity-observer
+  name: gpu-capacity-exporter
   labels:
-    app: instance-capacity-observer
+    app: gpu-capacity-exporter
     prometheus.io/scrape: "true"
 spec:
   type: NodePort
   selector:
-    app: instance-capacity-observer
+    app: gpu-capacity-exporter
   ports:
   - port: 8080
     targetPort: 8080
