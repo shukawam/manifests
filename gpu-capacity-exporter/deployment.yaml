@@ -1,23 +1,23 @@
 kind: Deployment
 apiVersion: apps/v1
 metadata:
-  name: instance-capacity-observer
+  name: gpu-capacity-exporter
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: instance-capacity-observer
+      app: gpu-capacity-exporter
   template:
     metadata:
       labels:
-        app: instance-capacity-observer
+        app: gpu-capacity-exporter
         version: v1
       annotations:
         instrumentation.opentelemetry.io/inject-java: "true"
     spec:
       containers:
-        - name: instance-capacity-observer
-          image: nrt.ocir.io/orasejapan/shukawam/gpu-capacity-exporter:1.0.0
+        - name: gpu-capacity-exporter
+          image: nrt.ocir.io/orasejapan/shukawam/gpu-capacity-exporter:1.0.1
           imagePullPolicy: Always
           ports:
             - name: api
