@@ -19,6 +19,6 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: shukawam-cluster-kafka-bootstrap
+                name: shukawam-bridge
                 port:
                   number: 8080
