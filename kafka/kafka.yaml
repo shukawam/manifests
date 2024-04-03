@@ -2,9 +2,9 @@ apiVersion: kafka.strimzi.io/v1beta2
 kind: KafkaNodePool
 metadata:
   name: controller
-  namespace: kafka
+  namespace: ochacafe
   labels:
-    strimzi.io/cluster: shukawam-cluster
+    strimzi.io/cluster: ochacafe
 spec:
   replicas: 3
   roles:
@@ -16,9 +16,9 @@ apiVersion: kafka.strimzi.io/v1beta2
 kind: KafkaNodePool
 metadata:
   name: broker
-  namespace: kafka
+  namespace: ochacafe
   labels:
-    strimzi.io/cluster: shukawam-cluster
+    strimzi.io/cluster: ochacafe
 spec:
   replicas: 3
   roles:
@@ -29,8 +29,8 @@ spec:
 apiVersion: kafka.strimzi.io/v1beta2
 kind: Kafka
 metadata:
-  name: shukawam-cluster
-  namespace: kafka
+  name: ochacafe
+  namespace: ochacafe
   annotations:
     strimzi.io/node-pools: enabled
     strimzi.io/kraft: enabled
