@@ -53,11 +53,11 @@ spec:
             - containerPort: 5080
               name: http
           volumeMounts:
-            - name: data
+            - name: volume
               mountPath: /data
   volumeClaimTemplates:
     - metadata:
-        name: data
+        name: volume
       spec:
         accessModes:
           - ReadWriteOnce
