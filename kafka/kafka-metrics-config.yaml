@@ -147,5 +147,4 @@ data:
         type: GAUGE
 kind: ConfigMap
 metadata:
-  creationTimestamp: null
   name: kafka-metrics-config
