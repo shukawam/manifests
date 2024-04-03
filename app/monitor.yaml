@@ -1,12 +1,12 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: service-monitor
+  name: monitor
 spec:
   project: management
   source:
     repoURL: "https://github.com/shukawam/manifests"
-    path: service-monitor
+    path: monitor
     targetRevision: HEAD
   destination:
     server: "https://kubernetes.default.svc"

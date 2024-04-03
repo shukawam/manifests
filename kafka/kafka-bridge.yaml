@@ -9,3 +9,4 @@ spec:
   bootstrapServers: ochacafe-kafka-bootstrap:9092
   http:
     port: 8080
+  enableMetrics: true
