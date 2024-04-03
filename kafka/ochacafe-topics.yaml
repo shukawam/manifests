@@ -1,9 +1,9 @@
 apiVersion: kafka.strimzi.io/v1beta2
 kind: KafkaTopic
 metadata:
-  name: shukawam-topic
+  name: ochacafe
   labels:
-    strimzi.io/cluster: shukawam-cluster
+    strimzi.io/cluster: ochacafe
 spec:
   # 省略した場合は、クラスタのdefault設定から引き継がれる
   # partitions: 3
