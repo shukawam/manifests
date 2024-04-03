@@ -44,6 +44,12 @@ spec:
         port: 9093
         type: internal
         tls: true
+    metricsConfig:
+      type: jmxPrometheusExporter
+      valueFrom:
+        configMapKeyRef:
+          name: kafka-metrics-config
+          key: config
     config:
       offsets.topic.replication.factor: 3
       transaction.state.log.replication.factor: 3
