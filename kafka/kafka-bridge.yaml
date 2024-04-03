@@ -2,7 +2,6 @@ apiVersion: kafka.strimzi.io/v1beta2
 kind: KafkaBridge
 metadata:
   name: ochacafe
-  namespace: ochacafe
 spec:
   replicas: 1
   bootstrapServers: ochacafe-kafka-bootstrap:9092
