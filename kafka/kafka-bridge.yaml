@@ -4,7 +4,6 @@ metadata:
   name: ochacafe
   labels:
     strimzi.io/cluster: ochacafe
-    strimzi.io/kind: KafkaBridge
 spec:
   replicas: 1
   bootstrapServers: ochacafe-kafka-bootstrap:9092
