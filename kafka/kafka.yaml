@@ -31,6 +31,8 @@ metadata:
   annotations:
     strimzi.io/node-pools: enabled
     strimzi.io/kraft: enabled
+  labels:
+    strimzi.io/kind: Kafka
 spec:
   kafka:
     version: 3.7.0
