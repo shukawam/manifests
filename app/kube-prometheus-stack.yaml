@@ -61,7 +61,7 @@ spec:
                     path: /var/lib/grafana/dashboards/default
                 - name: 'private'
                   orgId: 1
-                  folder: 'private'
+                  folder: ''
                   type: file
                   disableDeletion: false
                   editable: true
@@ -69,7 +69,7 @@ spec:
                     path: /var/lib/grafana/dashboards/private
                 - name: 'public'
                   orgId: 1
-                  folder: 'public'
+                  folder: ''
                   type: file
                   disableDeletion: false
                   editable: true
