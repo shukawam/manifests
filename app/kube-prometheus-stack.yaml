@@ -47,23 +47,37 @@ spec:
               access: proxy
               url: http://loki-stack:3100
               version: 1
-          # dashboardProviders:
-          #   dashboardproviders.yaml:
-          #     apiVersion: 1
-          #     providers:
-          #       - name: 'private'
-          #         orgId: 1
-          #         folder: 'private'
-          #         type: file
-          #         disableDeletion: false
-          #         editable: true
-          #         options:
-          #           path: /var/lib/grafana/dashboards/private
-          # dashboards:
-          #   private:
-          #     gpu-capacity-exporter:
-          #       url: url: https://raw.githubusercontent.com/shukawam/manifests/main/dashboards/grafana/gpu-capacity-exporter.json
-          #       datasource: Prometheus
+          dashboardProviders:
+            dashboardproviders.yaml:
+              apiVersion: 1
+              providers:
+                - name: 'private'
+                  orgId: 1
+                  folder: 'private'
+                  type: file
+                  disableDeletion: false
+                  editable: true
+                  options:
+                    path: /var/lib/grafana/dashboards/private
+                - name: 'public'
+                  orgId: 1
+                  folder: 'public'
+                  type: file
+                  disableDeletion: false
+                  editable: true
+                  options:
+                    path: /var/lib/grafana/dashboards/public
+          dashboards:
+            private:
+              gpu-capacity-exporter:
+                url: url: https://raw.githubusercontent.com/shukawam/manifests/main/dashboards/grafana/gpu-capacity-exporter.json
+                datasource: Prometheus
+              loki-stack-monitoring:
+                gnetId: 14055
+                revision: 5
+              strimzi-kafka-exporter:
+                gnetId: 11285
+                revision: 1
           grafana.ini:
             server:
               root_url: https://grafana.shukawam.me
