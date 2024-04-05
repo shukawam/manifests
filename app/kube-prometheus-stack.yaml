@@ -88,8 +88,7 @@ spec:
                 revision: 5
                 datasource: Loki
               strimzi-kafka-exporter:
-                gnetId: 11285
-                revision: 1
+                url: https://raw.githubusercontent.com/shukawam/manifests/main/dashboards/grafana/strimzi-kafka.json
                 datasource: Prometheus
               cert-manager:
                 gnetId: 11001
