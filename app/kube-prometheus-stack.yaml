@@ -40,17 +40,25 @@ spec:
             - secretName: shukawam-tls-secret-grafana
               hosts:
               - grafana.shukawam.me
-          additionalDatasources:
-            - name: Loki
-              type: loki
-              isDefault: false
-              access: proxy
-              url: http://loki-stack:3100
-              version: 1
+          datasources:
+            datasources.yaml:
+              apiVersion: 1
+              datasources:
+                - name: loki
+                  type: loki
+                  url: http://loki-stack:3100
           dashboardProviders:
             dashboardproviders.yaml:
               apiVersion: 1
               providers:
+                - name: 'default'
+                  orgId: 1
+                  folder: ''
+                  type: file
+                  disableDeletion: false
+                  editable: true
+                  options:
+                    path: /var/lib/grafana/dashboards/default
                 - name: 'private'
                   orgId: 1
                   folder: 'private'
