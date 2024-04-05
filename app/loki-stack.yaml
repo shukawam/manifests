@@ -1,18 +1,17 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: cert-manager
+  name: loki-stack
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io # cascade deletion on this App deletion
 spec:
   destination:
-    namespace: cert-manager
+    namespace: monitoring
     server: 'https://kubernetes.default.svc'
   source:
-    repoURL: 'https://charts.jetstack.io'
-    targetRevision: v1.14.4
-    chart: cert-manager
-    helm:
-      values: |
-        installCRDs: true
+    repoURL: 'https://grafana.github.io/helm-charts'
+    targetRevision: 2.10.2
+    chart: loki-stack
   project: management
   syncPolicy:
     automated:

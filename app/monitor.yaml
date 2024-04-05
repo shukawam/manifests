@@ -1,15 +1,12 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: openobserve
-  namespace: argocd
-  finalizers:
-    - resources-finalizer.argocd.argoproj.io # cascade deletion on this App deletion
+  name: monitor
 spec:
   project: management
   source:
     repoURL: "https://github.com/shukawam/manifests"
-    path: openobserve
+    path: monitor
     targetRevision: HEAD
   destination:
     server: "https://kubernetes.default.svc"

@@ -1,16 +1,18 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: service-monitor
+  name: kafka
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io # cascade deletion on this App deletion
 spec:
-  project: management
+  project: examples
   source:
     repoURL: "https://github.com/shukawam/manifests"
-    path: service-monitor
+    path: kafka
     targetRevision: HEAD
   destination:
     server: "https://kubernetes.default.svc"
-    namespace: monitoring
+    namespace: kafka
   syncPolicy:
     automated:
       prune: true
