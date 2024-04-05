@@ -2,6 +2,8 @@ apiVersion: monitoring.coreos.com/v1
 kind: PodMonitor
 metadata:
   name: cluster-operator-metrics
+  labels:
+    release: kube-prometheus-stack
 spec:
   selector:
     matchLabels:
@@ -17,6 +19,8 @@ apiVersion: monitoring.coreos.com/v1
 kind: PodMonitor
 metadata:
   name: entity-operator-metrics
+  labels:
+    release: kube-prometheus-stack
 spec:
   selector:
     matchLabels:
@@ -32,6 +36,8 @@ apiVersion: monitoring.coreos.com/v1
 kind: PodMonitor
 metadata:
   name: bridge-metrics
+  labels:
+    release: kube-prometheus-stack
 spec:
   selector:
     matchLabels:
@@ -47,6 +53,8 @@ apiVersion: monitoring.coreos.com/v1
 kind: PodMonitor
 metadata:
   name: kafka-resources-metrics
+  labels:
+    release: kube-prometheus-stack
 spec:
   selector:
     matchExpressions:
