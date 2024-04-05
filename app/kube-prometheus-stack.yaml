@@ -44,7 +44,7 @@ spec:
             datasources.yaml:
               apiVersion: 1
               datasources:
-                - name: loki
+                - name: Loki
                   type: loki
                   url: http://loki-stack:3100
           dashboardProviders:
