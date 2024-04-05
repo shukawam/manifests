@@ -48,35 +48,35 @@ spec:
                   type: loki
                   url: http://loki-stack:3100
           dashboardProviders:
-            dashboardproviders.yaml:
-              apiVersion: 1
-              providers:
-                - name: 'default'
-                  orgId: 1
-                  folder: ''
-                  type: file
-                  disableDeletion: false
-                  editable: true
-                  options:
-                    path: /var/lib/grafana/dashboards/default
-                - name: 'private'
-                  orgId: 1
-                  folder: ''
-                  type: file
-                  disableDeletion: false
-                  editable: true
-                  options:
-                    path: /var/lib/grafana/dashboards/private
-                - name: 'public'
-                  orgId: 1
-                  folder: ''
-                  type: file
-                  disableDeletion: false
-                  editable: true
-                  options:
-                    path: /var/lib/grafana/dashboards/public
+            # dashboardproviders.yaml:
+            #   apiVersion: 1
+            #   providers:
+            #     - name: 'default'
+            #       orgId: 1
+            #       folder: ''
+            #       type: file
+            #       disableDeletion: false
+            #       editable: true
+            #       options:
+            #         path: /var/lib/grafana/dashboards/default
+            #     - name: 'private'
+            #       orgId: 1
+            #       folder: ''
+            #       type: file
+            #       disableDeletion: false
+            #       editable: true
+            #       options:
+            #         path: /var/lib/grafana/dashboards/private
+            #     - name: 'public'
+            #       orgId: 1
+            #       folder: ''
+            #       type: file
+            #       disableDeletion: false
+            #       editable: true
+            #       options:
+            #         path: /var/lib/grafana/dashboards/public
           dashboards:
-            private:
+            default:
               gpu-capacity-exporter:
                 url: url: https://raw.githubusercontent.com/shukawam/manifests/main/dashboards/grafana/gpu-capacity-exporter.json
                 datasource: Prometheus
