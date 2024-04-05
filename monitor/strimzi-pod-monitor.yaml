@@ -2,8 +2,6 @@ apiVersion: monitoring.coreos.com/v1
 kind: PodMonitor
 metadata:
   name: cluster-operator-metrics
-  labels:
-    strimzi.io/cluster: ochacafe
 spec:
   selector:
     matchLabels:
@@ -19,12 +17,10 @@ apiVersion: monitoring.coreos.com/v1
 kind: PodMonitor
 metadata:
   name: entity-operator-metrics
-  labels:
-    strimzi.io/cluster: ochacafe
 spec:
   selector:
     matchLabels:
-      app.kubernetes.io/name: entity-operator
+      app.kubernetes.io/name: Kafka
   namespaceSelector:
     matchNames:
       - kafka
@@ -36,8 +32,6 @@ apiVersion: monitoring.coreos.com/v1
 kind: PodMonitor
 metadata:
   name: bridge-metrics
-  labels:
-    strimzi.io/cluster: ochacafe
 spec:
   selector:
     matchLabels:
@@ -53,8 +47,6 @@ apiVersion: monitoring.coreos.com/v1
 kind: PodMonitor
 metadata:
   name: kafka-resources-metrics
-  labels:
-    strimzi.io/cluster: ochacafe
 spec:
   selector:
     matchExpressions:
