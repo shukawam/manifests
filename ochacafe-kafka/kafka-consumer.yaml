@@ -1,0 +1,45 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: kafka-consumer
+  labels:
+    app: kafka-consumer
+spec:
+  type: ClusterIP
+  selector:
+    app: kafka-consumer
+  ports:
+    - port: 8080
+      targetPort: 8080
+      name: http
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: kafka-consumer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kafka-consumer
+  template:
+    metadata:
+      labels:
+        app: kafka-consumer
+        version: v1
+    spec:
+      containers:
+        - name: kafka-consumer
+          image: nrt.ocir.io/orasejapan/shukawam/kafka-consumer:1.0.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          env:
+            - name: OTEL_SERVICE_NAME
+              value: kafka-consumer
+            - name: OTEL_INSTRUMENTATION_MESSAGING_EXPERIMENTAL_RECEIVE-TELEMETRY_ENABLED
+              value: "true"
+            - name: MP_MESSAGING_CONNECTOR_HELIDON-KAFKA_BOOTSTRAP_SERVERS
+              value: ochacafe-kafka-bootstrap.kafka.svc.cluster.local:9092
+      imagePullSecrets:
+        - name: ocir-secret

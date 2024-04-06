@@ -1,0 +1,70 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: kafka-producer
+  labels:
+    app: kafka-producer
+spec:
+  type: ClusterIP
+  selector:
+    app: kafka-producer
+  ports:
+    - port: 8080
+      targetPort: 8080
+      name: http
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: kafka-producer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kafka-producer
+  template:
+    metadata:
+      labels:
+        app: kafka-producer
+        version: v1
+    spec:
+      containers:
+        - name: kafka-producer
+          image: nrt.ocir.io/orasejapan/shukawam/kafka-producer:1.0.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          env:
+            - name: OTEL_SERVICE_NAME
+              value: kafka-producer
+            - name: OTEL_INSTRUMENTATION_MESSAGING_EXPERIMENTAL_RECEIVE-TELEMETRY_ENABLED
+              value: "true"
+            - name: MP_MESSAGING_CONNECTOR_HELIDON-KAFKA_BOOTSTRAP_SERVERS
+              value: ochacafe-kafka-bootstrap.kafka.svc.cluster.local:9092
+      imagePullSecrets:
+        - name: ocir-secret
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: kafka-producer
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  tls:
+    - hosts:
+        - producer.shukawam.me
+      secretName: shukawam-tls-secret-producer
+  rules:
+    - host: keycloak.shukawam.me
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: kafka-producer
+                port:
+                  number: 8080
+
