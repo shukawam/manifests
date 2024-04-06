@@ -41,7 +41,7 @@ spec:
               value: kafka-consumer
             - name: OTEL_INSTRUMENTATION_MESSAGING_EXPERIMENTAL_RECEIVE-TELEMETRY_ENABLED
               value: "true"
-            - name: MP_MESSAGING_CONNECTOR_HELIDON-KAFKA_BOOTSTRAP_SERVERS
+            - name: mp.messaging.connector.helidon-kafka.bootstrap.servers
               value: ochacafe-kafka-bootstrap.kafka.svc.cluster.local:9092
       imagePullSecrets:
         - name: ocir-secret
