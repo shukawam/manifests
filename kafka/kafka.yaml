@@ -55,6 +55,7 @@ spec:
       transaction.state.log.replication.factor: 3
       transaction.state.log.min.isr: 2
       default.replication.factor: 3
+      num.partitions: 3
       min.insync.replicas: 2
   entityOperator:
     topicOperator: {}
