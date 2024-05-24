@@ -8,7 +8,7 @@ spec:
     server: "https://kubernetes.default.svc"
   source:
     repoURL: "https://github.com/shukawam/manifests"
-    path: keycloak
+    path: cluster-autoscaler
     targetRevision: HEAD
   project: management
   syncPolicy:
