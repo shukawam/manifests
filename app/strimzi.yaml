@@ -8,7 +8,7 @@ spec:
     server: https://kubernetes.default.svc
   source:
     repoURL: https://strimzi.io/charts/
-    targetRevision: 0.40.0
+    targetRevision: 0.41.0
     chart: strimzi-kafka-operator
   project: ochacafe
   syncPolicy:
