@@ -25,7 +25,7 @@ spec:
         runAsNonRoot: true
       containers:
         - name: openobserve
-          image: public.ecr.aws/zinclabs/openobserve:v0.10.5
+          image: public.ecr.aws/zinclabs/openobserve:v0.10.7
           env:
             - name: ZO_ROOT_USER_EMAIL
               valueFrom:
