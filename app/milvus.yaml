@@ -15,8 +15,8 @@ spec:
     chart: milvus
     helm:
       values: |
-        cluster
-          enabled: false
+        cluster:
+          enabled: true
         etcd:
           replicaCount: 1
         minio:
