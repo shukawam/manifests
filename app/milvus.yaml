@@ -2,6 +2,7 @@ apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   name: milvus
+  namespace: argocd
   finalizers:
     - resources-finalizer.argocd.argoproj.io # cascade deletion on this App deletion
 spec:
@@ -20,7 +21,7 @@ spec:
           replicaCount: 1
         minio:
           mode: standalone
-        pulser:
+        pulsar:
           enabled: false
         ingress:
           enabled: true
