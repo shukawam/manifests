@@ -1,0 +1,52 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: milvus
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io # cascade deletion on this App deletion
+spec:
+  destination:
+    namespace: milvus
+    server: 'https://kubernetes.default.svc'
+  source:
+    repoURL: 'https://zilliztech.github.io/milvus-helm'
+    targetRevision: 4.1.34
+    chart: milvus
+    helm:
+      values: |
+        langfuse:
+          nextauth:
+            url: https://langfuse.shukawam.me
+        ingress:
+          enabled: true
+          annotations:
+            cert-manager.io/cluster-issuer: letsencrypt-prod
+          className: nginx
+          hosts:
+            - host: langfuse.shukawam.me
+              paths:
+                - path: /
+                  pathType: Prefix
+          tls:
+            - hosts:
+              - langfuse.shukawam.me
+              secretName: shukawam-tls-secret-langfuse
+        ingress:
+          enabled: true
+          annotations:
+            cert-manager.io/cluster-issuer: letsencrypt-prod
+          rules:
+            - host: milvus.shukawam.me
+              path: /
+              pathType: Prefix
+          tls: []
+           - secretName: shukawam-tls-secret-milvus
+             hosts:
+               - milvus.shukawam.me
+  project: examples
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
