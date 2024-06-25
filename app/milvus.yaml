@@ -14,6 +14,14 @@ spec:
     chart: milvus
     helm:
       values: |
+        cluster
+          enabled: false
+        etcd:
+          replicaCount: 1
+        minio:
+          mode: standalone
+        pulser:
+          enabled: false
         ingress:
           enabled: true
           annotations:
