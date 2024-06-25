@@ -22,7 +22,7 @@ spec:
             - host: milvus.shukawam.me
               path: /
               pathType: Prefix
-          tls: []
+          tls:
            - secretName: shukawam-tls-secret-milvus
              hosts:
                - milvus.shukawam.me
