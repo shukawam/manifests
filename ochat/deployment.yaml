@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: ochat
-          image: nrt.ocir.io/orasejapan/shukawam/ochat:0.0.2
+          image: nrt.ocir.io/orasejapan/shukawam/ochat:0.0.3
           ports:
             - name: api
               containerPort: 8501
