@@ -4,7 +4,7 @@ metadata:
   name: ochat
   namespace: ochacafe
 spec:
-  replicas: 1
+  replicas: 8
   selector:
     matchLabels:
       app: ochat
