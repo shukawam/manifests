@@ -15,16 +15,21 @@ spec:
     spec:
       containers:
         - name: ochat
-          image: nrt.ocir.io/orasejapan/shukawam/ochat:0.0.4
+          image: nrt.ocir.io/orasejapan/shukawam/ochat:0.0.5
           ports:
             - name: api
               containerPort: 8501
           env:
-            - name: COHERE_API_KEY
+            - name: COMPARTMENT_ID
               valueFrom:
                 secretKeyRef:
                   name: ochat-secret
-                  key: COHERE_API_KEY
+                  key: COMPARTMENT_ID
+            - name: GENAI_ENDPOINT
+              valueFrom:
+                secretKeyRef:
+                  name: ochat-secret
+                  key: GENAI_ENDPOINT
             - name: LANGFUSE_SECRET_KEY
               valueFrom:
                 secretKeyRef:
