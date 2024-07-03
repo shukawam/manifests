@@ -57,7 +57,7 @@ spec:
               containerPort: 8501
           env:
             - name: LANGFUSE_RELEASE
-              valueFrom: 0.1.0
+              value: 0.1.0
             - name: COMPARTMENT_ID
               valueFrom:
                 secretKeyRef:
