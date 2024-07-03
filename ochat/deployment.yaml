@@ -13,9 +13,44 @@ spec:
       labels:
         app: ochat
     spec:
+      initContainers:
+        - image: ghcr.io/oracle/oci-cli:latest
+          name: download-wallet
+          volumeMounts:
+            - mountPath: /var/cache
+              name: cache-volume
+          env:
+            - name: ADB_OCID
+              valueFrom:
+                secretKeyRef:
+                  name: ochat-secret
+                  key: ADB_OCID
+            - name: WALLET_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: WALLET_PASSWORD
+                  name: ochat-secret
+          command: ["/bin/bash"]
+          args:
+            - -c
+            - >-
+              mkdir -p /var/cache/wallet &&
+              oci --auth instance_principal
+              db autonomous-database generate-wallet
+              --autonomous-database-id $(ADB_OCID)
+              --password $WALLET_PASSWORD
+              --file /var/cache/wallet/wallet.zip &&
+              echo "Wallet password is saved in /var/cache/wallet/password"
+        - image: busybox:latest
+          name: unzip-wallet
+          volumeMounts:
+            - mountPath: /var/cache
+              name: cache-volume
+          command:
+            ["unzip", "-d", "/var/cache/wallet", "/var/cache/wallet/wallet.zip"]
       containers:
         - name: ochat
-          image: nrt.ocir.io/orasejapan/shukawam/ochat:0.0.5
+          image: nrt.ocir.io/orasejapan/shukawam/ochat:0.1.0
           ports:
             - name: api
               containerPort: 8501
@@ -55,5 +90,41 @@ spec:
                 secretKeyRef:
                   name: ochat-secret
                   key: COLLECTION_NAME
+            - name: ORACLE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: ochat-secret
+                  key: ORACLE_USERNAME
+            - name: ORACLE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: ochat-secret
+                  key: ORACLE_PASSWORD
+            - name: ORACLE_DSN
+              valueFrom:
+                secretKeyRef:
+                  name: ochat-secret
+                  key: ORACLE_DSN
+            - name: WALLET_DIR
+              valueFrom:
+                secretKeyRef:
+                  name: ochat-secret
+                  key: WALLET_DIR
+            - name: WALLET_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: ochat-secret
+                  key: WALLET_PASSWORD
+            - name: TABLE_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: ochat-secret
+                  key: TABLE_NAME
+          volumeMounts:
+            - name: cache-volume
+              mountPath: /var/cache
       imagePullSecrets:
         - name: ocir-secret
+      volumes:
+        - name: cache-volume
+          emptyDir: {}
