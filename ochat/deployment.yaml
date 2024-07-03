@@ -36,6 +36,7 @@ spec:
             - >-
               mkdir -p /var/cache/wallet &&
               oci --auth instance_principal
+              --region ap-tokyo-1
               db autonomous-database generate-wallet
               --autonomous-database-id $(ADB_OCID)
               --password $WALLET_PASSWORD
@@ -55,6 +56,8 @@ spec:
             - name: api
               containerPort: 8501
           env:
+            - name: LANGFUSE_RELEASE
+              valueFrom: 0.1.0
             - name: COMPARTMENT_ID
               valueFrom:
                 secretKeyRef:
