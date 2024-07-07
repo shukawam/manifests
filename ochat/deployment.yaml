@@ -51,13 +51,13 @@ spec:
             ["unzip", "-d", "/var/cache/wallet", "/var/cache/wallet/wallet.zip"]
       containers:
         - name: ochat
-          image: nrt.ocir.io/orasejapan/shukawam/ochat:0.1.0
+          image: nrt.ocir.io/orasejapan/shukawam/ochat:0.1.1
           ports:
             - name: api
               containerPort: 8501
           env:
             - name: LANGFUSE_RELEASE
-              value: 0.1.0
+              value: 0.1.1
             - name: COMPARTMENT_ID
               valueFrom:
                 secretKeyRef:
