@@ -16,7 +16,6 @@ spec:
     helm:
       values: |
         alloy:
-          listenScheme: HTTPS
           mounts:
             dockercontainers: true
             varlog: true
