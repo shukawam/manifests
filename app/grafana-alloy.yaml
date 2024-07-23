@@ -27,6 +27,7 @@ spec:
           annotations:
             kubernetes.io/ingress.class: nginx
             cert-manager.io/cluster-issuer: letsencrypt-prod
+          faroPort: 12345
           hosts:
             - alloy.shukawam.me
           tls:
