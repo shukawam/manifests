@@ -18,7 +18,7 @@ spec:
         ingress:
           enabled: true
           annotations:
-            ubernetes.io/ingress.class: nginx
+            kubernetes.io/ingress.class: nginx
             cert-manager.io/cluster-issuer: letsencrypt-prod
           hosts:
             - alloy.shukawam.me
