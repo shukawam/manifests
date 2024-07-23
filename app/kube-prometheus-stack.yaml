@@ -27,7 +27,7 @@ spec:
                     name: openobserve-secret
                     key: root_user_password
         grafana:
-          defaultDashboardsEnabled: true
+          defaultDashboardsEnabled: false
           defaultDashboardsTimezone: jst
           ingress:
             enabled: true
@@ -80,8 +80,8 @@ spec:
                     path: /var/lib/grafana/dashboards/public
           dashboards:
             private:
-              gpu-capacity-exporter:
-                url: https://raw.githubusercontent.com/shukawam/manifests/main/dashboards/grafana/gpu-capacity-exporter.json
+              gpu-capacity:
+                url: https://raw.githubusercontent.com/shukawam/manifests/main/dashboards/grafana/gpu-capacity.json
                 datasource: Prometheus
               loki-kubernetes-logs:
                 gnetId: 15141
@@ -89,10 +89,6 @@ spec:
                 datasource: Loki
               strimzi-kafka-exporter:
                 url: https://raw.githubusercontent.com/shukawam/manifests/main/dashboards/grafana/strimzi-kafka.json
-                datasource: Prometheus
-              cert-manager:
-                gnetId: 11001
-                revision: 1
                 datasource: Prometheus
           grafana.ini:
             server:
