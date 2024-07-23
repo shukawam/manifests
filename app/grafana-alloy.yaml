@@ -8,13 +8,21 @@ metadata:
 spec:
   destination:
     namespace: monitoring
-    server: "https://kubernetes.default.svc"
+    server: https://kubernetes.default.svc
   source:
-    repoURL: "https://grafana.github.io/helm-charts"
+    repoURL: https://grafana.github.io/helm-charts
     targetRevision: 0.5.1
     chart: alloy
     helm:
       values: |
+        alloy:
+          listenScheme: HTTPS
+          mounts:
+            dockercontainers: true
+            varlog: true
+          securityContext:
+            privileged: true
+            runAsUser: 0
         ingress:
           enabled: true
           annotations:
