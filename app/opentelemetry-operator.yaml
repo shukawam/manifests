@@ -10,6 +10,11 @@ spec:
     repoURL: https://open-telemetry.github.io/opentelemetry-helm-charts
     targetRevision: 0.62.0
     chart: opentelemetry-operator
+    helm:
+      values: |
+        manager:
+          collectorImage:
+            repository: otel/opentelemetry-collector-k8s
   project: management
   syncPolicy:
     automated:
