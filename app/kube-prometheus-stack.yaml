@@ -87,8 +87,9 @@ spec:
                 gnetId: 15141
                 revision: 5
                 datasource: Loki
-              strimzi-kafka-exporter:
-                url: https://raw.githubusercontent.com/shukawam/manifests/main/dashboards/grafana/strimzi-kafka.json
+              node-exporter-full:
+                gnetId: 1860
+                revision: 37
                 datasource: Prometheus
           grafana.ini:
             server:
