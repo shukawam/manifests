@@ -83,13 +83,25 @@ spec:
               gpu-capacity:
                 url: https://raw.githubusercontent.com/shukawam/manifests/main/dashboards/grafana/gpu-capacity.json
                 datasource: Prometheus
-              loki-kubernetes-logs:
-                gnetId: 15141
+              loki-stack-monitoring:
+                gnetId: 14055
                 revision: 5
                 datasource: Loki
               node-exporter-full:
                 gnetId: 1860
                 revision: 37
+                datasource: Prometheus
+              argocd:
+                gnetId: 14584
+                revision: 1
+                datasource: Prometheus
+              kube-state-metrics-v2:
+                gnetId: 13332
+                revision: 12
+                datasource: Prometheus
+              cert-manager:
+                gnetId: 11001
+                revision: 1
                 datasource: Prometheus
           grafana.ini:
             server:
