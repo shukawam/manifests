@@ -29,6 +29,10 @@ spec:
             - secretName: shukawam-tls-secret-dify
               hosts:
                 - dify.shukawam.me
+        api:
+          persistence:
+            persistentVolumeClaim:
+              storageClass: oci-bv
   project: default
   syncPolicy:
     automated:
