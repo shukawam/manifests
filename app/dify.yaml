@@ -1,0 +1,39 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: dify
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io # cascade deletion on this App deletion
+spec:
+  destination:
+    namespace: dify
+    server: https://kubernetes.default.svc
+  source:
+    repoURL: https://borispolonsky.github.io/dify-helm
+    targetRevision: 0.21.0
+    chart: dify
+    helm:
+      values: |
+        ingress:
+          enabled: true
+          className: nginx
+          annotations:
+            cert-manager.io/cluster-issuer: letsencrypt-prod
+          hosts:
+            - host: dify.shukawam.me
+              paths:
+                - path: /
+                  pathType: Prefix
+          tls:
+            - secretName: shukawam-tls-secret-dify
+              hosts:
+                - dify.shukawam.me
+  project: default
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - ServerSideApply=true
+      - CreateNamespace=true
