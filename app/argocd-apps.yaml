@@ -8,7 +8,7 @@ spec:
     server: 'https://kubernetes.default.svc'
   source:
     repoURL: 'https://argoproj.github.io/argo-helm'
-    targetRevision: 2.0.0
+    targetRevision: 2.0.2
     chart: argocd-apps
     helm:
       values: |
