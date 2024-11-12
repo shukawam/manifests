@@ -14,10 +14,11 @@ spec:
       values: |
         installCRDs: true
         prometheus:
-          servicemonitor: true
-          namespace: monitoring
-          labels:
-            release: kube-prometheus-stack
+          servicemonitor:
+            enabled: true
+            namespace: monitoring
+            labels:
+              release: kube-prometheus-stack
   project: management
   syncPolicy:
     automated:
