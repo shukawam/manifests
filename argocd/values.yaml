@@ -1,4 +1,6 @@
 server:
+  metrics:
+    enabled: true
   ingress:
     enabled: true
     annotations:
@@ -28,3 +30,15 @@ configs:
         - groups
     secret:
       createSecret: false
+controller:
+  metrics:
+    enabled: true
+dex:
+  metrics:
+    enabled: true
+redis:
+  metrics:
+    enabled: true
+repoServer:
+  metrics:
+    enabled: true
