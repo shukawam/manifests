@@ -13,8 +13,9 @@ spec:
     helm:
       values: |
         tap:
+          ipv6: false
           ingress:
-            enabled: false
+            enabled: true
             className: nginx
             host: kubeshark.shukawam.me
             tls:
