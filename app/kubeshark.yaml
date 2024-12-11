@@ -1,0 +1,33 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kubeshark
+spec:
+  destination:
+    namespace: monitoring
+    server: https://kubernetes.default.svc
+  source:
+    repoURL: https://helm.kubeshark.co
+    targetRevision: 52.3.92
+    chart: kubeshark
+    helm:
+      values: |
+        tap:
+          ingress:
+            enabled: false
+            className: nginx
+            host: kubeshark.shukawam.me
+            tls:
+              - secretName: shukawam-tls-secret-kubeshark
+                  hosts:
+                    - kubeshark.shukawam.me
+            annotations:
+              cert-manager.io/cluster-issuer: letsencrypt-prod
+  project: management
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - ServerSideApply=true
+      - CreateNamespace=true
