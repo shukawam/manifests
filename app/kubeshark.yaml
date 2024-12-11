@@ -19,8 +19,8 @@ spec:
             host: kubeshark.shukawam.me
             tls:
               - secretName: shukawam-tls-secret-kubeshark
-                  hosts:
-                    - kubeshark.shukawam.me
+                hosts:
+                  - kubeshark.shukawam.me
             annotations:
               cert-manager.io/cluster-issuer: letsencrypt-prod
   project: management
