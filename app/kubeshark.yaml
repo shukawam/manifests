@@ -8,7 +8,7 @@ spec:
     server: https://kubernetes.default.svc
   source:
     repoURL: https://helm.kubeshark.co
-    targetRevision: 52.3.92
+    targetRevision: 52.3.96
     chart: kubeshark
     helm:
       values: |
