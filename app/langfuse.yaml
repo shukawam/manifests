@@ -11,7 +11,7 @@ spec:
     server: "https://kubernetes.default.svc"
   source:
     repoURL: "https://langfuse.github.io/langfuse-k8s"
-    targetRevision: 0.2.2
+    targetRevision: 0.12.1
     chart: langfuse
     helm:
       values: |
