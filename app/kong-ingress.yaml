@@ -1,0 +1,29 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: ingress-nginx
+spec:
+  destination:
+    namespace: kong
+    server: "https://kubernetes.default.svc"
+  source:
+    repoURL: https://charts.konghq.com
+    targetRevision: 0.17.0
+    chart: ingress
+    # helm:
+      # values: |
+      #   controller:
+      #     service:
+      #       enabled: true
+      #       annotations:
+      #         oci.oraclecloud.com/load-balancer-type: "lb"
+      #         service.beta.kubernetes.io/oci-load-balancer-shape: "flexible"
+      #         service.beta.kubernetes.io/oci-load-balancer-shape-flex-min: "10"
+      #         service.beta.kubernetes.io/oci-load-balancer-shape-flex-max: "200"
+  project: management
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
