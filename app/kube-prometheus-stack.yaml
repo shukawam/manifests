@@ -15,17 +15,6 @@ spec:
     chart: kube-prometheus-stack
     helm:
       values: |
-        prometheus:
-          prometheusSpec:
-            remoteWrite:
-              - url: https://openobserve.shukawam.me/api/default/prometheus/api/v1/write
-                basicAuth:
-                  username:
-                    name: openobserve-secret
-                    key: root_user_email
-                  password:
-                    name: openobserve-secret
-                    key: root_user_password
         grafana:
           defaultDashboardsEnabled: false
           defaultDashboardsTimezone: jst
