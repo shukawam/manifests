@@ -10,16 +10,14 @@ spec:
     repoURL: https://charts.konghq.com
     targetRevision: 0.17.0
     chart: ingress
-    # helm:
-      # values: |
-      #   controller:
-      #     service:
-      #       enabled: true
-      #       annotations:
-      #         oci.oraclecloud.com/load-balancer-type: "lb"
-      #         service.beta.kubernetes.io/oci-load-balancer-shape: "flexible"
-      #         service.beta.kubernetes.io/oci-load-balancer-shape-flex-min: "10"
-      #         service.beta.kubernetes.io/oci-load-balancer-shape-flex-max: "200"
+    helm:
+      values: |
+        proxy:
+          annotations:
+            oci.oraclecloud.com/load-balancer-type: "lb"
+            service.beta.kubernetes.io/oci-load-balancer-shape: "flexible"
+            service.beta.kubernetes.io/oci-load-balancer-shape-flex-min: "10"
+            service.beta.kubernetes.io/oci-load-balancer-shape-flex-max: "200"
   project: management
   syncPolicy:
     automated:
