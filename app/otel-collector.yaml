@@ -1,0 +1,64 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: otel-collector
+spec:
+  destination:
+    namespace: monitoring
+    server: https://kubernetes.default.svc
+  source:
+    repoURL: https://open-telemetry.github.io/opentelemetry-helm-charts
+    targetRevision: 0.115.0
+    chart: opentelemetry-collector
+    helm:
+      values: |
+        mode: deployment
+        service:
+          enabled: true
+        image:
+          repository: otel/opentelemetry-collector-k8s
+        ingress:
+          enabled: true
+          annotations:
+            cert-manager.io/cluster-issuer: letsencrypt-prod
+          ingressClassName: nginx
+          hosts:
+            - host: collector.shukawam.me
+              paths:
+                - path: /
+                  pathType: Prefix
+                  port: 4318
+          tls:
+            - secretName: shukawam-tls-secret-collector
+              hosts:
+                - collector.shukawam.me
+        config:
+          receivers:
+            otlp:
+              protocols:
+                grpc:
+                  endpoint: ${env:MY_POD_IP}:4317
+                http:
+                  endpoint: ${env:MY_POD_IP}:4318
+          processors:
+            batch: {}
+            memory_limiter:
+              check_interval: 5s
+              limit_percentage: 80
+              spike_limit_percentage: 25
+          exporters:
+            otlphttp/oci:
+              endpoint: https://aaaaddtuwwwg6aaaaaaaaacsxy.apm-agt.ap-tokyo-1.oci.oraclecloud.com/20200101/opentelemetry/private
+              headers:
+                Authorization: ${env:OCI_APM_DATAKEY}
+        extraEnvsFrom:
+          - secretRef:
+              name: otel-collector-secret
+  project: management
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - ServerSideApply=true
+      - CreateNamespace=true
