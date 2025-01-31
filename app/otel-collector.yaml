@@ -12,26 +12,11 @@ spec:
     chart: opentelemetry-collector
     helm:
       values: |
-        mode: deployment
+        mode: daemonset
         service:
           enabled: true
         image:
           repository: otel/opentelemetry-collector-k8s
-        ingress:
-          enabled: true
-          annotations:
-            cert-manager.io/cluster-issuer: letsencrypt-prod
-          ingressClassName: nginx
-          hosts:
-            - host: collector.shukawam.me
-              paths:
-                - path: /
-                  pathType: Prefix
-                  port: 4318
-          tls:
-            - secretName: shukawam-tls-secret-collector
-              hosts:
-                - collector.shukawam.me
         config:
           receivers:
             otlp:
