@@ -12,7 +12,7 @@ spec:
     chart: opentelemetry-collector
     helm:
       values: |
-        mode: daemonset
+        mode: deployment
         service:
           enabled: true
         image:
