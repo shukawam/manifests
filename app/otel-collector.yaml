@@ -32,7 +32,7 @@ spec:
               limit_percentage: 80
               spike_limit_percentage: 25
           exporters:
-            otlphttp/oci:
+            otlp/oci:
               endpoint: https://aaaaddtuwwwg6aaaaaaaaacsxy.apm-agt.ap-tokyo-1.oci.oraclecloud.com/20200101/opentelemetry/private
               headers:
                 Authorization: ${env:OCI_APM_DATAKEY}
@@ -44,7 +44,7 @@ spec:
                 processors:
                   - batch
                 exporters:
-                  - otlp
+                  - otlp/oci
         extraEnvsFrom:
           - secretRef:
               name: otel-collector-secret
