@@ -5,8 +5,8 @@ metadata:
 spec:
   project: management
   source:
-    repoURL: "https://github.com/shukawam/rolldice"
-    path: k8s
+    repoURL: "https://github.com/oracle-japan/opentelemetry"
+    path: rolldice-zero-code/k8s
     targetRevision: HEAD
   destination:
     server: "https://kubernetes.default.svc"
