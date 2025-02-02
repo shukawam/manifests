@@ -5,7 +5,7 @@ metadata:
 spec:
   project: management
   source:
-    repoURL: "https://github.com/oracle-japan/opentelemetry"
+    repoURL: "https://github.com/oracle-japan/ochacafe-opentelemetry"
     path: rolldice-zero-code/k8s
     targetRevision: HEAD
   destination:
