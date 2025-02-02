@@ -14,8 +14,12 @@ spec:
     argument: "1.0" # for demo.
   java:
     env:
-      - name: OTEL_EXPORTER_OTLP_ENDPOINT
-        value: http://otel-collector-opentelemetry-collector:4318
+      - name: OTEL_EXPORTER_OTLP_PROTOCOL
+        value: grpc
+      - name: OTEL_EXPORTER_OTLP_INSECURE
+        value: "true"
+      - name: OTEL_TRACES_EXPORTER
+        value: otlp
   python:
     env:
       # Required if endpoint is set to 4317.

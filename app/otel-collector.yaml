@@ -36,6 +36,15 @@ spec:
               endpoint: https://aaaaddtuwwwg6aaaaaaaaacsxy.apm-agt.ap-tokyo-1.oci.oraclecloud.com/20200101/opentelemetry/private
               headers:
                 Authorization: ${env:OCI_APM_DATAKEY}
+          service:
+            pipelines:
+              traces:
+                receivers:
+                  - otlp
+                processors:
+                  - batch
+                exporters:
+                  - otlp
         extraEnvsFrom:
           - secretRef:
               name: otel-collector-secret
