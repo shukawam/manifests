@@ -44,7 +44,7 @@ spec:
                 processors:
                   - batch
                 exporters:
-                  - otlp/oci
+                  - otlphttp/oci
         extraEnvsFrom:
           - secretRef:
               name: otel-collector-secret
