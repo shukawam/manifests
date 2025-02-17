@@ -97,13 +97,13 @@ spec:
               root_url: https://grafana.shukawam.me
             auth.generic_oauth:
               enabled: true
-              name: Keycloak
+              name: Auth0
               allow_sign_up: true
-              scopes: openid profile groups email
-              auth_url: https://keycloak.shukawam.me/realms/shukawam/protocol/openid-connect/auth
-              token_url: https://keycloak.shukawam.me/realms/shukawam/protocol/openid-connect/token
-              api_url: https://keycloak.shukawam.me/realms/shukawam/protocol/openid-connect/userinfo
-              role_attribute_path: contains(groups[*], 'admin') && 'Admin' || contains(groups[*], 'guest') && 'Editor' || 'Viewer'
+              scopes: openid profile email
+              auth_url: https://dev-l0fbo32k.jp.auth0.com/authorize
+              token_url: https://dev-l0fbo32k.jp.auth0.com/token
+              api_url: https://dev-l0fbo32k.jp.auth0.com/userinfo
+              role_attribute_path: contains(https://shukawam.me/groups[*], 'grafana-admins') && 'Admin' || contains(https://shukawam.me/groups[*], 'grafana-guests') && 'Editor' || 'Viewer'
           envValueFrom:
             GF_AUTH_GENERIC_OAUTH_CLIENT_ID:
               secretKeyRef:
