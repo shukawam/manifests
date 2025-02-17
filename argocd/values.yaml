@@ -32,7 +32,7 @@ configs:
     secret:
       createSecret: false
   rbac:
-    policy.default: role:readonly
+    policy.default: role:admin
     policy.csv: |
       p, role:admin, applications, *, */*, allow
       p, role:admin, clusters, get, *, allow
