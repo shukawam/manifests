@@ -28,11 +28,10 @@ configs:
         - openid
         - profile
         - email
-        - https://dev-l0fbo32k.jp.auth0.com/roles
     secret:
       createSecret: false
   rbac:
-    policy.default: role:admin
+    policy.default: role:readonly
     policy.csv: |
       p, role:admin, applications, *, */*, allow
       p, role:admin, clusters, get, *, allow
@@ -40,7 +39,7 @@ configs:
       p, role:admin, logs, get, *, allow
       p, role:admin, exec, create, */*, allow
       g, argocd-admins, role:admin
-    scopes: "[https://dev-l0fbo32k.jp.auth0.com/roles]"
+    scopes: "[https://shukawam.me/groups]"
 controller:
   metrics:
     enabled: true
