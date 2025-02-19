@@ -21,7 +21,7 @@ configs:
     admin.enabled: false
     oidc.config: |
       name: Auth0
-      issuer: https://dev-l0fbo32k.jp.auth0.com/
+      issuer: https://auth0.shukawam.me/
       clientID: $argocd.auth0.clientId
       clientSecret: $argocd.auth0.clientSecret
       requestedScopes:
