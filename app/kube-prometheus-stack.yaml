@@ -105,7 +105,7 @@ spec:
               api_url: https://auth0.shukawam.me/userinfo
               use_pkce: true
               use_refresh_token: true
-              role_attribute_path: contains(https://shukawam.me/groups[*], 'grafana-admins') && 'Admin' || contains(https://shukawam.me/groups[*], 'grafana-guests') && 'Editor' || 'Viewer'
+              role_attribute_path: contains('https://shukawam.me/groups[*]', 'grafana-admins') && 'Admin' || contains('https://shukawam.me/groups[*]', 'grafana-guests') && 'Editor' || 'Viewer'
           envValueFrom:
             GF_AUTH_GENERIC_OAUTH_CLIENT_ID:
               secretKeyRef:
