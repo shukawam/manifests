@@ -1,0 +1,42 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: opencost
+spec:
+  destination:
+    namespace: opencost
+    server: https://kubernetes.default.svc
+  source:
+    repoURL: https://opencost.github.io/opencost-helm-chart
+    targetRevision: 1.43.2
+    chart: opencost
+    helm:
+      values: |
+        opencost:
+          prometheus:
+            external:
+              enabled: true
+              url: http://kube-prometheus-stack-prometheus:9090
+            internal:
+              enabled: false
+          ui:
+            ingress:
+              enabled: true
+              ingressClassName: nginx
+              annotation:
+                cert-manager.io/cluster-issuer: letsencrypt-prod
+              hosts:
+                - host: opencost.shukawam.me
+                  paths:
+                    - /
+              tls:
+                - secretName: shukawam-tls-secret-opencost
+                  hosts:
+                    - opencost.shukawam.me
+  project: management
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
