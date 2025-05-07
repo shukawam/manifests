@@ -8,7 +8,7 @@ spec:
     server: https://kubernetes.default.svc
   source:
     repoURL: https://opencost.github.io/opencost-helm-chart
-    targetRevision: 1.43.2
+    targetRevision: 2.1.2
     chart: opencost
     helm:
       values: |
