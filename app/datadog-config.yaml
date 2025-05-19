@@ -1,0 +1,19 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: datadog-config
+spec:
+  destination:
+    namespace: datadog
+    server: https://kubernetes.default.svc
+  source:
+    repoURL: https://github.com/shukawam/manifests
+    path: datadog
+    targetRevision: HEAD
+  project: management
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
