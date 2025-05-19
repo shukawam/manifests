@@ -11,3 +11,12 @@ spec:
       apiSecret:
         secretName: datadog-secret
         keyName: api-key
+  features:
+    admissionController:
+      enabled: true
+      mutateUnlabelled: false
+    apm:
+      enabled: true
+      hostPortConfig:
+        enabled: true
+        hostPort: 8126 # default
