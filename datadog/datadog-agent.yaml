@@ -17,6 +17,5 @@ spec:
       mutateUnlabelled: false
     apm:
       enabled: true
-      hostPortConfig:
-        enabled: true
-        hostPort: 8126 # default
+      unixDomainSocketConfig:
+        path: /var/run/datadog/apm.socket # default
