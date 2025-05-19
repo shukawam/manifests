@@ -7,6 +7,8 @@ spec:
   global:
     clusterName: shukawam-cluster
     site: ap1.datadoghq.com
+    tags:
+      - env: devday
     credentials:
       apiSecret:
         secretName: datadog-secret
@@ -19,3 +21,7 @@ spec:
       enabled: true
       unixDomainSocketConfig:
         path: /var/run/datadog/apm.socket # default
+      instrumentation:
+        enabled: true
+        libVersions:
+          python: "2"
