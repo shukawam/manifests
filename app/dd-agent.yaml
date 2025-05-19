@@ -1,0 +1,19 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: dd-agent
+spec:
+  destination:
+    namespace: datadog
+    server: https://kubernetes.default.svc
+  source:
+    repoURL: https://helm.datadoghq.com
+    targetRevision: 2.9.2
+    chart: datadog-operator
+  project: management
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
