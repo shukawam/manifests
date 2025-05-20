@@ -4,7 +4,7 @@ metadata:
   name: otel-collector
 spec:
   destination:
-    namespace: monitoring
+    namespace: opentelemetry
     server: https://kubernetes.default.svc
   source:
     repoURL: https://open-telemetry.github.io/opentelemetry-helm-charts
@@ -12,7 +12,7 @@ spec:
     chart: opentelemetry-collector
     helm:
       values: |
-        mode: deployment
+        mode: daemonset
         service:
           enabled: true
         image:
@@ -33,10 +33,6 @@ spec:
               limit_percentage: 80
               spike_limit_percentage: 25
           exporters:
-            otlphttp/oci:
-              endpoint: https://aaaaddtuwwwg6aaaaaaaaacsxy.apm-agt.ap-tokyo-1.oci.oraclecloud.com/20200101/opentelemetry/private
-              headers:
-                Authorization: ${env:OCI_APM_DATAKEY}
             debug:
               verbosity: detailed
               sampling_initial: 5
@@ -49,7 +45,6 @@ spec:
                 processors:
                   - batch
                 exporters:
-                  - otlphttp/oci
                   - debug
         extraEnvsFrom:
           - secretRef:

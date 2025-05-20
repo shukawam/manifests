@@ -5,12 +5,12 @@ metadata:
 spec:
   project: management
   source:
-    repoURL: "https://github.com/shukawam/manifests"
+    repoURL: https://github.com/shukawam/manifests
     path: opentelemetry
     targetRevision: HEAD
   destination:
-    server: "https://kubernetes.default.svc"
-    namespace: monitoring
+    server: https://kubernetes.default.svc
+    namespace: opentelemetry
   syncPolicy:
     automated:
       prune: true

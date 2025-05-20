@@ -4,7 +4,7 @@ metadata:
   name: opentelemetry-operator
 spec:
   destination:
-    namespace: monitoring
+    namespace: opentelemetry
     server: https://kubernetes.default.svc
   source:
     repoURL: https://open-telemetry.github.io/opentelemetry-helm-charts
