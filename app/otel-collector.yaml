@@ -40,7 +40,7 @@ spec:
             otlp/mackerel:
               endpoint: https://otlp-vaxila.mackerelio.com
               headers:
-                Accept: */*
+                Accept: "*/*"
                 Mackerel-Api-Key: ${env:MACKEREL_API_KEY}
           service:
             pipelines:
