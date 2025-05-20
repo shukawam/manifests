@@ -37,6 +37,11 @@ spec:
               verbosity: detailed
               sampling_initial: 5
               sampling_thereafter: 200
+            otlp/mackerel:
+              endpoint: https://otlp-vaxila.mackerelio.com
+              headers:
+                Accept: */*
+                Mackerel-Api-Key: ${env:MACKEREL_API_KEY}
           service:
             pipelines:
               traces:
@@ -46,6 +51,7 @@ spec:
                   - batch
                 exporters:
                   - debug
+                  - otlp/mackerel
         extraEnvsFrom:
           - secretRef:
               name: otel-collector-secret
