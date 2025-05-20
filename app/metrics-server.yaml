@@ -5,9 +5,9 @@ metadata:
 spec:
   destination:
     namespace: monitoring
-    server: "https://kubernetes.default.svc"
+    server: https://kubernetes.default.svc
   source:
-    repoURL: "https://kubernetes-sigs.github.io/metrics-server/"
+    repoURL: https://kubernetes-sigs.github.io/metrics-server/
     targetRevision: 3.12.2
     chart: metrics-server
   project: management

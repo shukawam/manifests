@@ -5,9 +5,9 @@ metadata:
 spec:
   destination:
     namespace: cert-manager
-    server: 'https://kubernetes.default.svc'
+    server: https://kubernetes.default.svc
   source:
-    repoURL: 'https://charts.jetstack.io'
+    repoURL: https://charts.jetstack.io
     targetRevision: v1.17.2
     chart: cert-manager
     helm:

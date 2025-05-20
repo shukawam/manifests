@@ -5,11 +5,11 @@ metadata:
 spec:
   project: management
   source:
-    repoURL: "https://github.com/oracle-japan/ochacafe-opentelemetry"
+    repoURL: https://github.com/oracle-japan/ochacafe-opentelemetry
     path: rolldice-zero-code/k8s
     targetRevision: HEAD
   destination:
-    server: "https://kubernetes.default.svc"
+    server: https://kubernetes.default.svc
     namespace: monitoring
   syncPolicy:
     automated:
