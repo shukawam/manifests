@@ -19,3 +19,6 @@ spec:
       enabled: true
       unixDomainSocketConfig:
         path: /var/run/datadog/apm.socket # default
+    logCollection:
+      enabled: true
+      containerCollectAll: true
