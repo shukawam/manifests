@@ -47,9 +47,6 @@ spec:
                     thresholds:
                       cpu: 80
                       memory: 80
-                    targetThresholds:
-                      cpu: 50
-                      memory: 50
               plugins:
                 balance:
                   enabled:
