@@ -46,7 +46,7 @@ spec:
                   args:
                     thresholds:
                       cpu: 80
-                      memory: 80
+                      memory: 20
               plugins:
                 balance:
                   enabled:
