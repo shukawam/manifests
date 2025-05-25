@@ -1,0 +1,60 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kong-ingress-gateway
+spec:
+  destination:
+    namespace: kong
+    server: https://kubernetes.default.svc
+  source:
+    repoURL: https://charts.konghq.com
+    targetRevision: 0.19.0
+    chart: ingress
+    helm:
+      values: |
+        controller:
+          ingressController:
+            image:
+              tag: "3.4"
+            env:
+              feature_gates: "FillIDs=true"
+            konnect:
+              license:
+                enabled: true
+              enabled: true
+              controlPlaneID: "7b76367f-42d5-47e5-8431-f9a8013d26a7"
+              tlsClientCertSecretName: konnect-client-tls
+              apiHostname: "us.kic.api.konghq.com"
+        gateway:
+          image:
+            repository: kong/kong-gateway
+            tag: "3.10"
+          env:
+            konnect_mode: "on"
+            vitals: "off"
+            cluster_mtls: pki
+            cluster_telemetry_endpoint: "c0c63f5c36.us.tp0.konghq.com:443"
+            cluster_telemetry_server_name: "c0c63f5c36.us.tp0.konghq.com"
+            cluster_cert: /etc/secrets/konnect-client-tls/tls.crt
+            cluster_cert_key: /etc/secrets/konnect-client-tls/tls.key
+            lua_ssl_trusted_certificate: system
+            nginx_worker_processes: "1"
+            upstream_keepalive_max_requests: "100000"
+            nginx_http_keepalive_requests: "100000"
+            proxy_access_log: "off"
+            dns_stale_ttl: "3600"
+          resources:
+            requests:
+              cpu: 1
+              memory: "2Gi"
+          secretVolumes:
+            - konnect-client-tls
+          manager:
+            enabled: false
+  project: management
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
