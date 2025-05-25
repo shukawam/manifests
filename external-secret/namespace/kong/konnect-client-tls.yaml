@@ -1,0 +1,25 @@
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: konnect-client-tls
+  namespace: kong
+spec:
+  refreshInterval: 1m
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: cluster-secretstore
+  target:
+    name: konnect-client-tls
+    creationPolicy: Owner
+    template:
+      type: kubernetes.io/tls
+      data:
+        tls.crt: "{{ .tls-crt }}"
+        tls.key: "{{ .tls-key }}"
+  data:
+    - secretKey: tls-crt
+      remoteRef:
+        key: konnect.tls-crt
+    - secretKey: tls-key
+      remoteRef:
+        key: konnect.tls-key
