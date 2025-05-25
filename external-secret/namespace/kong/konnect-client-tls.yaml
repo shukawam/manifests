@@ -14,12 +14,14 @@ spec:
     template:
       type: kubernetes.io/tls
       data:
-        tls.crt: "{{ .tls-crt | b64dec }}"
-        tls.key: "{{ .tls-key | b64dec }}"
+        tls.crt: "{{ .tls-crt }}"
+        tls.key: "{{ .tls-key }}"
   data:
     - secretKey: tls-crt
       remoteRef:
         key: konnect.tls-crt
+        decodingStrategy: Base64
     - secretKey: tls-key
       remoteRef:
         key: konnect.tls-key
+        decodingStrategy: Base64
