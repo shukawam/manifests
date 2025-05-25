@@ -14,8 +14,8 @@ spec:
     template:
       type: kubernetes.io/tls
       data:
-        tls.crt: "{{ .tls-crt }}"
-        tls.key: "{{ .tls-key }}"
+        tls.crt: "{{ .tls-crt | pemCertificate }}"
+        tls.key: "{{ .tls-key | pemPrivateKey }}"
   data:
     - secretKey: tls-crt
       remoteRef:
