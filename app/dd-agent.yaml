@@ -8,7 +8,7 @@ spec:
     server: https://kubernetes.default.svc
   source:
     repoURL: https://helm.datadoghq.com
-    targetRevision: 2.9.2
+    targetRevision: 2.13.1
     chart: datadog-operator
   project: management
   syncPolicy:
