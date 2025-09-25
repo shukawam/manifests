@@ -1,3 +1,3 @@
 # manifests
 
-my manifests.(demo)
+my manifests.
