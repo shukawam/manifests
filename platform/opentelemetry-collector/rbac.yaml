@@ -10,8 +10,11 @@ rules:
       - pods
       - namespaces
       - nodes
+      # kubeletstats は endpoint: "${env:K8S_NODE_NAME}:10250" で kubelet を
+      # 直接叩くため nodes/stats で足りる。nodes/proxy は任意の kubelet
+      # エンドポイントへの GET を許すため runAsUser: 0 の DaemonSet には
+      # 過剰付与であり、k8sclusterreceiver の公式 ClusterRole にも含まれない。
       - nodes/stats
-      - nodes/proxy
       - services
       - endpoints
       - events
