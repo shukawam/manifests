@@ -148,21 +148,34 @@ Kubernetes Service の `networking.gke.io/load-balancer-ip-addresses` annotation
 
 ---
 
-## 5. `logging_components` の変更（既存変数の値を変える）
+## 5. `logging_components` の既定値変更（実装済み）
 
-`variables.tf` の `logging_components` は既定値が `["SYSTEM_COMPONENTS", "WORKLOADS"]` で、
-`variables.auto.tfvars` でも上書きされていない。一方このリポジトリの
-`platform/opentelemetry-collector/collector-node.yaml` の `filelog` receiver が同じ
-コンテナログを読み取り `googlecloud` exporter で Cloud Logging に送っている。このままだと
-**同じログが Cloud Logging に二重投入され、ログ取り込みの費用が倍になる。**
+`variables.tf` の `logging_components` は既定値が `["SYSTEM_COMPONENTS", "WORKLOADS"]` だった。
+一方このリポジトリの `platform/opentelemetry-collector/collector-node.yaml` の `filelog`
+receiver が同じコンテナログを読み取り `googlecloud` exporter で Cloud Logging に送っている。
+これを tfvars 側の上書きだけで避けようとすると、「`variables.auto.tfvars`（gitignore 対象の
+実値ファイル）に誰かが 1 行足す」という**所有者のいない手順**が残ってしまう。忘れられれば
+エラーも警告も出ないまま、GKE 標準のログ収集と OpenTelemetry Collector とで**同じログが
+Cloud Logging に二重投入され、ログ取り込みの費用が倍になる。**
 
-`logging_components` の説明文自身が「OpenTelemetry Collector 側でログを収集する場合は
-`["SYSTEM_COMPONENTS"]` だけに絞ると二重集約を避けられる」と明記している。
-
-`variables.auto.tfvars`（実際に apply に使うファイル）に以下を設定する。
+この本リポジトリでは `bootstrap/gke/` は常に本リポジトリの OpenTelemetry Collector と
+セットで使われる前提のため、tfvars での上書きではなく **`variables.tf` の既定値そのものを
+変更**して解決した。
 
 ```hcl
-logging_components = ["SYSTEM_COMPONENTS"]
+variable "logging_components" {
+  ...
+  default = ["SYSTEM_COMPONENTS"]
+}
+```
+
+`variables.auto.tfvars.example` には既定値と同じ値をあえて明記していない（description に
+理由が書いてある）。GKE 標準のログ収集にも Pod ワークロードのログを含めたい
+（= OpenTelemetry Collector 側の収集をやめる、または両方に二重投入してよい）場合は、
+`variables.auto.tfvars` で次のように上書きする。
+
+```hcl
+logging_components = ["SYSTEM_COMPONENTS", "WORKLOADS"]
 ```
 
 ---
@@ -177,5 +190,6 @@ logging_components = ["SYSTEM_COMPONENTS"]
 - 新規ファイル（例: `dns.tf`）: `google_dns_managed_zone` × 1、`google_dns_record_set` × 2
 - `outputs.tf`: `external_secrets_ksa_annotation` / `cert_manager_ksa_annotation` /
   `dns_zone_name_servers` / Gateway 用 IP / AI Gateway 用 IP の計 5 つ（既存 output に追記）
-- `variables.auto.tfvars`: `logging_components = ["SYSTEM_COMPONENTS"]` を設定
-  （Cloud Logging と OpenTelemetry Collector によるログの二重集約を避ける）
+- `variables.tf`: `logging_components` の既定値を `["SYSTEM_COMPONENTS"]` に変更
+  （Cloud Logging と OpenTelemetry Collector によるログの二重集約を避ける。
+  tfvars 側の上書きではなく既定値そのものを変更した）

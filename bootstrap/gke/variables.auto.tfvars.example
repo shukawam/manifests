@@ -26,10 +26,9 @@ max_node_count = 3
 # ---------------------------------------
 # Logging
 # ---------------------------------------
-# OpenTelemetry Collector 側で Pod ログを収集し Cloud Logging に送るため、
-# GKE 標準の Cloud Logging 連携は SYSTEM_COMPONENTS だけに絞り、
-# WORKLOADS ログの二重集約（と課金の二重発生）を避ける。
-logging_components = ["SYSTEM_COMPONENTS"]
+# logging_components は既定値 (["SYSTEM_COMPONENTS"]) のままでよいためここでは指定しない。
+# OpenTelemetry Collector がワークロードログを収集する前提の既定であり、
+# GKE 標準のログ収集にも WORKLOADS を含めたい場合のみ variables.tf の説明を見て上書きする。
 
 # ---------------------------------------
 # OpenTelemetry Collector

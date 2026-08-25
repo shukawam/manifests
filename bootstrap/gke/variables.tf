@@ -93,8 +93,15 @@ variable "deletion_protection" {
 
 variable "logging_components" {
   type        = list(string)
-  description = "Cloud Logging に送るコンポーネント。OpenTelemetry Collector 側でログを収集する場合は [\"SYSTEM_COMPONENTS\"] だけに絞ると二重集約を避けられる"
-  default     = ["SYSTEM_COMPONENTS", "WORKLOADS"]
+  description = <<-EOT
+    Cloud Logging に送るコンポーネント。
+    本リポジトリの OpenTelemetry Collector (platform/opentelemetry-collector) が
+    filelog receiver でワークロードのコンテナログを収集し Cloud Logging に送るため、
+    既定では ["SYSTEM_COMPONENTS"] に絞り GKE 側との二重集約 (と課金の二重発生) を避けている。
+    OpenTelemetry Collector を使わずに GKE 標準のログ収集だけに任せたい場合は、
+    ["SYSTEM_COMPONENTS", "WORKLOADS"] のように WORKLOADS を足すこと。
+  EOT
+  default     = ["SYSTEM_COMPONENTS"]
 }
 
 variable "monitoring_components" {
