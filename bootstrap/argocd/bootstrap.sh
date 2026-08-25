@@ -56,7 +56,7 @@ read -r -p "このコンテキストに Argo CD を導入します。よろし�
 case "$ans" in [yY]*) ;; *) echo "中止しました"; exit 1 ;; esac
 
 echo "==> Helm リポジトリを登録"
-helm repo add argo https://argoproj.github.io/argo-helm >/dev/null 2>&1 || true
+helm repo add argo https://argoproj.github.io/argo-helm --force-update >/dev/null 2>&1 || true
 helm repo update argo >/dev/null
 
 echo "==> Argo CD を導入"
