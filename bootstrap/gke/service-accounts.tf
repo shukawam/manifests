@@ -78,3 +78,66 @@ resource "google_service_account_iam_member" "otel_collector_workload_identity" 
     var.otel_collector_ksa_name,
   )
 }
+
+# ---------------------------------------
+# External Secrets Operator 用サービスアカウント
+#   Secret Manager 上のシークレットを ExternalSecret 経由で取得するための
+#   Workload Identity 連携
+# ---------------------------------------
+resource "google_service_account" "external_secrets" {
+  project      = var.project_id
+  account_id   = format("%s-external-secrets", var.resource_prefix)
+  display_name = format("%s-external-secrets", var.resource_prefix)
+  description  = "External Secrets Operator が Workload Identity 経由で借用するサービスアカウント"
+
+  depends_on = [google_project_service.this]
+}
+
+resource "google_project_iam_member" "external_secrets" {
+  project = var.project_id
+  role    = "roles/secretmanager.secretAccessor"
+  member  = format("serviceAccount:%s", google_service_account.external_secrets.email)
+}
+
+# Kubernetes ServiceAccount → Google Service Account の借用を許可する
+#   バインド先の namespace / ServiceAccount 名 (external-secrets/external-secrets) は
+#   マニフェスト側の Helm values で固定されるため、変数化せず定数で埋め込む
+resource "google_service_account_iam_member" "external_secrets_workload_identity" {
+  service_account_id = google_service_account.external_secrets.name
+  role               = "roles/iam.workloadIdentityUser"
+  member = format(
+    "serviceAccount:%s.svc.id.goog[external-secrets/external-secrets]",
+    var.project_id,
+  )
+}
+
+# ---------------------------------------
+# cert-manager 用サービスアカウント
+#   Cloud DNS の DNS-01 チャレンジで gke.shukawam.me 配下の証明書を発行するための
+#   Workload Identity 連携
+# ---------------------------------------
+resource "google_service_account" "cert_manager" {
+  project      = var.project_id
+  account_id   = format("%s-cert-manager", var.resource_prefix)
+  display_name = format("%s-cert-manager", var.resource_prefix)
+  description  = "cert-manager が Workload Identity 経由で借用するサービスアカウント (Cloud DNS DNS-01 チャレンジ用)"
+
+  depends_on = [google_project_service.this]
+}
+
+resource "google_project_iam_member" "cert_manager" {
+  project = var.project_id
+  role    = "roles/dns.admin"
+  member  = format("serviceAccount:%s", google_service_account.cert_manager.email)
+}
+
+# バインド先の namespace / ServiceAccount 名 (cert-manager/cert-manager) は
+# マニフェスト側の Helm values で固定されるため、変数化せず定数で埋め込む
+resource "google_service_account_iam_member" "cert_manager_workload_identity" {
+  service_account_id = google_service_account.cert_manager.name
+  role               = "roles/iam.workloadIdentityUser"
+  member = format(
+    "serviceAccount:%s.svc.id.goog[cert-manager/cert-manager]",
+    var.project_id,
+  )
+}

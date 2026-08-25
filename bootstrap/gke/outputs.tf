@@ -52,6 +52,47 @@ output "otel_collector_ksa_annotation" {
   description = "OpenTelemetry Collector の Kubernetes ServiceAccount に付与するアノテーション"
 }
 
+output "external_secrets_service_account_email" {
+  value       = google_service_account.external_secrets.email
+  description = "External Secrets Operator が Workload Identity で借用する Google Service Account"
+}
+
+output "external_secrets_ksa_annotation" {
+  value = format(
+    "iam.gke.io/gcp-service-account=%s",
+    google_service_account.external_secrets.email,
+  )
+  description = "External Secrets Operator の Kubernetes ServiceAccount に付与するアノテーション"
+}
+
+output "cert_manager_service_account_email" {
+  value       = google_service_account.cert_manager.email
+  description = "cert-manager が Workload Identity で借用する Google Service Account"
+}
+
+output "cert_manager_ksa_annotation" {
+  value = format(
+    "iam.gke.io/gcp-service-account=%s",
+    google_service_account.cert_manager.email,
+  )
+  description = "cert-manager の Kubernetes ServiceAccount に付与するアノテーション"
+}
+
+output "gateway_ip_address" {
+  value       = google_compute_address.gateway.address
+  description = "Kong Gateway (Gateway API) の DataPlane を公開する Service 用の静的外部 IP アドレス"
+}
+
+output "aigw_ip_address" {
+  value       = google_compute_address.aigw.address
+  description = "Kong AI Gateway の DataPlane を公開する Service 用の静的外部 IP アドレス"
+}
+
+output "dns_zone_name_servers" {
+  value       = google_dns_managed_zone.gke.name_servers
+  description = "gke.shukawam.me ゾーンのネームサーバ一覧 (dnsv.jp 側での NS 委任に使う)"
+}
+
 output "get_credentials_command" {
   value = format(
     "gcloud container clusters get-credentials %s --region %s --project %s",

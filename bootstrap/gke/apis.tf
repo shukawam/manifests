@@ -13,6 +13,12 @@ locals {
     "monitoring.googleapis.com",
     "cloudtrace.googleapis.com",
     "artifactregistry.googleapis.com",
+    # secretmanager: External Secrets Operator が Secret Manager からシークレットを取得するために必要
+    # dns: cert-manager の DNS-01 チャレンジおよび gke.shukawam.me ゾーンの管理に必要
+    # (このプロジェクトでは既に有効化済みのため apply 時は no-op になるが、
+    #  設定の自己完結性のためここにも列挙する)
+    "secretmanager.googleapis.com",
+    "dns.googleapis.com",
   ]
 }
 
