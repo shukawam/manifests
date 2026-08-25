@@ -448,6 +448,10 @@ Operator は CR ごとに ServiceAccount を作れるが RBAC は作らない。
 - core: `pods`, `namespaces`, `nodes`, `nodes/stats`, `nodes/proxy`, `services`, `endpoints`,
   `events`, `replicationcontrollers`, `resourcequotas`, `persistentvolumes`,
   `persistentvolumeclaims` (get / list / watch)
+- core の **subresource** も必須: `namespaces/status`, `nodes/spec`, `pods/status`,
+  `replicationcontrollers/status`。`k8sclusterreceiver` の公式 ClusterRole が baseline 要件として
+  挙げている。欠けると informer が実行時に 403 を受け、Argo CD は Synced/Healthy のまま
+  クラスタメトリクスだけが静かに欠落する
 - `apps`: `daemonsets`, `deployments`, `replicasets`, `statefulsets`
 - `batch`: `jobs`, `cronjobs`
 - `autoscaling`: `horizontalpodautoscalers`
@@ -457,11 +461,21 @@ Operator は CR ごとに ServiceAccount を作れるが RBAC は作らない。
 - receivers
   - `kubeletstats`: `auth_type: serviceAccount`, `endpoint: ${env:K8S_NODE_NAME}:10250`,
     `insecure_skip_verify: true`, metric_groups は node / pod / container / volume
-  - `hostmetrics`: cpu / memory / disk / filesystem / network / load
+  - `hostmetrics` は**使わない**。`/hostfs` のマウントと `root_path` が無い状態では
+    cpu / load / memory / network は Collector コンテナ自身の cgroup 視点の値を返し、
+    resources.limits に制限された Pod の使用量が「ノードのメトリクス」として記録される。
+    ノードの cpu / memory / network は `kubeletstats` の node メトリクスグループが
+    正しく提供するため、そちらに一本化する (失うのは load average のみ)。
+    ホストのルートファイルシステム全体をコンテナにマウントする権限昇格も避けられる。
   - `filelog`: `/var/log/pods/*/*/*.log` を読み、`container` operator で
     containerd のフォーマットを解析。Collector 自身のログは `exclude` で除外し、
     ログのループを防ぐ
 - processors: `memory_limiter` → `k8sattributes` → `resourcedetection` (`env`, `gcp`) → `batch`
+  - **`k8sattributes` の `pod_association` は `k8s.pod.uid` と (`k8s.namespace.name`, `k8s.pod.name`) で
+    関連付ける。`k8s.pod.ip` と `from: connection` は使わない。** `filelog` の `container` operator は
+    Pod 名 / UID / namespace を付けるが IP は付けず、`kubeletstats` はローカルの pull で
+    接続コンテキストを持たないため、IP や connection では 1 件もマッチせず
+    `k8s.deployment.name` / `k8s.node.name` が付かない。
 - exporters: `otlp` (`otel-gateway-collector.opentelemetry.svc.cluster.local:4317`, `tls.insecure: true`)
 - 環境変数 `K8S_NODE_NAME` を `fieldRef: spec.nodeName` で注入
 - volume: hostPath `/var/log` を read-only でマウント。
@@ -506,15 +520,22 @@ image:
 env:
   ENABLE_CONTROLLER_KONNECT: true
   ENABLE_CONTROLLER_AIGATEWAYDATAPLANE: true
-webhooks:
-  options:
-    certManager:
-      enabled: true
-certificateAuthority:
-  options:
-    certManager:
-      enabled: true
+global:
+  webhooks:
+    options:
+      certManager:
+        enabled: true
+  certificateAuthority:
+    options:
+      certManager:
+        enabled: true
 ```
+
+**キーの階層に注意。** このチャートでは `webhooks` / `certificateAuthority` は
+**`global:` 配下にしか存在しない** (`helm show values kong/kong-operator --version 1.4.0-rc.1`
+の 113 行目以降で確認)。トップレベルに置くと Helm は黙って無視し、`genCA` が走り続ける。
+本設計の初版はこれをトップレベルに書いており誤りだった。実装時の冪等性検証
+(同じ values で 2 回レンダリングして diff を取る) で発覚した。
 
 前半は Konnect が出力したセットアップコマンドの `--set` をそのまま落としたもの。
 チャートバージョンもコマンドの `--version 1.4.0-rc.1` に合わせて固定する。
@@ -575,8 +596,11 @@ apiVersion は **`gateway-operator.konghq.com/v2beta1`**。`v1beta1` も served 
 
 ```yaml
 spec:
-  controlPlaneOptions:
-    deployment: (resources のみ指定)
+  # controlPlaneOptions は書かない。v2beta1 の controlPlaneOptions は
+  # cache / configDump / controllers / dataplaneSync / featureGates /
+  # gatewayDiscovery / ingressClass / konnect / objectFilters / translation /
+  # watchNamespaces の 11 個のみで、deployment は存在しない (v1beta1 にはある)。
+  # structural schema のため未知フィールドは黙って prune され、書いても効かない。
   dataPlaneOptions:
     deployment:
       replicas: 2
