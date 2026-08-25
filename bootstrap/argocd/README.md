@@ -90,7 +90,7 @@ values は `platform/argo-cd/values.yaml` を相対パスでそのまま読み�
 フォークして別リポジトリで使う場合は、リポジトリ全体を一括置換してください。
 
 ```bash
-grep -rl 'github.com/shukawam/manifests' apps bootstrap projects platform \
+grep -rl 'github.com/shukawam/manifests' apps bootstrap \
   | xargs sed -i '' 's#github.com/shukawam/manifests#github.com/<you>/<repo>#g'
 ```
 
