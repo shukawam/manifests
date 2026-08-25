@@ -1,0 +1,24 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: platform
+  namespace: argocd
+spec:
+  description: プラットフォーム基盤コンポーネント
+  sourceRepos:
+    - https://github.com/shukawam/manifests.git
+    - https://argoproj.github.io/argo-helm
+    - https://charts.jetstack.io
+    - https://charts.external-secrets.io
+    - https://open-telemetry.github.io/opentelemetry-helm-charts
+    - https://charts.konghq.com
+  destinations:
+    - server: https://kubernetes.default.svc
+      namespace: '*'
+  # CRD / ClusterRole / ClusterSecretStore / ClusterIssuer / GatewayClass を作るため
+  clusterResourceWhitelist:
+    - group: '*'
+      kind: '*'
+  namespaceResourceWhitelist:
+    - group: '*'
+      kind: '*'

@@ -1,0 +1,44 @@
+global:
+  domain: argocd.gke.shukawam.me
+
+configs:
+  params:
+    # TLS は Kong Gateway で終端する。Argo CD 自身は平文 HTTP を話す
+    server.insecure: true
+  cm:
+    url: https://argocd.gke.shukawam.me
+    # label 方式は app.kubernetes.io/instance を書き換えてチャートの selector と衝突する
+    application.resourceTrackingMethod: annotation
+    timeout.reconciliation: 180s
+
+server:
+  service:
+    type: ClusterIP
+  # 公開は Gateway API の HTTPRoute で行うため、チャートの Ingress は使わない
+  ingress:
+    enabled: false
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+
+controller:
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+
+repoServer:
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+
+applicationSet:
+  enabled: true
+
+dex:
+  enabled: false
+
+notifications:
+  enabled: false
