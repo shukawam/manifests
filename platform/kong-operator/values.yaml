@@ -1,0 +1,32 @@
+# Konnect が出力したセットアップコマンドの --set をそのまま values に落としたもの
+image:
+  tag: "2.3.0-rc.2"
+
+env:
+  ENABLE_CONTROLLER_KONNECT: true
+  ENABLE_CONTROLLER_AIGATEWAYDATAPLANE: true
+
+# 既定 (false) だと templates/kong-operator-ca.yaml が
+#   {{ if not (lookup "v1" "Secret" ...) }}{{ $ca := genCA ... }}
+# を通り、Argo CD の helm template では lookup が常に nil を返すため
+# reconcile のたびに新しい CA が生成されて恒久 OutOfSync になる。
+# チャートの values コメント自身も production では cert-manager を推奨している。
+#
+# 注意: この chart では webhooks / certificateAuthority は
+# `global.webhooks` / `global.certificateAuthority` 配下にある
+# (`helm show values kong/kong-operator --version 1.4.0-rc.1` で確認済み)。
+# トップレベルに置くと無視され genCA が走り続けるため global 配下に置くこと。
+global:
+  webhooks:
+    options:
+      certManager:
+        enabled: true
+  certificateAuthority:
+    options:
+      certManager:
+        enabled: true
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
