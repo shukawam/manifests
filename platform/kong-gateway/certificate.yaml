@@ -1,0 +1,16 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: gke-shukawam-me
+  namespace: kong
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  secretName: gke-shukawam-me-tls
+  issuerRef:
+    kind: ClusterIssuer
+    name: letsencrypt-prod
+  commonName: "*.gke.shukawam.me"
+  dnsNames:
+    - "*.gke.shukawam.me"
+    - "gke.shukawam.me"

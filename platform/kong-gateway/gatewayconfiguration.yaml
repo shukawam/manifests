@@ -1,0 +1,51 @@
+# apiVersion は v2beta1 を使用する（v1beta1 は deprecated: true / storage: false）。
+#
+# 注意（要裁定）: spec.controlPlaneOptions.deployment は、実際にインストールされる
+# kong-operator 1.4.0-rc.1 の GatewayConfiguration CRD の v2beta1 スキーマには
+# 存在しない（v1beta1 の controlPlaneOptions には deployment があるが、v2beta1 の
+# controlPlaneOptions のプロパティは cache / configDump / controllers /
+# dataplaneSync / featureGates / gatewayDiscovery / ingressClass / konnect /
+# objectFilters / translation / watchNamespaces のみで deployment は無い）。
+# structural schema のため、この未知フィールドは API サーバーに黙って
+# prune されると見られ、controller コンテナへの resources.requests 指定は
+# 効かない可能性が高い。詳細は task-8-report.md 参照。ブリーフの指示により
+# 修正はせずそのまま記載し、裁定を仰ぐ。
+apiVersion: gateway-operator.konghq.com/v2beta1
+kind: GatewayConfiguration
+metadata:
+  name: kong
+  namespace: kong
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+spec:
+  controlPlaneOptions:
+    deployment:
+      podTemplateSpec:
+        spec:
+          containers:
+            - name: controller
+              resources:
+                requests:
+                  cpu: 100m
+                  memory: 256Mi
+  dataPlaneOptions:
+    deployment:
+      replicas: 2
+      podTemplateSpec:
+        spec:
+          containers:
+            - name: proxy
+              resources:
+                requests:
+                  cpu: 200m
+                  memory: 512Mi
+    network:
+      services:
+        ingress:
+          type: LoadBalancer
+          # この CRD は spec.loadBalancerIP を公開していないため、
+          # 静的 IP の固定は annotation 経由しか手段がない。
+          # 効かない場合の対処は docs/terraform-requirements.md のフォールバック参照。
+          annotations:
+            cloud.google.com/l4-rbs: "enabled"
+            networking.gke.io/load-balancer-ip-addresses: shukawam-gke-gateway
