@@ -1,15 +1,11 @@
 # apiVersion は v2beta1 を使用する（v1beta1 は deprecated: true / storage: false）。
 #
-# 注意（要裁定）: spec.controlPlaneOptions.deployment は、実際にインストールされる
-# kong-operator 1.4.0-rc.1 の GatewayConfiguration CRD の v2beta1 スキーマには
-# 存在しない（v1beta1 の controlPlaneOptions には deployment があるが、v2beta1 の
-# controlPlaneOptions のプロパティは cache / configDump / controllers /
-# dataplaneSync / featureGates / gatewayDiscovery / ingressClass / konnect /
-# objectFilters / translation / watchNamespaces のみで deployment は無い）。
-# structural schema のため、この未知フィールドは API サーバーに黙って
-# prune されると見られ、controller コンテナへの resources.requests 指定は
-# 効かない可能性が高い。詳細は task-8-report.md 参照。ブリーフの指示により
-# 修正はせずそのまま記載し、裁定を仰ぐ。
+# spec.controlPlaneOptions は意図的に書いていない（書き忘れではない）:
+#   - v2beta1 の controlPlaneOptions には deployment フィールドが無い
+#     （deployment があるのは v1beta1 の controlPlaneOptions のみ）
+#   - structural schema のため、書いても API サーバーに黙って prune され効かない
+#   - v2beta1 の GatewayConfiguration にコントロールプレーンの
+#     resources を設定する手段は現状存在しない
 apiVersion: gateway-operator.konghq.com/v2beta1
 kind: GatewayConfiguration
 metadata:
@@ -18,16 +14,6 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "0"
 spec:
-  controlPlaneOptions:
-    deployment:
-      podTemplateSpec:
-        spec:
-          containers:
-            - name: controller
-              resources:
-                requests:
-                  cpu: 100m
-                  memory: 256Mi
   dataPlaneOptions:
     deployment:
       replicas: 2
