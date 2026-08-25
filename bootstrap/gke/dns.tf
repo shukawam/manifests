@@ -14,6 +14,12 @@ resource "google_dns_managed_zone" "gke" {
   description = "gke.shukawam.me サブドメイン用パブリックゾーン"
   visibility  = "public"
 
+  # cert-manager が DNS-01 チャレンジ時に _acme-challenge の TXT レコードを書き込む。
+  # チャレンジが失敗して消し忘れたレコードが残っていると、ゾーンが空でないため
+  # terraform destroy が失敗する。このゾーンに Terraform 管理外で存在し得るのは
+  # ACME の一時レコードだけなので、force_destroy で destroy を通す。
+  force_destroy = true
+
   depends_on = [google_project_service.this]
 }
 
@@ -24,8 +30,10 @@ resource "google_dns_record_set" "wildcard" {
   managed_zone = google_dns_managed_zone.gke.name
   name         = "*.gke.shukawam.me."
   type         = "A"
-  ttl          = 300
-  rrdatas      = [google_compute_address.gateway.address]
+  # 静的 IP の annotation が実機で効かない場合、手動で IP を張り替えて反復する
+  # 可能性があるため、既定 (300 秒) より短い 60 秒にして反映待ちを短縮する。
+  ttl     = 60
+  rrdatas = [google_compute_address.gateway.address]
 }
 
 # aigw.gke.shukawam.me はワイルドカードより優先される個別レコードとして
@@ -35,6 +43,7 @@ resource "google_dns_record_set" "aigw" {
   managed_zone = google_dns_managed_zone.gke.name
   name         = "aigw.gke.shukawam.me."
   type         = "A"
-  ttl          = 300
-  rrdatas      = [google_compute_address.aigw.address]
+  # wildcard レコードと同じ理由 (手動での IP 張り替えを想定した反映待ち短縮)
+  ttl     = 60
+  rrdatas = [google_compute_address.aigw.address]
 }
