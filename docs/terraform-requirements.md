@@ -37,7 +37,31 @@ Kong Gateway / Kong AI Gateway）を構築する。Kubernetes マニフェスト
 | GSA (`account_id`) | 付与ロール | Workload Identity バインド先 (Kubernetes SA) |
 | --- | --- | --- |
 | `${resource_prefix}-external-secrets` （= `shukawam-external-secrets`） | `roles/secretmanager.secretAccessor` | `external-secrets/external-secrets` |
-| `${resource_prefix}-cert-manager` （= `shukawam-cert-manager`） | `roles/dns.admin` | `cert-manager/cert-manager` |
+| `${resource_prefix}-cert-manager` （= `shukawam-cert-manager`） | カスタムロール `certManagerDns01`（下記参照） | `cert-manager/cert-manager` |
+
+**cert-manager 用ロールについて（実装時に `roles/dns.admin` から変更）**: 当初案の
+`roles/dns.admin` はプロジェクト内の全ゾーン（`gcp-fieldeng-dev` 上の無関係な
+`shukawam-zdf-gke` クラスタの private zone を含む）に対する作成・削除まで許してしまう。
+`roles/dns.editor` も `dns.managedZones.delete` を持つため同様に不適。実装では
+DNS-01 チャレンジに必要な操作（`dns.managedZones.{list,get}` /
+`dns.resourceRecordSets.{list,get,create,update,delete}` / `dns.changes.{create,get,list}`）
+だけに絞ったカスタムロール `google_project_iam_custom_role.cert_manager_dns`
+（role_id: `certManagerDns01`）を `service-accounts.tf` に定義し、それを
+`cert-manager` 用 GSA に付与している。`dns.managedZones.list` はプロジェクトスコープの
+まま残す必要がある点に注意（ClusterIssuer が `hostedZoneName` を指定していないため、
+cert-manager が対象ゾーンを list で自動発見する。ゾーンレベルの IAM 付与では list を
+満たせない）。
+
+**`roles/secretmanager.secretAccessor` のスコープについて（トレードオフとして据え置き）**:
+このロールはプロジェクト内の全 Secret に対する読み取りを許すプロジェクトスコープの
+付与のままにしている。Secret 単位（`google_secret_manager_secret_iam_member` 等）に
+絞るには、Terraform が対象 Secret の存在を知っている必要がある。しかし Secret 自体
+（例: `konnect-api-token`）は README の手動手順で作成される想定で、`terraform apply`
+時点ではまだ存在しない。Terraform に Secret 自体を作らせる案もあるが、そうすると
+`terraform destroy` で Secret ごと（トークン等の値ごと）消えてしまい、Secret の
+ライフサイクルが Terraform のライフサイクルに結合してしまう。将来、運用対象の
+Secret が固定され、かつ Terraform 側で Secret リソースそのものも管理する方針に
+変える場合は、Secret 単位の IAM 付与に絞ることを検討してよい。
 
 各 GSA について、既存の `otel_collector` と同じ 3 点セットが必要:
 
@@ -141,8 +165,10 @@ Kubernetes Service の `networking.gke.io/load-balancer-ip-addresses` annotation
 1. Terraform で A レコードを張るのをやめ、`kubectl get svc` で得た実際の IP を手で
    `google_dns_record_set` に設定し直す
 2. external-dns を platform アプリとして追加し、`Gateway` / `Service` から自動で A レコードを
-   同期させる（その場合 cert-manager 用に作成済みの `roles/dns.admin` ロールを持つ GSA を
-   そのまま再利用できる）
+   同期させる（その場合 cert-manager 用に作成済みの GSA とカスタムロール
+   `certManagerDns01` をそのまま再利用できる。ただしこのカスタムロールは DNS-01
+   チャレンジ用の権限セットのため、external-dns が必要とする操作がこれと異なる場合は
+   ロールの見直しが必要）
 
 この文書のスコープでは対応不要。参考情報として記載する。
 

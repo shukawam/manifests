@@ -125,9 +125,39 @@ resource "google_service_account" "cert_manager" {
   depends_on = [google_project_service.this]
 }
 
+# roles/dns.admin は使わない。cert-manager にはこの Terraform が管理するゾーンに対する
+# レコード操作のみを許可すれば十分だが、dns.admin はプロジェクト内の全ゾーン
+# (無関係な shukawam-zdf-gke クラスタが持つ private zone を含む) の作成・削除まで許してしまう。
+# roles/dns.editor もゾーンの削除権限 (dns.managedZones.delete) を持つため不採用。
+# 必要な操作だけに絞ったカスタムロールを定義する。
+#
+# dns.managedZones.list はプロジェクトスコープのまま残す必要がある。
+# ClusterIssuer が hostedZoneName を指定していないため、cert-manager は DNS-01
+# チャレンジのたびに対象ゾーンを list で自動発見する。ゾーンレベルの IAM 付与では
+# list 操作 (プロジェクト全体を対象にするコレクション操作) を許可できない。
+resource "google_project_iam_custom_role" "cert_manager_dns" {
+  project     = var.project_id
+  role_id     = "certManagerDns01"
+  title       = "cert-manager DNS-01 solver"
+  description = "cert-manager が DNS-01 チャレンジで Cloud DNS のレコードを操作するために必要な最小権限"
+
+  permissions = [
+    "dns.managedZones.list",
+    "dns.managedZones.get",
+    "dns.resourceRecordSets.list",
+    "dns.resourceRecordSets.get",
+    "dns.resourceRecordSets.create",
+    "dns.resourceRecordSets.update",
+    "dns.resourceRecordSets.delete",
+    "dns.changes.create",
+    "dns.changes.get",
+    "dns.changes.list",
+  ]
+}
+
 resource "google_project_iam_member" "cert_manager" {
   project = var.project_id
-  role    = "roles/dns.admin"
+  role    = google_project_iam_custom_role.cert_manager_dns.id
   member  = format("serviceAccount:%s", google_service_account.cert_manager.email)
 }
 
