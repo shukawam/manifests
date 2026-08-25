@@ -42,24 +42,32 @@ done
 # 到達できない場合（kubeconfig の認証切れ等、マニフェストの正しさとは無関係な
 # 理由）は kubectl --dry-run=client を一切実行せず、YAML 構文チェックのみに
 # 縮退する。構文が壊れていればこの場合でも従来どおり fail にする。
-run_with_timeout() {
-  if command -v timeout >/dev/null 2>&1; then
-    timeout 5 "$@"
-  elif command -v gtimeout >/dev/null 2>&1; then
-    gtimeout 5 "$@"
-  else
-    "$@"
-  fi
-}
+timeout_bin=""
+if command -v timeout >/dev/null 2>&1; then
+  timeout_bin="timeout"
+elif command -v gtimeout >/dev/null 2>&1; then
+  timeout_bin="gtimeout"
+fi
 
 cluster_reachable=0
-if run_with_timeout kubectl cluster-info --request-timeout=3s >/dev/null 2>&1; then
+reach_reason="unreachable"
+if [ -z "$timeout_bin" ]; then
+  # timeout/gtimeout がどちらも無いと、exec credential plugin がハングした場合に
+  # プローブ自体を安全に打ち切れない。ハングするくらいなら、判定せずに
+  # 到達不能とみなしてスキップする方が安全（フェイルセーフ）。
+  reach_reason="no-timeout-bin"
+elif "$timeout_bin" 5 kubectl cluster-info --request-timeout=3s >/dev/null 2>&1; then
   cluster_reachable=1
 fi
 
 if [ "$cluster_reachable" -eq 0 ]; then
-  printf '\033[33mWARN\033[0m クラスタに到達できないため、kubectl --dry-run=client によるスキーマ検証をスキップします\n'
-  printf '     (原因: kubeconfig の認証切れ等が考えられます。復旧: gcloud auth login。YAML 構文チェックのみ継続します)\n'
+  if [ "$reach_reason" = "no-timeout-bin" ]; then
+    printf '\033[33mWARN\033[0m timeout/gtimeout が見つからないためクラスタ到達性を安全に判定できません。kubectl --dry-run=client によるスキーマ検証をスキップします\n'
+    printf '     (解消: brew install coreutils で timeout/gtimeout を導入してください。YAML 構文チェックのみ継続します)\n'
+  else
+    printf '\033[33mWARN\033[0m クラスタに到達できないため、kubectl --dry-run=client によるスキーマ検証をスキップします\n'
+    printf '     (原因: kubeconfig の認証切れ等が考えられます。復旧: gcloud auth login。YAML 構文チェックのみ継続します)\n'
+  fi
 fi
 
 skipped_dirs=""
