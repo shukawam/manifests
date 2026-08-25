@@ -17,7 +17,9 @@ Autopilot はノードを GKE 側が完全管理するため、`hostPath` / `hos
 | `variables.tf` | 入力変数 |
 | `apis.tf` | 必要な Google Cloud API の有効化 |
 | `network.tf` | GKE 専用 VPC・サブネット (Pod / Service セカンダリレンジ付き) |
-| `service-accounts.tf` | ノード用 SA、OpenTelemetry Collector 用 SA + Workload Identity |
+| `service-accounts.tf` | ノード用 SA、OpenTelemetry Collector 用 SA、External Secrets Operator 用 SA、cert-manager 用 SA (いずれも Workload Identity) |
+| `static-ip.tf` | Kong Gateway / Kong AI Gateway 用のリージョナル静的外部 IP |
+| `dns.tf` | gke.shukawam.me のパブリックゾーンと A レコード (ワイルドカード / aigw) |
 | `gke.tf` | GKE Standard クラスタ本体とノードプール |
 | `outputs.tf` | 出力値 |
 
@@ -34,6 +36,11 @@ Autopilot はノードを GKE 側が完全管理するため、`hostPath` / `hos
 | ノードプール | `<prefix>-gke-node-pool` |
 | ノード用 SA | `<prefix>-gke-node` |
 | OTel Collector 用 SA | `<prefix>-otel-collector` |
+| External Secrets Operator 用 SA | `<prefix>-external-secrets` |
+| cert-manager 用 SA | `<prefix>-cert-manager` |
+| Kong Gateway 用静的 IP | `<prefix>-gke-gateway` |
+| Kong AI Gateway 用静的 IP | `<prefix>-gke-aigw` |
+| Cloud DNS マネージドゾーン | `<prefix>-gke-zone` (`gke.shukawam.me.`) |
 
 ## 使い方
 
@@ -109,6 +116,47 @@ presets:
 namespace や ServiceAccount 名を変える場合は、Terraform 側の
 `otel_collector_namespace` / `otel_collector_ksa_name` も合わせて変更する
 (Workload Identity のバインディングがこの 2 つで決まるため)。
+
+## External Secrets Operator / cert-manager の Workload Identity
+
+External Secrets Operator 用 SA (`roles/secretmanager.secretAccessor`) と
+cert-manager 用 SA (Cloud DNS の DNS-01 チャレンジ専用カスタムロール) は、
+バインド先の namespace / ServiceAccount 名 (`external-secrets/external-secrets`,
+`cert-manager/cert-manager`) を Terraform 側で定数として埋め込んでいる
+(マニフェスト側の Helm values で固定される前提のため、otel_collector のような
+namespace / ksa_name 変数はない)。Kubernetes 側の ServiceAccount には
+それぞれの annotation を付与する。
+
+```bash
+kubectl annotate serviceaccount external-secrets -n external-secrets \
+  "$(terraform output -raw external_secrets_ksa_annotation)"
+
+kubectl annotate serviceaccount cert-manager -n cert-manager \
+  "$(terraform output -raw cert_manager_ksa_annotation)"
+```
+
+cert-manager 用 SA には `roles/dns.admin` ではなく、このディレクトリで定義した
+カスタムロール (`google_project_iam_custom_role.cert_manager_dns`) を付与している。
+`dns.admin` はプロジェクト内の無関係なゾーン (別クラスタの private zone を含む) まで
+操作できてしまうため、DNS-01 チャレンジに必要な最小権限に絞っている。
+
+## Cloud DNS ゾーンと NS 委任
+
+`dns.tf` が作成する `google_dns_managed_zone.gke` は `gke.shukawam.me` 用のパブリック
+ゾーンで、`shukawam.me` 本体 (01.dnsv.jp / 02.dnsv.jp 管理) には一切触れない。
+apply 後、以下でネームサーバを確認し、dnsv.jp 側で `gke` ホストの NS レコードとして
+手動登録する (この NS 委任自体は Terraform の範囲外)。
+
+```bash
+terraform output dns_zone_name_servers
+```
+
+NS 委任が完了するまでは cert-manager の DNS-01 チャレンジが解決できず、
+`Certificate` は `Pending` のまま止まる (Kubernetes マニフェスト側の既知動作)。
+
+`google_dns_record_set` の TTL は 60 秒と短めにしている。静的 IP の
+`networking.gke.io/load-balancer-ip-addresses` annotation が実機で効かなかった場合に
+A レコードを手動で張り替えて反復する可能性があるため、反映待ちを短くする狙い。
 
 ## 破棄
 

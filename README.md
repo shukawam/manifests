@@ -43,23 +43,6 @@ Argo CD の App of Apps で以下のプラットフォーム基盤を構築・�
 [設計ドキュメント §8](docs/superpowers/specs/2026-08-24-argocd-platform-design.md#8-前提となる手動手順)
 を参照。
 
-> [!WARNING]
-> **`bootstrap/gke/` は上記手順 1 に必要な変更がまだ実装されていない。**
-> [`docs/terraform-requirements.md`](docs/terraform-requirements.md) に記載された以下 4 種類の
-> リソースが `bootstrap/gke/` に一切存在しない（担当は別セッション）。
->
-> - Secret Manager / Cloud DNS の API 有効化
-> - ESO 用 / cert-manager 用の Google Service Account（Workload Identity）
-> - 静的 IP アドレス（Kong Gateway 用 / Kong AI Gateway 用の 2 つ）
-> - Cloud DNS のマネージドゾーンと A レコード
->
-> これらが揃わないまま現状の手順どおり `terraform apply` を進めると、手順 2 で
-> `terraform output dns_zone_name_servers` がそもそも存在せずエラーになる。さらに
-> cert-manager / ESO は存在しない GSA を指す Workload Identity annotation 付きで起動し、
-> `Certificate` は `Pending`、`ExternalSecret` は `SecretSyncedError` のまま止まる。
-> **上記 4 種類のリソースが `bootstrap/gke/` に実装されるまで、ブートストラップ以降の手順は
-> 進められない。**
-
 ## 3. `bootstrap/gke` → `bootstrap/argocd` の実行方法
 
 ### 3.1 `bootstrap/gke`（Terraform）
