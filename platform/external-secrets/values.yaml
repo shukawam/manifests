@@ -1,0 +1,10 @@
+# Secret Manager にアクセスするのはコントローラだけ。
+# webhook / cert-controller の SA には annotation を付けない。
+serviceAccount:
+  annotations:
+    iam.gke.io/gcp-service-account: shukawam-external-secrets@gcp-fieldeng-dev.iam.gserviceaccount.com
+
+resources:
+  requests:
+    cpu: 20m
+    memory: 64Mi
