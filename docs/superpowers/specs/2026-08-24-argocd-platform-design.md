@@ -805,7 +805,7 @@ ESO は `template` を指定しないとラベルを引き継がないため、�
 | GSA | ロール | Workload Identity バインド先 |
 | --- | --- | --- |
 | `${resource_prefix}-external-secrets` | `roles/secretmanager.secretAccessor` | `external-secrets/external-secrets` |
-| `${resource_prefix}-cert-manager` | `roles/dns.admin` | `cert-manager/cert-manager` |
+| `${resource_prefix}-cert-manager` | カスタムロール `certManagerDns01` | `cert-manager/cert-manager` |
 
 output: `external_secrets_ksa_annotation`, `cert_manager_ksa_annotation`
 (いずれも `iam.gke.io/gcp-service-account=<email>` 形式)。
@@ -831,7 +831,7 @@ Managed Service for Prometheus への書き込みまで足りるため **追加�
 
 1. Terraform で A レコードを張るのをやめ、`kubectl get svc` で得た IP を手で登録する
 2. external-dns を platform アプリとして追加し、`Gateway` / `Service` から
-   自動で A レコードを同期させる (cert-manager と同じ `roles/dns.admin` を再利用できる)
+   自動で A レコードを同期させる (cert-manager 用のカスタムロール `certManagerDns01` を再利用できる)
 
 ### 7.4 Cloud DNS
 
@@ -895,7 +895,7 @@ printf '%s' "$KONNECT_TOKEN" | gcloud secrets versions add konnect-api-token \
 | CRD 適用が `Too long` で失敗 | client-side apply の annotation 上限 | `ServerSideApply=true` (§4.3 で全 Application に設定済み) |
 | `kong-operator` が毎回 OutOfSync | チャートの CA テンプレートが `lookup` を使う | `certificateAuthority` / `webhooks` の `certManager.enabled: true` (§6.8) |
 | `opentelemetry-operator` が毎回 OutOfSync | `autoGenerateCert` の再生成 | `admissionWebhooks.certManager.enabled: true` (§6.6) |
-| `Certificate` が `Pending` のまま | NS 委任が未完了 / `dns.admin` が無い | §8.1 の `dig` で委任を確認。cert-manager のログで DNS-01 の失敗理由を見る |
+| `Certificate` が `Pending` のまま | NS 委任が未完了 / DNS 権限が不足 | §8.1 の `dig` で委任を確認。cert-manager のログで DNS-01 の失敗理由を見る |
 | **LB の IP が静的 IP にならない** | GKE の annotation が Kong Operator 生成の Service で効かない | §7.3 のフォールバック 1 or 2。**実装時に最初に検証すべき項目** |
 | `HTTPRoute` が `Accepted` にならない | `allowedRoutes` / `parentRefs` の namespace 不一致 | `kubectl describe httproute -n argocd argocd` の status を見る |
 | `argocd` CLI が接続できない | gRPC が Kong を通らない | `--grpc-web` を付ける (§6.1) |
