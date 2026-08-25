@@ -69,6 +69,10 @@ Workload Identity バインド先の namespace / ServiceAccount 名（`external-
 ## 3. 静的 IP アドレス
 
 `google_compute_address` を **regional**（`region = "asia-northeast1"`）で 2 つ新規作成する。
+L4 RBS（GKE の `type: LoadBalancer` が作るリージョナルパススルー Network Load Balancer）の
+外部 NLB 用には `address_type = "EXTERNAL"` と `network_tier = "PREMIUM"` が必要。プロバイダの
+既定値がたまたま両方とも一致するため省略しても動くが、担当者に推測させないよう明示的に
+指定すること。
 
 | リソース名 | 用途 |
 | --- | --- |
@@ -144,6 +148,25 @@ Kubernetes Service の `networking.gke.io/load-balancer-ip-addresses` annotation
 
 ---
 
+## 5. `logging_components` の変更（既存変数の値を変える）
+
+`variables.tf` の `logging_components` は既定値が `["SYSTEM_COMPONENTS", "WORKLOADS"]` で、
+`variables.auto.tfvars` でも上書きされていない。一方このリポジトリの
+`platform/opentelemetry-collector/collector-node.yaml` の `filelog` receiver が同じ
+コンテナログを読み取り `googlecloud` exporter で Cloud Logging に送っている。このままだと
+**同じログが Cloud Logging に二重投入され、ログ取り込みの費用が倍になる。**
+
+`logging_components` の説明文自身が「OpenTelemetry Collector 側でログを収集する場合は
+`["SYSTEM_COMPONENTS"]` だけに絞ると二重集約を避けられる」と明記している。
+
+`variables.auto.tfvars`（実際に apply に使うファイル）に以下を設定する。
+
+```hcl
+logging_components = ["SYSTEM_COMPONENTS"]
+```
+
+---
+
 ## まとめ: 追加するリソース一覧
 
 - `apis.tf`: `required_apis` に 2 API 追加
@@ -154,3 +177,5 @@ Kubernetes Service の `networking.gke.io/load-balancer-ip-addresses` annotation
 - 新規ファイル（例: `dns.tf`）: `google_dns_managed_zone` × 1、`google_dns_record_set` × 2
 - `outputs.tf`: `external_secrets_ksa_annotation` / `cert_manager_ksa_annotation` /
   `dns_zone_name_servers` / Gateway 用 IP / AI Gateway 用 IP の計 5 つ（既存 output に追記）
+- `variables.auto.tfvars`: `logging_components = ["SYSTEM_COMPONENTS"]` を設定
+  （Cloud Logging と OpenTelemetry Collector によるログの二重集約を避ける）
