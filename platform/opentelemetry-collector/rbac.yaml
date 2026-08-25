@@ -19,6 +19,13 @@ rules:
       - resourcequotas
       - persistentvolumes
       - persistentvolumeclaims
+      # k8sclusterreceiver の公式 ClusterRole が baseline 要件として挙げている
+      # subresource。無いと informer が実行時に 403 になり、クラスタメトリクス
+      # が静かに欠落する。
+      - namespaces/status
+      - nodes/spec
+      - pods/status
+      - replicationcontrollers/status
     verbs: ["get", "list", "watch"]
   - apiGroups: ["apps"]
     resources: ["daemonsets", "deployments", "replicasets", "statefulsets"]

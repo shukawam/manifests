@@ -43,10 +43,20 @@ spec:
             - k8s.deployment.name
             - k8s.node.name
             - k8s.container.name
+        # k8s.pod.ip は node collector からの中継データには付かないため使えない。
+        # また node collector 経由で届くデータの接続元 IP は発信元 Pod ではなく
+        # node collector 自身になるため、まず UID / (namespace, pod 名) で
+        # 関連付ける。ただしアプリケーションから gateway へ直接 OTLP で届く
+        # トレースについては接続元がそのまま Pod なので connection も残す。
         pod_association:
           - sources:
               - from: resource_attribute
-                name: k8s.pod.ip
+                name: k8s.pod.uid
+          - sources:
+              - from: resource_attribute
+                name: k8s.namespace.name
+              - from: resource_attribute
+                name: k8s.pod.name
           - sources:
               - from: connection
       resourcedetection:
