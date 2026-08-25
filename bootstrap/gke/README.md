@@ -39,7 +39,7 @@ Autopilot はノードを GKE 側が完全管理するため、`hostPath` / `hos
 
 ```bash
 cp variables.auto.tfvars.example variables.auto.tfvars
-# terraform.tfvars を編集 (最低限 resource_prefix と project_id)
+# variables.auto.tfvars を編集 (最低限 resource_prefix と project_id)
 
 gcloud auth application-default login
 
