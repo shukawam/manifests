@@ -1,0 +1,13 @@
+crds:
+  enabled: true
+  keep: true
+
+# Cloud DNS を DNS-01 で操作するため Workload Identity を紐付ける
+serviceAccount:
+  annotations:
+    iam.gke.io/gcp-service-account: shukawam-cert-manager@gcp-fieldeng-dev.iam.gserviceaccount.com
+
+resources:
+  requests:
+    cpu: 20m
+    memory: 64Mi
