@@ -1,0 +1,81 @@
+apiVersion: opentelemetry.io/v1beta1
+kind: OpenTelemetryCollector
+metadata:
+  name: otel-gateway
+  namespace: opentelemetry
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  mode: deployment
+  # k8s_cluster receiver は重複計上を避けるため必ず 1 レプリカ
+  replicas: 1
+  serviceAccount: otel-collector
+  resources:
+    requests:
+      cpu: 200m
+      memory: 512Mi
+    limits:
+      memory: 1Gi
+  config:
+    receivers:
+      otlp:
+        protocols:
+          grpc:
+            endpoint: 0.0.0.0:4317
+          http:
+            endpoint: 0.0.0.0:4318
+      k8s_cluster:
+        collection_interval: 30s
+        allocatable_types_to_report: [cpu, memory]
+    processors:
+      memory_limiter:
+        check_interval: 5s
+        limit_percentage: 80
+        spike_limit_percentage: 20
+      k8sattributes:
+        auth_type: serviceAccount
+        passthrough: false
+        extract:
+          metadata:
+            - k8s.namespace.name
+            - k8s.pod.name
+            - k8s.pod.uid
+            - k8s.deployment.name
+            - k8s.node.name
+            - k8s.container.name
+        pod_association:
+          - sources:
+              - from: resource_attribute
+                name: k8s.pod.ip
+          - sources:
+              - from: connection
+      resourcedetection:
+        detectors: [env, gcp]
+        timeout: 10s
+        override: false
+      batch:
+        send_batch_size: 1000
+        timeout: 10s
+    exporters:
+      # メトリクスは GMP へ。googlecloud だと custom.googleapis.com の
+      # メトリクス記述子上限とコストに当たる。
+      googlemanagedprometheus:
+        project: gcp-fieldeng-dev
+      googlecloud:
+        project: gcp-fieldeng-dev
+        log:
+          default_log_name: opentelemetry-collector
+    service:
+      pipelines:
+        metrics:
+          receivers: [otlp, k8s_cluster]
+          processors: [memory_limiter, k8sattributes, resourcedetection, batch]
+          exporters: [googlemanagedprometheus]
+        traces:
+          receivers: [otlp]
+          processors: [memory_limiter, k8sattributes, resourcedetection, batch]
+          exporters: [googlecloud]
+        logs:
+          receivers: [otlp]
+          processors: [memory_limiter, k8sattributes, resourcedetection, batch]
+          exporters: [googlecloud]
