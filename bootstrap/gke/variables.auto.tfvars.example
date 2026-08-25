@@ -1,0 +1,30 @@
+# ---------------------------------------
+# Common
+# ---------------------------------------
+resource_prefix = "shukawam"
+
+# ---------------------------------------
+# Google Cloud
+# ---------------------------------------
+project_id = "gcp-fieldeng-dev"
+region     = "asia-northeast1"
+
+# ノードを配置するゾーン。空リストにするとリージョン内の全ゾーンに分散する
+zones = ["asia-northeast1-a"]
+
+# ---------------------------------------
+# Node pool
+# ---------------------------------------
+machine_type   = "e2-standard-4"
+node_count     = 2
+min_node_count = 1
+max_node_count = 3
+
+# 検証環境でコストを抑えたい場合
+# spot = true
+
+# ---------------------------------------
+# OpenTelemetry Collector
+# ---------------------------------------
+otel_collector_namespace = "opentelemetry"
+otel_collector_ksa_name  = "otel-collector"
