@@ -38,6 +38,31 @@ for t in "${render_targets[@]}"; do
 done
 
 # --- 3. 素の YAML が構文的に妥当か -------------------------------------
+# クラスタへの到達性をループに入る前に 1 回だけ安価に確認する。
+# 到達できない場合（kubeconfig の認証切れ等、マニフェストの正しさとは無関係な
+# 理由）は kubectl --dry-run=client を一切実行せず、YAML 構文チェックのみに
+# 縮退する。構文が壊れていればこの場合でも従来どおり fail にする。
+run_with_timeout() {
+  if command -v timeout >/dev/null 2>&1; then
+    timeout 5 "$@"
+  elif command -v gtimeout >/dev/null 2>&1; then
+    gtimeout 5 "$@"
+  else
+    "$@"
+  fi
+}
+
+cluster_reachable=0
+if run_with_timeout kubectl cluster-info --request-timeout=3s >/dev/null 2>&1; then
+  cluster_reachable=1
+fi
+
+if [ "$cluster_reachable" -eq 0 ]; then
+  printf '\033[33mWARN\033[0m クラスタに到達できないため、kubectl --dry-run=client によるスキーマ検証をスキップします\n'
+  printf '     (原因: kubeconfig の認証切れ等が考えられます。復旧: gcloud auth login。YAML 構文チェックのみ継続します)\n'
+fi
+
+skipped_dirs=""
 for d in projects apps platform/cert-manager-issuers platform/secret-stores \
          platform/opentelemetry-collector platform/kong-gateway platform/kong-ai-gateway \
          bootstrap/argocd; do
@@ -46,6 +71,17 @@ for d in projects apps platform/cert-manager-issuers platform/secret-stores \
   files=("$d"/*.yaml)
   shopt -u nullglob
   [ ${#files[@]} -gt 0 ] || continue
+
+  if [ "$cluster_reachable" -eq 0 ]; then
+    skipped_dirs="${skipped_dirs:+$skipped_dirs }$d"
+    if yq eval-all 'true' "$d"/*.yaml >/dev/null 2>&1; then
+      note "warn (クラスタ未到達のため kubectl --dry-run=client 未実行。YAML 構文は妥当): $d"
+    else
+      bad "YAML 構文エラー: $d"
+    fi
+    continue
+  fi
+
   if kubectl apply --dry-run=client -f "$d" >/dev/null 2>/tmp/kubectl-err.txt; then
     ok "kubectl --dry-run=client $d"
   else
@@ -68,6 +104,10 @@ for d in projects apps platform/cert-manager-issuers platform/secret-stores \
     fi
   fi
 done
+
+if [ "$cluster_reachable" -eq 0 ] && [ -n "$skipped_dirs" ]; then
+  printf '\033[33mWARN\033[0m kubectl --dry-run=client を未実行のディレクトリ:%s\n' "$skipped_dirs"
+fi
 
 # --- 4. repoURL が全ファイルで一致しているか ---------------------------
 if [ -d apps ] || [ -d bootstrap ]; then
