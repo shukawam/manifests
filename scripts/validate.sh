@@ -11,12 +11,22 @@ ok()   { printf '\033[32mOK\033[0m   %s\n' "$*"; }
 bad()  { printf '\033[31mFAIL\033[0m %s\n' "$*"; fail=1; }
 
 # --- 1. Helm リポジトリを冪等に登録 -------------------------------------
-helm repo add argo             https://argoproj.github.io/argo-helm                  >/dev/null 2>&1 || true
-helm repo add jetstack         https://charts.jetstack.io                            >/dev/null 2>&1 || true
-helm repo add external-secrets https://charts.external-secrets.io                    >/dev/null 2>&1 || true
-helm repo add open-telemetry   https://open-telemetry.github.io/opentelemetry-helm-charts >/dev/null 2>&1 || true
-helm repo add kong             https://charts.konghq.com                             >/dev/null 2>&1 || true
-helm repo update >/dev/null 2>&1
+# --force-update: 同名エイリアスが既に別 URL で登録されていた場合、それを
+# 黙って温存すると以後誤ったリポジトリから pull し続けてしまうため、
+# 常に URL を上書きする。
+helm repo add argo             https://argoproj.github.io/argo-helm                  --force-update >/dev/null 2>&1 || true
+helm repo add jetstack         https://charts.jetstack.io                            --force-update >/dev/null 2>&1 || true
+helm repo add external-secrets https://charts.external-secrets.io                    --force-update >/dev/null 2>&1 || true
+helm repo add open-telemetry   https://open-telemetry.github.io/opentelemetry-helm-charts --force-update >/dev/null 2>&1 || true
+helm repo add kong             https://charts.konghq.com                             --force-update >/dev/null 2>&1 || true
+# ここで失敗しても `|| true` は付けない。付けると set -e に頼った暗黙の
+# 中断ができなくなり、古い/不在のチャートに対して以降の検証を通してしまう
+# （中断より悪い）。失敗した場合はメッセージを出してから明示的に終了する。
+if ! helm repo update >/tmp/helm-repo-update-err.txt 2>&1; then
+  bad "helm repo update に失敗しました"
+  sed 's/^/       /' /tmp/helm-repo-update-err.txt
+  exit 1
+fi
 
 # --- 2. values.yaml がチャートに対して正しくレンダリングされるか ---------
 # "<values への相対パス>|<helm repo>/<chart>|<version>|<namespace>"
@@ -30,14 +40,67 @@ render_targets=(
 for t in "${render_targets[@]}"; do
   IFS='|' read -r vals chart ver ns <<<"$t"
   [ -f "$vals" ] || { note "skip (未作成): $vals"; continue; }
-  if helm template release "$chart" --version "$ver" -n "$ns" -f "$vals" >/dev/null 2>/tmp/helm-err.txt; then
-    ok "helm template $chart"
+
+  # Argo CD が実際に使うリリース名は spec.sources[0].helm.releaseName
+  # があればそれ、無ければ metadata.name (apps/*.yaml)。固定名 "release"
+  # でレンダリングすると、例えば cert-manager のコントローラ SA が
+  # "release-cert-manager" になり、Workload Identity のバインディングを
+  # 壊す名前を検証してしまう。values.yaml のディレクトリ名 (例:
+  # platform/cert-manager) は apps/*.yaml のファイル名 (apps/cert-manager.yaml)
+  # と一致する規約なので、それで対応する apps ファイルを引く。
+  apps_file="apps/$(basename "$(dirname "$vals")").yaml"
+  release="release"
+  if [ -f "$apps_file" ]; then
+    derived="$(yq eval '.spec.sources[0].helm.releaseName // .metadata.name // ""' "$apps_file")"
+    if [ -n "$derived" ] && [ "$derived" != "null" ]; then
+      release="$derived"
+    else
+      note "warn: $apps_file からリリース名を取得できず release にフォールバック"
+    fi
+  else
+    note "warn: $apps_file が無いため release name を release にフォールバック ($vals)"
+  fi
+
+  # --include-crds: Argo CD は既定でこれを渡す (helm.skipCrds の既定は
+  # false)。付けないと crds/ ディレクトリに CRD を置くサブチャート
+  # (例: kong-operator の gwapi-standard-crds) の CRD がまるごと
+  # 検証対象外になる。
+  if helm template "$release" "$chart" --version "$ver" -n "$ns" -f "$vals" --include-crds >/dev/null 2>/tmp/helm-err.txt; then
+    ok "helm template $chart (release: $release)"
   else
     bad "helm template $chart"; sed 's/^/       /' /tmp/helm-err.txt | head -20
   fi
 done
 
-# --- 3. 素の YAML が構文的に妥当か -------------------------------------
+# --- 3. argo-cd のチャート版・リリース名が bootstrap.sh と一致しているか --
+# チャート版 10.4.0 は bootstrap/argocd/bootstrap.sh・apps/argo-cd.yaml・
+# この validate.sh (render_targets) の 3 箇所に、リリース名 argocd は
+# 前 2 者に重複している。どちらかがずれると Argo CD がもう一組立ち上がり、
+# HTTPRoute の backend が解決しなくなる（過去に実際に起きた重大欠陥）。
+if [ -f apps/argo-cd.yaml ] && [ -f bootstrap/argocd/bootstrap.sh ]; then
+  apps_argocd_version="$(yq eval '.spec.sources[0].targetRevision' apps/argo-cd.yaml)"
+  apps_argocd_release="$(yq eval '.spec.sources[0].helm.releaseName' apps/argo-cd.yaml)"
+  bootstrap_argocd_version="$(grep -oE '^ARGOCD_CHART_VERSION="[^"]*"' bootstrap/argocd/bootstrap.sh \
+                                 | sed -E 's/^ARGOCD_CHART_VERSION="([^"]*)"$/\1/' || true)"
+  bootstrap_argocd_release="$(grep -oE '^helm upgrade --install [^ ]+' bootstrap/argocd/bootstrap.sh \
+                                 | awk '{print $4}' || true)"
+
+  if [ -n "$bootstrap_argocd_version" ] && [ "$apps_argocd_version" = "$bootstrap_argocd_version" ]; then
+    ok "argo-cd チャート版が一致: apps/argo-cd.yaml=${apps_argocd_version} bootstrap.sh=${bootstrap_argocd_version}"
+  else
+    bad "argo-cd チャート版の不一致: apps/argo-cd.yaml=${apps_argocd_version:-<なし>} bootstrap.sh=${bootstrap_argocd_version:-<なし>}"
+  fi
+
+  if [ -n "$bootstrap_argocd_release" ] && [ "$apps_argocd_release" = "$bootstrap_argocd_release" ]; then
+    ok "argo-cd リリース名が一致: apps/argo-cd.yaml=${apps_argocd_release} bootstrap.sh=${bootstrap_argocd_release}"
+  else
+    bad "argo-cd リリース名の不一致: apps/argo-cd.yaml=${apps_argocd_release:-<なし>} bootstrap.sh=${bootstrap_argocd_release:-<なし>}"
+  fi
+else
+  bad "argo-cd 版/リリース名検証に必要なファイルが無い (apps/argo-cd.yaml, bootstrap/argocd/bootstrap.sh)"
+fi
+
+# --- 4. 素の YAML が構文的に妥当か -------------------------------------
 # クラスタへの到達性をループに入る前に 1 回だけ安価に確認する。
 # 到達できない場合（kubeconfig の認証切れ等、マニフェストの正しさとは無関係な
 # 理由）は kubectl --dry-run=client を一切実行せず、YAML 構文チェックのみに
@@ -117,7 +180,7 @@ if [ "$cluster_reachable" -eq 0 ] && [ -n "$skipped_dirs" ]; then
   printf '\033[33mWARN\033[0m kubectl --dry-run=client を未実行のディレクトリ:%s\n' "$skipped_dirs"
 fi
 
-# --- 4. repoURL が全ファイルで一致しているか ---------------------------
+# --- 5. repoURL が全ファイルで一致しているか ---------------------------
 if [ -d apps ] || [ -d bootstrap ]; then
   bad_urls=$(grep -rhoE 'repoURL: https://github\.com/[^ ]+' apps bootstrap 2>/dev/null \
              | sort -u | grep -v "repoURL: ${REPO_URL}\$" || true)
@@ -125,7 +188,7 @@ if [ -d apps ] || [ -d bootstrap ]; then
   else bad "repoURL の不一致"; printf '%s\n' "$bad_urls" | sed 's/^/       /'; fi
 fi
 
-# --- 5. 全 Application に ServerSideApply=true があるか -----------------
+# --- 6. 全 Application に ServerSideApply=true があるか -----------------
 if [ -d apps ]; then
   for f in apps/*.yaml; do
     [ -f "$f" ] || continue
@@ -139,7 +202,7 @@ if [ -d apps ]; then
   done
 fi
 
-# --- 6. bootstrap.sh（shellcheck があれば） ----------------------------
+# --- 7. bootstrap.sh（shellcheck があれば） ----------------------------
 if [ -f bootstrap/argocd/bootstrap.sh ]; then
   bash -n bootstrap/argocd/bootstrap.sh && ok "bash -n bootstrap.sh" || bad "bootstrap.sh 構文エラー"
   if command -v shellcheck >/dev/null 2>&1; then
