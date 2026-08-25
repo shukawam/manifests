@@ -19,7 +19,7 @@ Argo CD の App of Apps で以下のプラットフォーム基盤を構築・�
 | OpenTelemetry Operator / Collector | クラスタのメトリクス・ログ・トレースを Google Cloud の可観測性基盤へ送る |
 | Kong Operator | Gateway API の実装と Konnect 連携の両方を担う |
 | Kong Gateway (Gateway API) | クラスタの外部公開口。`https://argocd.gke.shukawam.me` を `HTTPRoute` で公開する |
-| Kong AI Gateway | Konnect が管理する AI 用データプレーン。独立した LoadBalancer で `http://aigw.gke.shukawam.me` を公開する |
+| Kong AI Gateway | Konnect が管理する AI 用データプレーン。独立した LoadBalancer で `http://aigw.gke.shukawam.me:8000` を公開する |
 
 `bootstrap/` はクラスタと Argo CD が立ち上がるまでの、GitOps に乗せられない手前の 2 段
 （`bootstrap/gke` = Terraform, `bootstrap/argocd` = Argo CD 初回インストール）。
@@ -42,6 +42,23 @@ Argo CD の App of Apps で以下のプラットフォーム基盤を構築・�
 `Pending` のまま止まる。手順ごとの詳細は
 [設計ドキュメント §8](docs/superpowers/specs/2026-08-24-argocd-platform-design.md#8-前提となる手動手順)
 を参照。
+
+> [!WARNING]
+> **`bootstrap/gke/` は上記手順 1 に必要な変更がまだ実装されていない。**
+> [`docs/terraform-requirements.md`](docs/terraform-requirements.md) に記載された以下 4 種類の
+> リソースが `bootstrap/gke/` に一切存在しない（担当は別セッション）。
+>
+> - Secret Manager / Cloud DNS の API 有効化
+> - ESO 用 / cert-manager 用の Google Service Account（Workload Identity）
+> - 静的 IP アドレス（Kong Gateway 用 / Kong AI Gateway 用の 2 つ）
+> - Cloud DNS のマネージドゾーンと A レコード
+>
+> これらが揃わないまま現状の手順どおり `terraform apply` を進めると、手順 2 で
+> `terraform output dns_zone_name_servers` がそもそも存在せずエラーになる。さらに
+> cert-manager / ESO は存在しない GSA を指す Workload Identity annotation 付きで起動し、
+> `Certificate` は `Pending`、`ExternalSecret` は `SecretSyncedError` のまま止まる。
+> **上記 4 種類のリソースが `bootstrap/gke/` に実装されるまで、ブートストラップ以降の手順は
+> 進められない。**
 
 ## 3. `bootstrap/gke` → `bootstrap/argocd` の実行方法
 
@@ -136,7 +153,7 @@ argocd login argocd.gke.shukawam.me --grpc-web
 
 ## 6. セキュリティ上の注意（Kong AI Gateway）
 
-Kong AI Gateway（`http://aigw.gke.shukawam.me`）は、LLM のストリーミング応答やタイムアウトに
+Kong AI Gateway（`http://aigw.gke.shukawam.me:8000`）は、LLM のストリーミング応答やタイムアウトに
 関する不確実性を避けるため、独立した LoadBalancer で公開している。**この構成では
 TLS を付けていない（平文 HTTP でインターネットに露出する）。**
 
@@ -144,8 +161,7 @@ TLS を付けていない（平文 HTTP でインターネットに露出する�
 プラグインを必ず有効にすること。** Argo CD / Kubernetes 側にはこれを強制する仕組みがない
 （Konnect 上の設定は `kongctl` による手動反映であり、GitOps の管理対象外）。
 
-検証用途に限り、必要であれば `google_compute_address` の
-`master_authorized_networks` と同様に、Service の `loadBalancerSourceRanges` で送信元 IP を
+検証用途に限り、必要であれば Service の `loadBalancerSourceRanges` で送信元 IP を
 絞ることも検討する。詳細は
 [設計ドキュメント §6.10](docs/superpowers/specs/2026-08-24-argocd-platform-design.md#610-kong-ai-gateway)
 を参照。
