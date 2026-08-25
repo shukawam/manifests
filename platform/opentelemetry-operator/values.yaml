@@ -1,0 +1,15 @@
+admissionWebhooks:
+  # autoGenerateCert は使わない。Argo CD の helm template では lookup が効かず、
+  # reconcile のたびに証明書が再生成されて恒久 OutOfSync になる。
+  certManager:
+    enabled: true
+
+manager:
+  # googlecloud / googlemanagedprometheus exporter は contrib にしか入っていない。
+  # ここで既定イメージを差し替えておくと Collector CR 側で image を書かずに済む。
+  collectorImage:
+    repository: otel/opentelemetry-collector-contrib
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
