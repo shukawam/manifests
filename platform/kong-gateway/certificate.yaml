@@ -4,7 +4,13 @@ metadata:
   name: gke-shukawam-me
   namespace: kong
   annotations:
-    argocd.argoproj.io/sync-wave: "1"
+    # gateway.yaml と同じ wave にする。Argo CD は cert-manager.io/Certificate
+    # のヘルスチェックを持つため、wave を分けると Let's Encrypt の発行が
+    # 終わるまで Gateway (延いては Kong の DataPlane / LoadBalancer) が
+    # 作られなくなる。発行は手動の NS 委任が前提のため、それが済むまで
+    # 静的 IP の annotation 確認すらできなくなってしまう。同じ wave なら
+    # Gateway は即座に作られ、Kong は Secret が現れた時点で拾う。
+    argocd.argoproj.io/sync-wave: "2"
 spec:
   secretName: gke-shukawam-me-tls
   issuerRef:
