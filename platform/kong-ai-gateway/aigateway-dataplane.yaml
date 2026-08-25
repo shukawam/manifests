@@ -1,0 +1,37 @@
+# aigatewaydataplanes.aigateway.konghq.com (v1alpha1, storage) のスキーマと突き合わせ済み:
+# spec.{controlPlaneRef,deployment,network} は実物に一致する。
+# network.services.ingress は annotations/type/ports のみを公開し、
+# spec.loadBalancerIP は存在しないため、静的 IP の固定は annotation で行う
+# (Terraform が作った予約済み静的 IP 名: shukawam-gke-aigw)。
+# annotation が実際に効くかは Task 10 の実機検証で確認する。
+apiVersion: aigateway.konghq.com/v1alpha1
+kind: AIGatewayDataPlane
+metadata:
+  name: kong
+  namespace: kong
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+spec:
+  controlPlaneRef:
+    type: konnectNamespacedRef
+    konnectNamespacedRef:
+      name: kong
+  deployment:
+    replicas: 1
+    podTemplateSpec:
+      spec:
+        containers:
+          - name: aigw
+            image: kong/kong-ai-gateway:2.0.2
+  network:
+    services:
+      ingress:
+        type: LoadBalancer
+        # この CRD も spec.loadBalancerIP を公開していないため annotation で固定する
+        annotations:
+          cloud.google.com/l4-rbs: "enabled"
+          networking.gke.io/load-balancer-ip-addresses: shukawam-gke-aigw
+        ports:
+          - name: http
+            port: 8000
+            targetPort: 8000
