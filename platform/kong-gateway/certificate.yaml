@@ -18,5 +18,7 @@ spec:
     name: letsencrypt-prod
   commonName: "*.gke.shukawam.me"
   dnsNames:
+    # apex (gke.shukawam.me) は含めない。ワイルドカードは自分自身の owner name には
+    # マッチせず、apex 用の A レコードも存在せず、gateway.yaml の listener hostname
+    # (*.gke.shukawam.me) も apex を含まない。構造上使えない SAN のため外している。
     - "*.gke.shukawam.me"
-    - "gke.shukawam.me"
