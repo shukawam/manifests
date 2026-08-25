@@ -250,6 +250,18 @@ values が二重管理になるのを防ぐのが目的。
 
 `apps/argo-cd.yaml` が同じチャートバージョン・同じ values ファイルを参照するため、
 Argo CD は起動直後から自分自身を Synced と判定する。
+
+**ただし Helm のリリース名を明示的に一致させる必要がある。** Argo CD は
+`spec.source.helm.releaseName` が無いと **Application 名をリリース名として使う**。
+`argo-cd` チャートは `nameOverride: argocd` を持ち、fullname テンプレートは
+リリース名が `argocd` を含むときだけ接頭辞を付けない。Application 名 `argo-cd` は
+（ハイフンのため）`argocd` を含まないので、リリース名を指定しないと
+`argo-cd-argocd-server` などがレンダリングされ、bootstrap.sh が
+`helm upgrade --install argocd` で作った `argocd-server` 一式とは**別名の Argo CD が
+もう一組作られる**。自己管理は成立せず、`HTTPRoute` の `backendRefs` も解決しない。
+
+したがって `apps/argo-cd.yaml` のチャート source に
+`helm.releaseName: argocd` を明示する。bootstrap.sh のリリース名と一致させること。
 `helm` が残す `sh.helm.release.v1.argocd.*` Secret は害がないのでそのまま残す
 (README に「以後 helm upgrade は使わず git を変更する」と明記)。
 
