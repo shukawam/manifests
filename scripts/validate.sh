@@ -62,7 +62,7 @@ for d in projects apps platform/cert-manager-issuers platform/secret-stores \
         bad "kubectl --dry-run=client $d"; sed 's/^/       /' /tmp/kubectl-err.txt | head -20
       else
         unknown_kinds=$(grep -oE 'no matches for kind "[^"]+"' /tmp/kubectl-err.txt \
-                           | sed -E 's/no matches for kind "([^"]+)"/\1/' | sort -u | paste -sd, -)
+                           | sed -E 's/no matches for kind "([^"]+)"/\1/' | sort -u | paste -sd, - || true)
         note "warn (CRD 未導入のため未検証な kind: ${unknown_kinds:-不明}. YAML 構文は妥当): $d"
       fi
     fi
