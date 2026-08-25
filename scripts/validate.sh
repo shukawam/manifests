@@ -49,11 +49,22 @@ for d in projects apps platform/cert-manager-issuers platform/secret-stores \
   if kubectl apply --dry-run=client -f "$d" >/dev/null 2>/tmp/kubectl-err.txt; then
     ok "kubectl --dry-run=client $d"
   else
-    # CRD 未導入のクラスタでは未知 kind が引っかかるため、YAML 構文だけは必ず見る
-    if yq eval-all 'true' "$d"/*.yaml >/dev/null 2>&1; then
-      note "warn (CRD 未導入と思われる。YAML 構文は妥当): $d"
-    else
+    # YAML 自体が構文的に壊れていれば、kubectl のエラー内容によらず fail
+    if ! yq eval-all 'true' "$d"/*.yaml >/dev/null 2>&1; then
       bad "YAML 構文エラー: $d"; sed 's/^/       /' /tmp/kubectl-err.txt | head -10
+    else
+      # kubectl のエラーが「CRD 未導入」由来の行だけで構成されているかを見る。
+      # それ以外のエラー（フィールド名の誤り・型違反・必須フィールド欠落など）が
+      # 1 行でも混ざっていれば、CRD 未導入を理由に握りつぶさず fail にする。
+      other_errors=$(grep -vE 'no matches for kind|ensure CRDs are installed|resource mapping not found for name' \
+                       /tmp/kubectl-err.txt | sed '/^[[:space:]]*$/d' || true)
+      if [ -n "$other_errors" ]; then
+        bad "kubectl --dry-run=client $d"; sed 's/^/       /' /tmp/kubectl-err.txt | head -20
+      else
+        unknown_kinds=$(grep -oE 'no matches for kind "[^"]+"' /tmp/kubectl-err.txt \
+                           | sed -E 's/no matches for kind "([^"]+)"/\1/' | sort -u | paste -sd, -)
+        note "warn (CRD 未導入のため未検証な kind: ${unknown_kinds:-不明}. YAML 構文は妥当): $d"
+      fi
     fi
   fi
 done
