@@ -212,4 +212,79 @@ if [ -f bootstrap/argocd/bootstrap.sh ]; then
   fi
 fi
 
+# --- 8. bootstrap/gke (Terraform) の静的検証と、マニフェスト側定数との整合 ------
+# GSA の email やアドレス名は Terraform の命名規則 (format("%s-xxx", resource_prefix)) から
+# 手打ちで書き写した文字列で、Terraform 側との自動的な結び付きが無い。ズレてもエラーには
+# ならず、Workload Identity や LoadBalancer の静的 IP 紐付けが黙って壊れる
+# （本プロジェクトで繰り返し起きている「沈黙する失敗」の典型形）ため、ここで突き合わせる。
+if command -v terraform >/dev/null 2>&1; then
+  if [ -d bootstrap/gke/.terraform ]; then
+    if terraform -chdir=bootstrap/gke fmt -check >/tmp/tf-fmt-err.txt 2>&1; then
+      ok "terraform fmt -check: bootstrap/gke"
+    else
+      bad "terraform fmt -check: bootstrap/gke (terraform -chdir=bootstrap/gke fmt で修正してください)"
+      sed 's/^/       /' /tmp/tf-fmt-err.txt
+    fi
+
+    if terraform -chdir=bootstrap/gke validate >/tmp/tf-validate-err.txt 2>&1; then
+      ok "terraform validate: bootstrap/gke"
+    else
+      bad "terraform validate: bootstrap/gke"
+      sed 's/^/       /' /tmp/tf-validate-err.txt
+    fi
+  else
+    note "skip (bootstrap/gke で terraform init 未実行のため fmt/validate は未実施)"
+  fi
+else
+  note "skip (terraform コマンドが見つからないため bootstrap/gke の fmt/validate は未実施)"
+fi
+
+# variables.auto.tfvars は gitignore 対象の実値ファイルのため、他マシン (CI 含む) には
+# 存在しない可能性がある。無ければ検証自体をスキップする。
+if [ -f bootstrap/gke/variables.auto.tfvars ]; then
+  resource_prefix="$(grep -E '^resource_prefix[[:space:]]*=' bootstrap/gke/variables.auto.tfvars \
+                        | sed -E 's/^resource_prefix[[:space:]]*=[[:space:]]*"([^"]*)".*/\1/' || true)"
+  project_id="$(grep -E '^project_id[[:space:]]*=' bootstrap/gke/variables.auto.tfvars \
+                   | sed -E 's/^project_id[[:space:]]*=[[:space:]]*"([^"]*)".*/\1/' || true)"
+
+  if [ -n "$resource_prefix" ] && [ -n "$project_id" ]; then
+    # "<マニフェストファイル>|<account_id / 静的IP名の接尾辞>|<種別: gsa または address>"
+    tf_const_checks=(
+      "platform/external-secrets/values.yaml|external-secrets|gsa"
+      "platform/cert-manager/values.yaml|cert-manager|gsa"
+      "platform/opentelemetry-collector/serviceaccount.yaml|otel-collector|gsa"
+      "platform/kong-gateway/gatewayconfiguration.yaml|gke-gateway|address"
+      "platform/kong-ai-gateway/aigateway-dataplane.yaml|gke-aigw|address"
+    )
+    for c in "${tf_const_checks[@]}"; do
+      IFS='|' read -r file suffix kind <<<"$c"
+      [ -f "$file" ] || { note "skip (未作成): $file"; continue; }
+
+      if [ "$kind" = "gsa" ]; then
+        expected="${resource_prefix}-${suffix}@${project_id}.iam.gserviceaccount.com"
+        actual="$(grep -oE 'iam\.gke\.io/gcp-service-account:[[:space:]]*[^[:space:]]+' "$file" \
+                     | head -1 | awk '{print $2}' || true)"
+        label="GSA email"
+      else
+        expected="${resource_prefix}-${suffix}"
+        actual="$(grep -oE 'networking\.gke\.io/load-balancer-ip-addresses:[[:space:]]*[^[:space:]]+' "$file" \
+                     | head -1 | awk '{print $2}' || true)"
+        label="静的 IP アドレス名"
+      fi
+
+      if [ -z "$actual" ]; then
+        bad "$label が $file から抽出できませんでした"
+      elif [ "$actual" = "$expected" ]; then
+        ok "$label が Terraform の命名規則と一致: $file ($actual)"
+      else
+        bad "$label の不一致: $file の値=${actual} 期待値=${expected} (resource_prefix=${resource_prefix}, project_id=${project_id})"
+      fi
+    done
+  else
+    note "skip (bootstrap/gke/variables.auto.tfvars から resource_prefix / project_id を読めず、定数の整合検証は未実施)"
+  fi
+else
+  note "skip (bootstrap/gke/variables.auto.tfvars が無い。gitignore 対象のため他マシンには存在しない)"
+fi
+
 exit $fail
