@@ -25,6 +25,14 @@ Argo CD の App of Apps で以下のプラットフォーム基盤を構築・�
 （`bootstrap/gke` = Terraform, `bootstrap/argocd` = Argo CD 初回インストール）。
 `projects/` 以降はすべて Argo CD の管理下に入る。
 
+
+> [!IMPORTANT]
+> **現在、Gateway API 経由の HTTPS 公開は上流の不具合により機能しません。**
+> Kong Operator 2.3.0-rc.2 が Let's Encrypt 証明書を変換した `certificate` エンティティを
+> Kong Gateway 3.14 が拒否し、その Gateway のルーティングが全停止します。
+> 詳細と切り分け結果は [`docs/known-issues.md`](docs/known-issues.md) を参照。
+> 当面 Argo CD へは `kubectl port-forward svc/argocd-server -n argocd 8080:80` でアクセスしてください。
+
 ## 2. 実行順
 
 ```
