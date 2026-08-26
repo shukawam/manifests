@@ -9,10 +9,20 @@ metadata:
     # 終わるまで Gateway (延いては Kong の DataPlane / LoadBalancer) が
     # 作られなくなる。発行は手動の NS 委任が前提のため、それが済むまで
     # 静的 IP の annotation 確認すらできなくなってしまう。同じ wave なら
-    # Gateway は即座に作られ、Kong は Secret が現れた時点で拾う。
+    # Gateway は即座に作られ、Secret が現れた時点で Kong が listener を
+    # Programmed にする (下の secretTemplate のラベルが付いていることが前提)。
     argocd.argoproj.io/sync-wave: "2"
 spec:
   secretName: gke-shukawam-me-tls
+  # Kong Operator は Secret の informer キャッシュを konghq.com/secret=true で
+  # 絞り込んでいる。このラベルが無い Secret はオペレータから**一切見えず**、
+  # Gateway の listener が InvalidCertificateRef ("Secret ... not found") のまま
+  # 永久に止まる。kubectl get では取得できるので発覚しにくい。
+  # Konnect が出力する Secret にこのラベルが付いているのはこのためで、
+  # cert-manager が発行する TLS Secret にも同じラベルが要る。
+  secretTemplate:
+    labels:
+      konghq.com/secret: "true"
   issuerRef:
     kind: ClusterIssuer
     name: letsencrypt-prod
