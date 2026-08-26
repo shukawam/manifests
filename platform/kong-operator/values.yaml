@@ -26,7 +26,17 @@ global:
       certManager:
         enabled: true
 
+# limits も明示する。requests だけ上書きするとチャート既定の
+# limits (cpu 500m / memory 256Mi) がそのまま残り、requests と同値になって
+# 余裕がゼロになる。このオペレータは全 namespace を監視し Gateway API /
+# Kong / Konnect / AI Gateway の全コントローラを動かすため、
+# コールドスタート時の informer キャッシュ構築で 256Mi を超えて OOMKilled になる
+# (実機で 23 回連続の CrashLoopBackOff を確認)。
+# 温まった後の定常状態では収まるため、Pod が再起動するまで露見しない。
 resources:
   requests:
     cpu: 100m
     memory: 256Mi
+  limits:
+    cpu: 1000m
+    memory: 1Gi
