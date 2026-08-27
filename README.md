@@ -14,10 +14,10 @@ Argo CD の App of Apps で以下のプラットフォーム基盤を構築・�
 | コンポーネント | 役割 |
 | --- | --- |
 | Argo CD | GitOps コントローラ。ブートストラップ後は自分自身も Git 経由で管理する |
-| cert-manager | Let's Encrypt のサーバ証明書発行 / OpenTelemetry Operator の webhook 証明書 / Kong Operator の CA・webhook 証明書 |
+| cert-manager | Let's Encrypt のサーバ証明書発行 / OpenTelemetry Operator の webhook 証明書 / Kong AI Gateway の Konnect hybrid mTLS クラスタ証明書 |
 | External Secrets Operator (ESO) | Google Cloud Secret Manager のシークレットをクラスタに同期する |
 | OpenTelemetry Operator / Collector | クラスタのメトリクス・ログ・トレースを Google Cloud の可観測性基盤へ送る |
-| Kong Operator | Gateway API の実装と Konnect 連携の両方を担う |
+| Kong Ingress (`kong/ingress` Helm chart) | Kong Ingress Controller (KIC) による Gateway API の実装と、Kong Gateway データプレーンの両方を 1 chart で提供する（Kong Operator は廃止済み） |
 | Kong Gateway (Gateway API) | クラスタの外部公開口。`https://argocd.gke.shukawam.me` を `HTTPRoute` で公開する |
 | Kong AI Gateway | Konnect が管理する AI 用データプレーン。独立した LoadBalancer で `http://aigw.gke.shukawam.me:8000` を公開する |
 
