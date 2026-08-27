@@ -5,9 +5,10 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "1"
 spec:
-  controllerName: konghq.com/gateway-operator
-  parametersRef:
-    group: gateway-operator.konghq.com
-    kind: GatewayConfiguration
-    name: kong
-    namespace: kong
+  # KIC の既定の controllerName。オペレータの
+  # konghq.com/gateway-operator から差し替えた。
+  # 誤った値を書いても GatewayClass は作成でき、Gateway が黙って
+  # Accepted=False になるだけなので、実機で status を確認すること。
+  controllerName: konghq.com/kic-gateway-controller
+  # parametersRef は書かない。GatewayConfiguration は
+  # Kong Operator 専用 CRD であり、オペレータ削除に伴い存在しなくなる。
