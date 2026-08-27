@@ -181,10 +181,41 @@ if [ "$cluster_reachable" -eq 0 ] && [ -n "$skipped_dirs" ]; then
 fi
 
 # --- 5. repoURL が全ファイルで一致しているか ---------------------------
+# github.com の repoURL は本来このリポジトリ自身を指しているべき、という前提の
+# チェック（フォーク時の参照ずれ等、意図しない repoURL の混入を捕まえるのが目的）。
+# ただし CRD 等を upstream から直接取り込む設計（例: Gateway API 標準 CRD）は
+# 意図的に別の github.com リポジトリを参照するため、明示的な許可リストで例外化する。
+# 許可リストにも本リポジトリにも一致しない github.com の repoURL は従来どおり FAIL。
+ALLOWED_EXTERNAL_GITHUB_REPOS=(
+  # Gateway API 標準 CRD を upstream から直接引く apps/gateway-api-crds.yaml 用。
+  # kong/ingress は Gateway API CRD を同梱しないため、この Application が
+  # KIC より前の wave で CRD を供給する。
+  "https://github.com/kubernetes-sigs/gateway-api"
+)
+
 if [ -d apps ] || [ -d bootstrap ]; then
-  bad_urls=$(grep -rhoE 'repoURL: https://github\.com/[^ ]+' apps bootstrap 2>/dev/null \
-             | sort -u | grep -v "repoURL: ${REPO_URL}\$" || true)
-  if [ -z "$bad_urls" ]; then ok "repoURL が ${REPO_URL} で統一されている"
+  found_urls=$(grep -rhoE 'repoURL: https://github\.com/[^ ]+' apps bootstrap 2>/dev/null | sort -u || true)
+  bad_urls=""
+  if [ -n "$found_urls" ]; then
+    while IFS= read -r line || [ -n "$line" ]; do
+      [ -n "$line" ] || continue
+      url="${line#repoURL: }"
+      if [ "$url" = "$REPO_URL" ]; then
+        continue
+      fi
+      allowed=0
+      for a in "${ALLOWED_EXTERNAL_GITHUB_REPOS[@]}"; do
+        if [ "$url" = "$a" ]; then
+          allowed=1
+          break
+        fi
+      done
+      if [ "$allowed" -eq 0 ]; then
+        bad_urls="${bad_urls:+$bad_urls$'\n'}$line"
+      fi
+    done <<<"$found_urls"
+  fi
+  if [ -z "$bad_urls" ]; then ok "repoURL が ${REPO_URL} または許可リストで統一されている"
   else bad "repoURL の不一致"; printf '%s\n' "$bad_urls" | sed 's/^/       /'; fi
 fi
 
