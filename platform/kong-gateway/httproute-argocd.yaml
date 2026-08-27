@@ -7,6 +7,22 @@ metadata:
   namespace: argocd
   annotations:
     argocd.argoproj.io/sync-wave: "3"
+    # Kong ネイティブの HTTP -> HTTPS リダイレクト。
+    # この HTTPRoute は https listener だけに attach するので Kong ルートは
+    # protocols=["https"] になる。Kong は https 専用ルートに HTTP で来た
+    # リクエストへ https_redirect_status_code を返す（既定 426）。
+    # ここを 301 にすることで、リダイレクト専用の HTTPRoute を別に作らずに
+    # HTTP アクセスを HTTPS へ誘導できる。
+    #
+    # リダイレクト専用ルートを分けてはいけない。Kong は
+    # KONG_ROUTER_FLAVOR=traditional で動いており、traditional ルーターは
+    # protocols=["http"] のルートから HTTPS リクエストを除外しない。
+    # 同一 host/path の http ルートと https ルートを両方作ると HTTPS でも
+    # リダイレクト側にマッチしてしまい、無限リダイレクトになる。
+    #
+    # KIC は kongstate.Route.overrideByAnnotation で HTTPRoute の
+    # アノテーションを読むため、Gateway API でもこの annotation が効く。
+    konghq.com/https-redirect-status-code: "301"
 spec:
   parentRefs:
     - name: kong
