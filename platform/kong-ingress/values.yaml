@@ -4,6 +4,31 @@
 
 controller:
   ingressController:
+    # admission webhook (ValidatingWebhookConfiguration) を無効化する。
+    #
+    # charts/kong/templates/admission-webhook.yaml は genCA と lookup を
+    # 使って CA・証明書を生成する。Argo CD の repo-server はクラスタ接続なしで
+    # `helm template` を実行するため lookup は常に nil を返し、reconcile の
+    # たびに新しい CA/証明書が生成される。結果、
+    #   - Secret の内容が diff のたびに変わり続け、恒久 OutOfSync になる
+    #   - KIC がマウントする証明書の世代と、apiserver が保持する
+    #     ValidatingWebhookConfiguration.caBundle の世代がずれ、
+    #     webhook の TLS ハンドシェイクが失敗する
+    # という状態になる。しかも chart 既定は failurePolicy: Ignore のため、
+    # 失敗しても apiserver は検証をスキップして通してしまい、
+    # 「壊れているのに気づけない」状態が常態化する。
+    #
+    # このリポジトリは同じ欠陥 (lookup 依存 + Argo CD の宣言的レンダリング
+    # という組み合わせ) を Kong Operator で一度踏んで修正済み
+    # (削除済み platform/kong-operator/values.yaml 参照)。
+    #
+    # 無効化の判断根拠:
+    #   - クラスタに KongPlugin / KongConsumer / KongClusterPlugin の CR が
+    #     0 件で、admission webhook が守る対象がそもそも存在しない
+    #   - failurePolicy: Ignore である以上、有効化していても検証は
+    #     元々保証になっていない (壊れても apiserver は素通りさせる)
+    admissionWebhook:
+      enabled: false
     image:
       # ★ 浮動タグ (3.5) を使わないこと。
       # KIC 3.4.0 で混入した SNI 生成の不具合により、TLS 証明書を付けた Gateway が
@@ -42,12 +67,26 @@ controller:
         memory: 2Gi
 
 gateway:
+  # Kong Manager 用の NodePort Service (kong-ingress-gateway-manager) を無効化する。
+  # chart 既定 (manager.enabled: true, type: NodePort) のままだと、Kong Manager が
+  # クラスタの全ノードに露出する。旧構成 (Kong Operator) にこの露出は無く、
+  # 本移行はその状態を変える理由を持たないため、明示的に無効化する。
+  manager:
+    enabled: false
   image:
     # ★ こちらも浮動タグ (3.9) を使わないこと。
     # 同じチャートが KIC (controller) と Kong Gateway (gateway) の 2 イメージを
     # 別々のタグ設定として持つ。KIC 側だけ固定して Kong Gateway 側を chart 既定の
     # 浮動タグに任せると、KIC で拒否したのと同じ型のリスク（意図しないマイナー/パッチ
     # を引いて壊れる）をデータプレーン側で再導入してしまう。3.9 系最新パッチで固定する。
+    #
+    # ★★ エディション変更に注意: 現在稼働中のデータプレーンは
+    # kong/kong-gateway:3.14 (Enterprise) だが、この chart の image.repository
+    # 既定は kong (OSS)。3.9.3 は本 chart の appVersion (3.9) に一致する
+    # 妥当なパッチ版だが、Enterprise -> OSS へのエディション変更を伴う。
+    # Enterprise 専用プラグイン (RBAC, OIDC/OAuth2 Introspection, Rate Limiting
+    # Advanced 等) は移行後使用できなくなる。稼働中の設定がこれらの
+    # Enterprise 専用機能に依存していないことを、移行実施前に別途確認すること。
     tag: "3.9.3"
   # 旧 platform/kong-gateway/gatewayconfiguration.yaml (Kong Operator の
   # GatewayConfiguration, Task 4 で削除) が持っていた設定を引き継ぐ。
@@ -66,15 +105,15 @@ gateway:
       # なり OOMKilled で 23 回 CrashLoopBackOff した」事故があるため
       # (docs/known-issues.md 参照)、limits は必ず明示しつつ requests から
       # 十分な余白を確保する。
-      # cpu: 起動時のコンフィグ再構築やスパイク的なリクエスト増でのスロットリングを
-      # 避けるため 2.5 倍の 500m。ノード 1 台 (e2-standard-4 = 4 vCPU) を
-      # 専有しない範囲。
-      # memory: dbless モードの Kong はルート数の多い宣言的設定の再読み込みで
-      # 一時的にメモリ使用が跳ねる。512Mi ぴったりだと張り付いた瞬間に OOM する
-      # ため 2 倍の 1Gi を上限にし、突発的な増加を吸収しつつノードの他ワークロード
-      # を圧迫しない範囲に留める。
-      cpu: 500m
-      memory: 1Gi
+      #
+      # ★ 実測ベースラインに合わせる: 現在稼働中のデータプレーン
+      # (kong/kong-gateway:3.14) の実測 limits は cpu: 2 / memory: 2000Mi。
+      # 当初案の cpu: 500m / memory: 1Gi のままだと、移行だけで cpu が 1/4、
+      # memory が 1/2 に落ちる。移行はエディション変更 (C-2 参照) や設定の
+      # 持ち替えが目的であり、データプレーンのキャパシティを削る意図は無いため、
+      # 実測値そのものに寄せる。
+      cpu: 2
+      memory: 2000Mi
   proxy:
     type: LoadBalancer
     annotations:
