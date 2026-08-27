@@ -24,11 +24,29 @@ spec:
     namespace: kong
   syncPolicy:
     automated:
-      # CRD を誤って消さないため、このアプリだけ prune しない。
       # kong/ingress チャートは configuration.konghq.com の CRD
-      # (kongplugins, kongconsumers, kongclusterplugins 等、計 9 個) を同梱する。
-      # prune: true のままだと Application 削除時にこれらの CRD が消え、
-      # クラスタ内の該当 CR が連鎖削除される。
+      # (kongplugins, kongconsumers, kongclusterplugins 等、計 12 種類) を同梱する。
+      # このチャートは kong サブチャートを controller (KIC) / gateway
+      # (Kong Gateway) の 2 エイリアスで 2 回インスタンス化する構成のため、
+      # CRD は 12 種類 x 2 = 24 ドキュメントとして重複レンダリングされる
+      # (内容はバイト一致)。この重複により、Argo CD が sync 時に
+      # RepeatedResourceWarning を出す可能性がある。実害は無い
+      # (最終的にクラスタに存在する CRD は 12 個で、内容も一致する) が、
+      # 初見では不具合に見えるため注記しておく。
+      #
+      # ★ prune: false の効果について（誤解しやすい点）:
+      # prune: false が防ぐのは「自動 sync 時に Git から削除された
+      # リソースが誤って消される」ことだけであり、Application 自体を
+      # 削除したときのカスケード削除（finalizer による子リソース削除）には
+      # 一切効かない。カスケード削除を止めるのは
+      # argocd.argoproj.io/sync-options: Delete=false や
+      # helm.sh/resource-policy: keep であって、prune ではない。
+      # 実際、kong/ingress が同梱する上記 12 CRD には
+      # helm.sh/resource-policy: keep が付いていない (helm template で実測確認済み。
+      # Kong Operator が同梱していた CRD には付いていた)。つまり、この
+      # Application を削除すると CRD は（prune: false であるかどうかに関わらず）
+      # 連鎖削除され、クラスタ内の該当 CR も消える。CRD を本当に保護したい場合は
+      # Delete=false を付けるか、削除前に手動でバックアップ/移行すること。
       prune: false
       selfHeal: true
     syncOptions:
