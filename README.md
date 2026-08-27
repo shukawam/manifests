@@ -27,11 +27,14 @@ Argo CD の App of Apps で以下のプラットフォーム基盤を構築・�
 
 
 > [!IMPORTANT]
-> **現在、Gateway API 経由の HTTPS 公開は上流の不具合により機能しません。**
-> Kong Operator 2.3.0-rc.2 が Let's Encrypt 証明書を変換した `certificate` エンティティを
-> Kong Gateway 3.14 が拒否し、その Gateway のルーティングが全停止します。
-> 詳細と切り分け結果は [`docs/known-issues.md`](docs/known-issues.md) を参照。
-> 当面 Argo CD へは `kubectl port-forward svc/argocd-server -n argocd 8080:80` でアクセスしてください。
+> **AI Gateway だけは、DP クライアント証明書を Konnect に手で登録するまで機能しません。**
+> cert-manager が発行した証明書が Konnect 側に未登録だと、データプレーンは
+> `401` を繰り返して接続できません。手順は
+> [`docs/known-issues.md` の 7](docs/known-issues.md) を参照。
+> 証明書を更新したときも、その都度登録が必要です。
+>
+> Gateway API 経由の HTTPS 公開（`https://argocd.gke.shukawam.me`）は
+> 2026-08-27 の Kong Operator 廃止・`kong/ingress` Helm chart への移行で解決済みです。
 
 ## 2. 実行順
 
