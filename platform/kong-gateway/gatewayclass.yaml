@@ -4,6 +4,16 @@ metadata:
   name: kong
   annotations:
     argocd.argoproj.io/sync-wave: "1"
+    # KIC は「unmanaged モード」でしか Gateway を扱わない。
+    # gateway_controller.go の Reconcile は
+    #   if isGatewayClassUnmanaged(gwc.Annotations) { reconcileUnmanagedGateway(...) }
+    # となっており、このアノテーションが無い GatewayClass に紐づく Gateway は
+    # 一切 status を書かれずに静かに return される（エラーログすら出ない）。
+    # KIC 3.5.13 の annotations.go にも
+    # 「it's currently required that this annotation be present on all
+    #  GatewayClass resources: "unmanaged" mode is the only supported mode」
+    # と明記されている。値は任意の非空文字列でよく、"true" が既定の placeholder。
+    konghq.com/gatewayclass-unmanaged: "true"
 spec:
   # KIC の既定の controllerName。オペレータの
   # konghq.com/gateway-operator から差し替えた。
