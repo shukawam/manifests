@@ -10,11 +10,22 @@ spec:
     - name: kong
       namespace: kong
       sectionName: http
+  # ワイルドカード（*.gke.shukawam.me）は使えない。
+  # KIC 3.5.13 の generateRequestRedirectUsingRedirectKongPlugin は
+  # requestRedirect.hostname が nil のとき scheme を完全に無視して
+  # location = path（"/"）を生成する。Kong 3.9+ の redirect プラグインは
+  # location にホストを含む URL を要求するため
+  #   config.location: "missing host in url"
+  # で宣言的設定全体が HTTP 400 になり、ルーティングが全滅する。
+  # したがってリダイレクト先ホストは 1 つずつ明示する必要があり、
+  # 公開ホストを増やすときはこの HTTPRoute を host ごとに複製すること
+  # （hostnames は rule 単位ではなく route 単位のため 1 route = 1 host）。
   hostnames:
-    - "*.gke.shukawam.me"
+    - argocd.gke.shukawam.me
   rules:
     - filters:
         - type: RequestRedirect
           requestRedirect:
             scheme: https
+            hostname: argocd.gke.shukawam.me
             statusCode: 301
