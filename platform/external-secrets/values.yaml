@@ -4,6 +4,28 @@ serviceAccount:
   annotations:
     iam.gke.io/gcp-service-account: shukawam-external-secrets@gcp-fieldeng-dev.iam.gserviceaccount.com
 
+extraEnv:
+  # 【必須】これが無いと、ノード起動直後に ESO が起動したときだけ
+  # ClusterSecretStore が Ready=False（"unable to create client" /
+  # "could not find default credentials"）のまま永久に復旧しなくなる。
+  #
+  # Go の cloud.google.com/go/compute/metadata は OnGCE() の結果を
+  # onGCEOnce.Do でプロセス寿命の間メモ化する。GKE の gke-metadata-server は
+  # DaemonSet なので、ESO Pod がそれより先に（あるいはほぼ同時に）起動すると
+  # 探索が失敗し、「GCE 上ではない」と判定した結果が固定される。以降 metadata
+  # server が正常化しても ESO は二度と ADC を取得できず、Pod を再起動するまで
+  # 直らない。実機ではこの 2 つの Pod の起動時刻が 3 秒差だった。
+  #
+  # GCE_METADATA_HOST が設定されていると OnGCEWithContext は
+  # 「The user explicitly said they're on GCE, so trust them.」として
+  # 探索せず即 true を返すため、この競合が消える。トークン取得は遅延評価かつ
+  # リトライされるので、metadata server の準備完了を自然に待てる。
+  #
+  # 値はライブラリ既定と同じ documented metadata IP。DNS 解決に依存しないよう
+  # metadata.google.internal ではなく IP を指定する。
+  - name: GCE_METADATA_HOST
+    value: "169.254.169.254"
+
 resources:
   requests:
     cpu: 20m
