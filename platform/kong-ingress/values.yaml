@@ -22,6 +22,32 @@ gateway:
     # 浮動タグに任せると、KIC で拒否したのと同じ型のリスク（意図しないマイナー/パッチ
     # を引いて壊れる）をデータプレーン側で再導入してしまう。3.9 系最新パッチで固定する。
     tag: "3.9.3"
+  # 旧 platform/kong-gateway/gatewayconfiguration.yaml (Kong Operator の
+  # GatewayConfiguration, Task 4 で削除) が持っていた設定を引き継ぐ。
+  # replicas: 2 は移行前と同一。Kong のデータプレーンは Argo CD 自身の公開経路
+  # でもあり、Pod 1 つの再起動で到達不能になる single point of failure を
+  # 作らないため、chart 既定の 1 のままにはしない。
+  replicaCount: 2
+  resources:
+    requests:
+      # 移行前 (旧 gatewayconfiguration.yaml) と同一の値。
+      cpu: 200m
+      memory: 512Mi
+    limits:
+      # requests と同値にしない。過去に Kong Operator で「requests だけ上書きし
+      # limits を chart 既定のまま残した結果、実質 requests=limits で余裕ゼロに
+      # なり OOMKilled で 23 回 CrashLoopBackOff した」事故があるため
+      # (docs/known-issues.md 参照)、limits は必ず明示しつつ requests から
+      # 十分な余白を確保する。
+      # cpu: 起動時のコンフィグ再構築やスパイク的なリクエスト増でのスロットリングを
+      # 避けるため 2.5 倍の 500m。ノード 1 台 (e2-standard-4 = 4 vCPU) を
+      # 専有しない範囲。
+      # memory: dbless モードの Kong はルート数の多い宣言的設定の再読み込みで
+      # 一時的にメモリ使用が跳ねる。512Mi ぴったりだと張り付いた瞬間に OOM する
+      # ため 2 倍の 1Gi を上限にし、突発的な増加を吸収しつつノードの他ワークロード
+      # を圧迫しない範囲に留める。
+      cpu: 500m
+      memory: 1Gi
   proxy:
     type: LoadBalancer
     annotations:

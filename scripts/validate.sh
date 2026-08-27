@@ -135,8 +135,14 @@ if [ "$cluster_reachable" -eq 0 ]; then
 fi
 
 skipped_dirs=""
+# platform/kong-ai-gateway はここに含めない。Task 4 で AIGatewayDataPlane
+# (生の k8s マニフェスト) を Helm 化し、ディレクトリの中身が values.yaml
+# (Helm values、kind/apiVersion を持たない) だけになったため。ここに入れると
+# kubectl apply --dry-run=client が values.yaml を k8s マニフェストとして
+# 検証しようとして "apiVersion not set, kind not set" で必ず fail する。
+# values.yaml 自体の妥当性は上の「helm template」検証 (render_targets) で見る。
 for d in projects apps platform/cert-manager-issuers platform/secret-stores \
-         platform/opentelemetry-collector platform/kong-gateway platform/kong-ai-gateway \
+         platform/opentelemetry-collector platform/kong-gateway \
          bootstrap/argocd; do
   [ -d "$d" ] || continue
   shopt -s nullglob
