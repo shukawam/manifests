@@ -1,0 +1,98 @@
+# ─────────────────────────────────────────────────────────────────────────
+# Konnect hybrid 接続設定。
+# オペレータ版では KonnectAIGateway CR がエンドポイントを解決していたが、
+# Helm 版では values に直接書く。
+# 値は Konnect 上の AI Gateway 87ffec73-4403-49c8-bc99-81dc47fce093 の実測値。
+# ─────────────────────────────────────────────────────────────────────────
+env:
+  konnect_mode: "on"
+  cluster_mtls: pki
+  cluster_control_plane: "fa722e22fb.us.cp.konghq.com:443"
+  cluster_server_name: "fa722e22fb.us.cp.konghq.com"
+  cluster_telemetry_endpoint: "fa722e22fb.us.tp.konghq.com:443"
+  cluster_telemetry_server_name: "fa722e22fb.us.tp.konghq.com"
+  # cert-manager が発行するクラスタ mTLS 証明書のマウント先。
+  # (certificates.cluster.enabled: true にすると、このパスへ自動的に
+  #  Secret がマウントされる。secretVolumes は使わない — 詳細は下記コメント参照)
+  cluster_cert: /etc/cert-manager/cluster/tls.crt
+  cluster_cert_key: /etc/cert-manager/cluster/tls.key
+
+image:
+  repository: kong/kong-ai-gateway
+  # チャート既定の image.repository は kong/kong-ai-gateway-dev。
+  # Konnect のセットアップ手順が指定していた kong/kong-ai-gateway:2.0.2 に合わせる。
+  tag: "2.0.2"
+
+proxy:
+  type: LoadBalancer
+  annotations:
+    cloud.google.com/l4-rbs: "enabled"
+    networking.gke.io/load-balancer-ip-addresses: shukawam-gke-aigw
+
+# ─────────────────────────────────────────────────────────────────────────
+# DP クライアント証明書（Konnect hybrid mTLS）: cert-manager の自己署名証明書で発行する
+# ─────────────────────────────────────────────────────────────────────────
+# 裁定 (2026-08-27): オペレータが生成した既存証明書の再利用 (選択肢 a) ではなく、
+# cert-manager による新規発行 (選択肢 b) を採用した。理由は、既存証明書の実在・
+# 有効期限をこの時点でクラスタに接続して確認できず（gcloud 認証失効）、
+# 「今確認できない成果物の救出」に依存する順序制約を避けるため。
+#
+# 【重要】この証明書は Konnect に未登録である。
+# Konnect へ登録するまで、この DP は Konnect への hybrid 接続で 401 になる。
+# 登録作業は本タスク (Task 3) の範囲外とし、Task 6 で実施する
+# （クラスタ操作と実機の認証情報が必要なため、リポジトリ変更のみのこのタスクでは
+# 実行できない）。symptom の切り分け方は docs/known-issues.md を参照。
+# ただし同ファイルには本証明書のような「DP 証明書が Konnect 未登録による 401」の
+# 具体的な登録手順そのものは 2026-08-27 時点でまだ書かれていない
+# （Gateway API の TLS listener 問題と、Secret ラベル要件の 2 件のみを記録）。
+# Task 6 の担当者は、Konnect (Gateway Manager > 対象 Control Plane >
+# Dataplane Certificates 等、実際の UI 導線は要確認) で
+# `kong-ai-gateway-kong-ai-gateway-cluster-cert` Secret の tls.crt を
+# 新規 Dataplane Certificate として登録し、完了後に docs/known-issues.md へ
+# 手順を書き足すこと。
+certificates:
+  enabled: true
+  # 証明書の有効期間を 10 年相当にする（時限爆弾を潰すため）。
+  # cert-manager の自動更新は Konnect 側の再登録を伴わない（この構成では
+  # 更新後の証明書を Konnect に反映する仕組みが存在しない）ため、既定の
+  # 90 日 duration / 15 日 renewBefore のままだと、更新のたびに気づかれずに
+  # 401 へ落ちる「隠れた期限」を埋め込むことになる。
+  # オペレータが生成していた証明書も 2026 -> 2036 の 10 年物だった前例に倣う。
+  #
+  # 【罠】templates/certificate.yaml は per-service (admin/proxy/cluster) の
+  # duration/renewBefore を一切読まず、常にこの global 値 (certificates.duration /
+  # certificates.renewBefore) だけを使う。certificates.cluster.duration のように
+  # 個別指定しても helm template 上は黙って無視される（実測で確認済み。
+  # 本リポジトリで繰り返している「values のキーが黙って無視される」バグの
+  # もう 1 例）。admin/proxy の証明書は下で無効化しているため、この global 値は
+  # 実質的に cluster 証明書 1 枚にのみ適用される。
+  duration: 87600h # 10 年 (365 * 24 * 10)
+  # renewBefore は duration に対して十分小さい値（期限の 1 年前）にする。
+  # 実質的に「向こう 9 年はローテーションが起きない」値であり、
+  # かつ万一この環境が 9 年後まで生き延びていた場合でも、実際に更新が走る
+  # 1 年前というカレンダー規模の猶予をもって Konnect 再登録の計画・引き継ぎが
+  # できるようにするため（0 や極端に小さい値にすると、更新自体は先延ばしに
+  # できても、更新が実際に走った瞬間に無警告で 401 化するリスクは変わらない）。
+  renewBefore: 8760h # 1 年 (365 * 24)
+  # AI Gateway は Konnect 管理で admin API・proxy TLS 証明書を必要としない
+  # (admin.enabled はチャート既定で false)。certificates.enabled: true にすると
+  # admin/proxy 用の証明書もチャート既定で発行されてしまう
+  # (certificates.admin.enabled / certificates.proxy.enabled のチャート既定は
+  # いずれも true) ため、ここで明示的に false にして無効化する。
+  # 無効化しないと、Konnect 登録対象がどれか分からなくなる不要な Certificate/Secret
+  # が増える。
+  admin:
+    enabled: false
+  proxy:
+    enabled: false
+  cluster:
+    enabled: true
+    # kong/kong-ai-gateway チャート 0.1.0 の README は「issuer/clusterIssuer を
+    # 空にすればビルトインの自己署名 Issuer が自動生成される」と説明しているが、
+    # templates/certificate.yaml の実装にはその fallback が無く、
+    # issuer/clusterIssuer を明示しない限り Certificate に issuerRef が
+    # 出力されない（helm template で実測確認済み、cert-manager の Certificate は
+    # issuerRef が必須のため未指定だと拒否される）。そのため
+    # platform/cert-manager-issuers/clusterissuer-selfsigned.yaml で用意した
+    # 自己署名 ClusterIssuer を明示的に指定する。
+    clusterIssuer: selfsigned

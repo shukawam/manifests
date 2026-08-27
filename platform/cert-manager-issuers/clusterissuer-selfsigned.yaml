@@ -1,0 +1,14 @@
+# kong-ai-gateway の Konnect hybrid mTLS 証明書 (cluster cert) 専用の自己署名 Issuer。
+# kong/kong-ai-gateway チャート 0.1.0 は README で「issuer/clusterIssuer を空にすれば
+# ビルトインの自己署名 Issuer が自動生成される」と説明しているが、
+# templates/certificate.yaml の実装はこの fallback を持たず、issuer/clusterIssuer を
+# 明示しないと Certificate に issuerRef が出力されない（helm template で実測確認済み）。
+# そのため自己署名 ClusterIssuer をこちらで用意し、
+# platform/kong-ai-gateway/values.yaml の certificates.cluster.clusterIssuer から
+# 明示的に参照する。
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: selfsigned
+spec:
+  selfSigned: {}
