@@ -199,3 +199,58 @@ rm -f /tmp/dp.crt
 
 **注意**: エンドポイントは `data-plane-certificates`。`certificates` も HTTP 200 を返すが
 これは別のコレクション（常に 0 件）で、ここを見ても登録状況は分からない。
+
+---
+
+## 8. ESO が起動タイミングによって永久に認証できなくなる（解決済み・2026-08-27）
+
+**症状**: `ClusterSecretStore/gcp-secret-manager` が
+`Ready=False` / `InvalidProviderConfig` / `unable to create client` のまま復旧しない。
+コントローラのログには `google: could not find default credentials`。
+**Pod を再起動すると直る。**
+
+**原因**: Workload Identity の設定は正しく、GSA の IAM バインディングも
+`serviceAccount:gcp-fieldeng-dev.svc.id.goog[external-secrets/external-secrets]` で正しい。
+同じ ServiceAccount のテスト Pod からは metadata server が GSA メールとトークンを返す。
+
+問題は ESO プロセス内部にある。Go の `cloud.google.com/go/compute/metadata` は
+`OnGCE()` の判定を `onGCEOnce.Do` で**プロセス寿命の間メモ化する**。
+
+```go
+func OnGCEWithContext(ctx context.Context) bool {
+    onGCEOnce.Do(func() { onGCE = defaultClient.OnGCEWithContext(ctx) })
+    return onGCE
+}
+```
+
+GKE の `gke-metadata-server` は DaemonSet なので、ノード起動直後は ESO Pod と
+競合する。ESO が先に（あるいはほぼ同時に）起動して探索に失敗すると
+「GCE 上ではない」が固定され、以降 metadata server が正常化しても
+**ESO は二度と ADC を取得できない**。実機では両 Pod の起動時刻が 3 秒差だった。
+
+**対処**: `platform/external-secrets/values.yaml` で
+`GCE_METADATA_HOST=169.254.169.254` を設定する。この環境変数があると
+`OnGCEWithContext` は
+
+```go
+// The user explicitly said they're on GCE, so trust them.
+if os.Getenv(metadataHostEnv) != "" { return true }
+```
+
+で探索せず即 true を返すため競合が消える。トークン取得は遅延評価かつ
+リトライされるので、metadata server の準備完了を自然に待てる。
+値はライブラリ既定と同じ documented metadata IP で、DNS 解決に依存しないよう
+`metadata.google.internal` ではなく IP を使う。
+
+**切り分けの勘所**: 「再起動すると直る」認証エラーを見たら、
+設定ではなく**プロセス内キャッシュ**を疑う。Workload Identity が壊れているかは、
+同じ ServiceAccount を指定したテスト Pod から metadata server を叩けば
+コントローラと切り離して確認できる。
+
+```bash
+kubectl run wi-check -n external-secrets --rm -i --restart=Never \
+  --overrides='{"spec":{"serviceAccountName":"external-secrets"}}' \
+  --image=curlimages/curl:8.11.1 -- \
+  curl -s -H "Metadata-Flavor: Google" \
+  http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/email
+```
