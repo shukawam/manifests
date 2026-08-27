@@ -181,8 +181,30 @@ finalizer で残って削除できず、Konnect 側の登録も宙に浮く。
 ```
 
 **手順 4 で `konnect.*` / `aigateway.*` / `gateway-operator.*` CRD が消える。**
-`kong-operator` Application は CRD 誤削除を防ぐため `prune: false` にしてあるので、
-Application 削除時に CRD は残る。意図的に残すか手動削除するかを実装時に決める。
+**訂正 (2026-08-27, 最終レビューで判明): 当初「`kong-operator` Application は
+`prune: false` にしてあるので Application 削除時に CRD は残る」と書いていたが、これは誤り。**
+`syncPolicy.automated.prune` が防ぐのは自動 sync 時に Git から削除されたリソースが
+誤って消されることだけであり、Application 自体を削除したときのカスケード削除
+（finalizer 経由の子リソース削除）には一切効かない。カスケード削除を止めるのは
+`argocd.argoproj.io/sync-options: Delete=false` や `helm.sh/resource-policy: keep`
+であって、`prune` ではない。
+
+Kong Operator が同梱する CRD には `helm.sh/resource-policy: keep` が付いており
+（実測で確認済み。対照的に、移行後の `kong/ingress` が同梱する CRD にはこの
+アノテーションが無い）、これが実際に CRD を守っていた要因である。したがって
+`kong-operator` Application を削除すると、CRD 自体は `resource-policy: keep`
+により残るが、**CRD に紐づく CR（`AIGatewayDataPlane` 等）はオペレータの
+finalizer 処理に依存しているため、オペレータ Pod が既に消えた後では
+finalizer が外れず CR が Terminating のまま残留するリスクがある。**
+
+正しい対処:
+1. **CR を先に削除する（本セクション冒頭の手順どおり、オペレータ稼働中に）。**
+   オペレータが生きているうちに CR を消せば finalizer が正しく処理される。
+2. CRD 自体を残すか消すか制御したい場合は、`prune: false` ではなく
+   `argocd.argoproj.io/sync-options: Delete=false` を該当 CRD リソースに
+   付けるか、`helm.sh/resource-policy: keep` の有無を明示的に確認する。
+3. `prune: false` はあくまで自動 sync 時の誤削除防止としてのみ機能している
+   ことを前提に読むこと（Application 削除時の安全網にはならない）。
 
 ## 10. 想定される失敗
 
