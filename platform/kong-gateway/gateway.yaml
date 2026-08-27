@@ -21,7 +21,9 @@ spec:
       tls:
         mode: Terminate
         certificateRefs:
-          - kind: Secret
+          # group も CRD 既定値（コア API グループ = 空文字）だが明示する。
+          - group: ""
+            kind: Secret
             name: gke-shukawam-me-tls
       allowedRoutes:
         namespaces:
