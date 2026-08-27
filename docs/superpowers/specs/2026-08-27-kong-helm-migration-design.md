@@ -206,6 +206,35 @@ finalizer が外れず CR が Terminating のまま残留するリスクがあ�
 3. `prune: false` はあくまで自動 sync 時の誤削除防止としてのみ機能している
    ことを前提に読むこと（Application 削除時の安全網にはならない）。
 
+**再訂正 (2026-08-27, 実機カットオーバー後):** 上記の
+「Kong Operator が同梱する CRD には `helm.sh/resource-policy: keep` が付いている」
+という記述は**同梱 CRD 全体には当てはまらない**。実測では、Kong Operator 由来の
+`*.gateway.networking.k8s.io`（Gateway API 標準の 10 CRD）には
+`helm.sh/resource-policy: keep` が**付いていなかった**。`keep` が付いていたのは
+`gateway-operator.konghq.com` / `konnect.konghq.com` / `aigateway.konghq.com` 系だけである。
+
+つまり `kong-operator` Application をそのまま削除していれば、**Gateway API の
+10 CRD がカスケード削除され、`Gateway` / `HTTPRoute` / `GatewayClass` が
+まとめて消えていた**。実際のカットオーバーでは、削除前に 10 CRD すべてへ
+`argocd.argoproj.io/sync-options=Delete=false` を手で付与することでこれを回避した。
+
+さらに実機では、CR 削除時に以下の追加対処が必要だった。
+
+- `Gateway/kong` に 3 つの finalizer が付いており、オペレータ削除後は誰も外さない
+  （デッドロック）。オペレータ稼働中に `Gateway` を先に消す必要がある。
+- 取り残された `DataPlane` / `ControlPlane` と、それらが作った
+  `dataplane-admin-*` / `dataplane-ingress-*` Service は finalizer を手で外して削除した。
+- `KonnectAIGateway` / `KonnectAPIAuthConfiguration` は Argo CD の prune 対象になった後も
+  finalizer（`gateway.konghq.com/konnect-cleanup`,
+  `konnect.konghq.com/konnectapiauth-in-use`）が残り、Application が
+  「waiting for deletion」で停止した。手で finalizer を外して解消した。
+- ESO が作った Secret にも `gateway.konghq.com/secret-in-use-by-konnect-resource`
+  が残り、`ExternalSecret` の foregroundDeletion を塞いでいた。
+
+**教訓: オペレータを消す前に、そのオペレータが finalizer を付けている
+リソースをすべて洗い出して先に消す。** 消し損ねると、finalizer を外せる主体が
+いなくなり、以降はすべて手作業になる。
+
 ## 10. 想定される失敗
 
 | 事象 | 原因 | 対処 |
