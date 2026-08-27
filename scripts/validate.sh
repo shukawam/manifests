@@ -66,7 +66,19 @@ for t in "${render_targets[@]}"; do
   # false)。付けないと crds/ ディレクトリに CRD を置くサブチャート
   # (例: kong-operator の gwapi-standard-crds) の CRD がまるごと
   # 検証対象外になる。
-  if helm template "$release" "$chart" --version "$ver" -n "$ns" -f "$vals" --include-crds >/dev/null 2>/tmp/helm-err.txt; then
+  #
+  # --api-versions cert-manager.io/v1: 付けないと Capabilities.APIVersions.Has
+  # で gate されたブロックが黙ってレンダリングされない。実例:
+  # kong-ai-gateway の templates/certificate.yaml は
+  # `{{- if and (.Capabilities.APIVersions.Has "cert-manager.io/v1") ... }}`
+  # で全体を囲んでおり、これが無いと本 diff で最も繊細な certificates
+  # ブロックが一切検証対象に入らず、clusterIssuer の綴り間違いや duration の
+  # 単位間違いをこの helm template が一切検出できない (「黙ってスキップする
+  # 検証」がこのリポジトリで 3 度目)。他のチャート (argo-cd, cert-manager
+  # 本体, external-secrets, opentelemetry-operator, kong-ingress) は
+  # cert-manager.io/v1 の有無で分岐するテンプレートを持たないため無害
+  # (実測でレンダリング結果に差分無しを確認済み)。
+  if helm template "$release" "$chart" --version "$ver" -n "$ns" -f "$vals" --include-crds --api-versions cert-manager.io/v1 >/dev/null 2>/tmp/helm-err.txt; then
     ok "helm template $chart (release: $release)"
   else
     bad "helm template $chart"; sed 's/^/       /' /tmp/helm-err.txt | head -20
