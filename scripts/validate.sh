@@ -35,8 +35,8 @@ render_targets=(
   "platform/cert-manager/values.yaml|jetstack/cert-manager|v1.21.1|cert-manager"
   "platform/external-secrets/values.yaml|external-secrets/external-secrets|2.9.0|external-secrets"
   "platform/opentelemetry-operator/values.yaml|open-telemetry/opentelemetry-operator|0.122.0|opentelemetry-operator-system"
-  "platform/kong-operator/values.yaml|kong/kong-operator|1.4.0-rc.1|kong"
   "platform/kong-ingress/values.yaml|kong/ingress|0.24.0|kong"
+  "platform/kong-ai-gateway/values.yaml|kong/kong-ai-gateway|0.1.0|kong"
 )
 for t in "${render_targets[@]}"; do
   IFS='|' read -r vals chart ver ns <<<"$t"
@@ -285,8 +285,8 @@ if [ -f bootstrap/gke/variables.auto.tfvars ]; then
       "platform/external-secrets/values.yaml|external-secrets|gsa"
       "platform/cert-manager/values.yaml|cert-manager|gsa"
       "platform/opentelemetry-collector/serviceaccount.yaml|otel-collector|gsa"
-      "platform/kong-gateway/gatewayconfiguration.yaml|gke-gateway|address"
-      "platform/kong-ai-gateway/aigateway-dataplane.yaml|gke-aigw|address"
+      "platform/kong-ingress/values.yaml|gke-gateway|address"
+      "platform/kong-ai-gateway/values.yaml|gke-aigw|address"
     )
     for c in "${tf_const_checks[@]}"; do
       IFS='|' read -r file suffix kind <<<"$c"
