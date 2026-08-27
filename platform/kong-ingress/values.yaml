@@ -15,6 +15,13 @@ controller:
       tag: "3.5.13"
 
 gateway:
+  image:
+    # ★ こちらも浮動タグ (3.9) を使わないこと。
+    # 同じチャートが KIC (controller) と Kong Gateway (gateway) の 2 イメージを
+    # 別々のタグ設定として持つ。KIC 側だけ固定して Kong Gateway 側を chart 既定の
+    # 浮動タグに任せると、KIC で拒否したのと同じ型のリスク（意図しないマイナー/パッチ
+    # を引いて壊れる）をデータプレーン側で再導入してしまう。3.9 系最新パッチで固定する。
+    tag: "3.9.3"
   proxy:
     type: LoadBalancer
     annotations:
