@@ -36,6 +36,7 @@ render_targets=(
   "platform/external-secrets/values.yaml|external-secrets/external-secrets|2.9.0|external-secrets"
   "platform/opentelemetry-operator/values.yaml|open-telemetry/opentelemetry-operator|0.122.0|opentelemetry-operator-system"
   "platform/kong-operator/values.yaml|kong/kong-operator|1.4.0-rc.1|kong"
+  "platform/kong-ingress/values.yaml|kong/ingress|0.24.0|kong"
 )
 for t in "${render_targets[@]}"; do
   IFS='|' read -r vals chart ver ns <<<"$t"

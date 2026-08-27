@@ -1,0 +1,24 @@
+# kong/ingress は薄いラッパで、実体は kong サブチャートを
+# controller (KIC) と gateway (Kong Gateway) の 2 エイリアスで
+# 2 回インスタンス化する構成になっている。
+
+controller:
+  ingressController:
+    image:
+      # ★ 浮動タグ (3.5) を使わないこと。
+      # KIC 3.4.0 で混入した SNI 生成の不具合により、TLS 証明書を付けた Gateway が
+      # 宣言的設定の投入を全件失敗させ、その Gateway のルーティングが全停止する
+      # (docs/known-issues.md 参照)。3.5.5 の
+      # "Fixed an issue with SNI generation in dbless mode. (#7853)" で修正済み。
+      # Kong Operator ではこのバージョンを選べず、本移行の目的そのものが
+      # 「KIC のバージョンを自分で決めること」である。パッチまで固定する。
+      tag: "3.5.13"
+
+gateway:
+  proxy:
+    type: LoadBalancer
+    annotations:
+      # Terraform が予約した静的 IP を固定する。この annotation が GKE で
+      # 実際に機能することは実機検証済み (35.221.95.244 が割り当たる)。
+      cloud.google.com/l4-rbs: "enabled"
+      networking.gke.io/load-balancer-ip-addresses: shukawam-gke-gateway
