@@ -163,7 +163,15 @@ selfHeal が延々と再 apply する。
 Kong Operator を使っていた頃はオペレータが登録していたが、Helm 版では**登録は手動**。
 証明書を更新（cert-manager の自動更新を含む）したら、その都度登録が必要になる。
 
-**確認**（登録済み証明書の一覧。`{aigw-id}` は Konnect の AI Gateway ID）
+**AI Gateway ID の調べ方**（Kong Operator の CR は削除済みなのでクラスタからは引けない）
+
+```bash
+TOKEN=$(gcloud secrets versions access latest --secret konnect-api-token --project gcp-fieldeng-dev)
+curl -s -H "Authorization: Bearer $TOKEN" https://us.api.konghq.com/v1/ai-gateways \
+  | jq -r '.data[] | "\(.id)\t\(.name)"'
+```
+
+**確認**（登録済み証明書の一覧。`{aigw-id}` は上で得た ID）
 
 ```bash
 TOKEN=$(gcloud secrets versions access latest --secret konnect-api-token --project gcp-fieldeng-dev)
