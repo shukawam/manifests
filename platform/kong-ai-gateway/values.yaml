@@ -28,6 +28,21 @@ proxy:
   annotations:
     cloud.google.com/l4-rbs: "enabled"
     networking.gke.io/load-balancer-ip-addresses: shukawam-gke-aigw
+  # 公開ポートを 8000 に固定し、443 (TLS) を無効化する。
+  #
+  # 削除済み aigateway-dataplane.yaml (Kong Operator の AIGatewayDataPlane) は
+  # ports: [{name: http, port: 8000, targetPort: 8000}] を固定していたが、
+  # chart 既定は proxy.http.servicePort: 80 / proxy.tls.enabled: true
+  # (servicePort: 443)。既定のままレンダリングすると契約が壊れる:
+  #   - README.md の 2 箇所が http://aigw.gke.shukawam.me:8000 と明記
+  #   - bootstrap/gke/dns.tf がこの名前を該当 IP に向けている
+  # さらに 443 を Kong の自己署名証明書で開くのは、README が明記する
+  # 「TLS を付けていない」状態より悪い (利用者が有効な TLS だと誤認しうる)。
+  # そのため http.servicePort を 8000 に変更し、tls を無効化する。
+  http:
+    servicePort: 8000
+  tls:
+    enabled: false
 
 # ─────────────────────────────────────────────────────────────────────────
 # DP クライアント証明書（Konnect hybrid mTLS）: cert-manager の自己署名証明書で発行する
