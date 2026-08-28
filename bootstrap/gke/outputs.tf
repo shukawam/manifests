@@ -83,11 +83,6 @@ output "gateway_ip_address" {
   description = "Kong Gateway (Gateway API) の DataPlane を公開する Service 用の静的外部 IP アドレス"
 }
 
-output "aigw_ip_address" {
-  value       = google_compute_address.aigw.address
-  description = "Kong AI Gateway の DataPlane を公開する Service 用の静的外部 IP アドレス"
-}
-
 output "dns_zone_name_servers" {
   value       = google_dns_managed_zone.gke.name_servers
   description = "gke.shukawam.me ゾーンのネームサーバ一覧 (dnsv.jp 側での NS 委任に使う)"

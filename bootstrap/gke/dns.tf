@@ -23,8 +23,10 @@ resource "google_dns_managed_zone" "gke" {
   depends_on = [google_project_service.this]
 }
 
-# ワイルドカード: argocd.gke.shukawam.me など個別レコードがないホスト名は
-# すべて Kong Gateway (Gateway API DataPlane) 用 IP に解決する
+# ワイルドカード: argocd.gke.shukawam.me / aigw.gke.shukawam.me など個別レコードの
+# ないホスト名はすべて Kong Gateway (Gateway API DataPlane) 用 IP に解決する。
+# aigw は 2026-08-28 まで専用の個別 A レコードを持っていたが、Kong AI Gateway を
+# Gateway API 経由の HTTPRoute 公開に統合したためワイルドカードに一本化した。
 resource "google_dns_record_set" "wildcard" {
   project      = var.project_id
   managed_zone = google_dns_managed_zone.gke.name
@@ -34,16 +36,4 @@ resource "google_dns_record_set" "wildcard" {
   # 可能性があるため、既定 (300 秒) より短い 60 秒にして反映待ちを短縮する。
   ttl     = 60
   rrdatas = [google_compute_address.gateway.address]
-}
-
-# aigw.gke.shukawam.me はワイルドカードより優先される個別レコードとして
-# Kong AI Gateway 用 IP に解決する
-resource "google_dns_record_set" "aigw" {
-  project      = var.project_id
-  managed_zone = google_dns_managed_zone.gke.name
-  name         = "aigw.gke.shukawam.me."
-  type         = "A"
-  # wildcard レコードと同じ理由 (手動での IP 張り替えを想定した反映待ち短縮)
-  ttl     = 60
-  rrdatas = [google_compute_address.aigw.address]
 }

@@ -19,14 +19,3 @@ resource "google_compute_address" "gateway" {
 
   depends_on = [google_project_service.this]
 }
-
-resource "google_compute_address" "aigw" {
-  project = var.project_id
-  name    = format("%s-gke-aigw", var.resource_prefix)
-  region  = var.region
-
-  address_type = "EXTERNAL"
-  network_tier = "PREMIUM"
-
-  depends_on = [google_project_service.this]
-}
