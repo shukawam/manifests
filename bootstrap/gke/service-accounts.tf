@@ -171,3 +171,35 @@ resource "google_service_account_iam_member" "cert_manager_workload_identity" {
     var.project_id,
   )
 }
+
+# ---------------------------------------
+# Kong AI Gateway 用サービスアカウント
+#   config/kongctl.yaml (Konnect 側) の use_gcp_service_account: true が指す
+#   Workload Identity 連携先。Vertex AI Model Garden 上の Anthropic モデル
+#   (claude-opus-5 / claude-sonnet-5) を呼び出すために aiplatform.user が必要。
+# ---------------------------------------
+resource "google_service_account" "kong_ai_gateway" {
+  project      = var.project_id
+  account_id   = format("%s-kong-ai-gateway", var.resource_prefix)
+  display_name = format("%s-kong-ai-gateway", var.resource_prefix)
+  description  = "kong-ai-gateway が Workload Identity 経由で借用し、Vertex AI (Anthropic モデル) を呼び出すためのサービスアカウント"
+
+  depends_on = [google_project_service.this]
+}
+
+resource "google_project_iam_member" "kong_ai_gateway" {
+  project = var.project_id
+  role    = "roles/aiplatform.user"
+  member  = format("serviceAccount:%s", google_service_account.kong_ai_gateway.email)
+}
+
+# バインド先の namespace / ServiceAccount 名 (kong/kong-ai-gateway-kong-ai-gateway、
+# Helm chart のフルネーム規則で決まる) は変数化せず定数で埋め込む
+resource "google_service_account_iam_member" "kong_ai_gateway_workload_identity" {
+  service_account_id = google_service_account.kong_ai_gateway.name
+  role               = "roles/iam.workloadIdentityUser"
+  member = format(
+    "serviceAccount:%s.svc.id.goog[kong/kong-ai-gateway-kong-ai-gateway]",
+    var.project_id,
+  )
+}

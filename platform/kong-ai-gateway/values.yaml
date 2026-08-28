@@ -26,6 +26,19 @@ image:
   # Konnect のセットアップ手順が指定していた kong/kong-ai-gateway:2.0.2 に合わせる。
   tag: "2.0.2"
 
+# ─────────────────────────────────────────────────────────────────────────
+# Workload Identity: Vertex AI (Anthropic モデル) 呼び出し用。
+# ノードプールが workloadMetadataConfig=GKE_METADATA のため、この Pod の
+# ServiceAccount にアノテーションが無いと未マッピングの Workload Identity 連合 ID
+# として認証され (= 権限を一切持たない)、ノードの既定 SA には決してフォールバックしない。
+# bootstrap/gke (terraform) の google_service_account.kong_ai_gateway 側で
+# roles/aiplatform.user と roles/iam.workloadIdentityUser を対で設定している。
+# ─────────────────────────────────────────────────────────────────────────
+serviceAccount:
+  create: true
+  annotations:
+    iam.gke.io/gcp-service-account: shukawam-kong-ai-gateway@gcp-fieldeng-dev.iam.gserviceaccount.com
+
 proxy:
   # 2026-08-28: 専用 LoadBalancer での直接公開から、Kong Gateway
   # (platform/kong-gateway, Gateway API) 経由の HTTPRoute 公開に切り替えた。

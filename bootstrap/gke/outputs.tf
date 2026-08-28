@@ -78,6 +78,19 @@ output "cert_manager_ksa_annotation" {
   description = "cert-manager の Kubernetes ServiceAccount に付与するアノテーション"
 }
 
+output "kong_ai_gateway_service_account_email" {
+  value       = google_service_account.kong_ai_gateway.email
+  description = "kong-ai-gateway が Workload Identity で借用する Google Service Account"
+}
+
+output "kong_ai_gateway_ksa_annotation" {
+  value = format(
+    "iam.gke.io/gcp-service-account=%s",
+    google_service_account.kong_ai_gateway.email,
+  )
+  description = "kong-ai-gateway の Kubernetes ServiceAccount に付与するアノテーション"
+}
+
 output "gateway_ip_address" {
   value       = google_compute_address.gateway.address
   description = "Kong Gateway (Gateway API) の DataPlane を公開する Service 用の静的外部 IP アドレス"
