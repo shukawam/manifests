@@ -304,7 +304,9 @@ if [ -f bootstrap/gke/variables.auto.tfvars ]; then
       "platform/cert-manager/values.yaml|cert-manager|gsa"
       "platform/opentelemetry-collector/serviceaccount.yaml|otel-collector|gsa"
       "platform/kong-ingress/values.yaml|gke-gateway|address"
-      "platform/kong-ai-gateway/values.yaml|gke-aigw|address"
+      # kong-ai-gateway は 2026-08-28 に専用 LoadBalancer/静的 IP をやめ、
+      # kong-gateway 経由の HTTPRoute (ClusterIP) に統合した。専用の静的 IP
+      # アドレスは持たなくなったため、この突き合わせ対象から外す。
     )
     for c in "${tf_const_checks[@]}"; do
       IFS='|' read -r file suffix kind <<<"$c"

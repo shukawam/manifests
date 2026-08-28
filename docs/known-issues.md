@@ -254,3 +254,25 @@ kubectl run wi-check -n external-secrets --rm -i --restart=Never \
   curl -s -H "Metadata-Flavor: Google" \
   http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/email
 ```
+
+---
+
+## 9. AI Gateway を独立 LoadBalancer から Gateway API 経由に統合した（2026-08-28）
+
+**変更前の方針**（README に明記されていた）: Kong AI Gateway は LLM のストリーミング
+応答やタイムアウトに関する不確実性を避けるため、Gateway API (`kong-gateway`) とは
+別の独立した LoadBalancer で `http://aigw.gke.shukawam.me:8000` を平文公開していた。
+
+**変更後**: `platform/kong-gateway/httproute-aigw.yaml` で `kong-gateway` の
+`https` listener に相乗りさせ、`https://aigw.gke.shukawam.me` として TLS 終端込みで
+公開する。AI Gateway 側の Service は `ClusterIP` に変更し、直接公開はやめた。
+
+**タイムアウト対策**: 元の懸念（ストリーミング中に Gateway API 側のタイムアウトで
+接続が切れる）に対しては、HTTPRoute の `rules[].timeouts.request` /
+`backendRequest` を両方 `0s` にして無効化した。Gateway API の仕様上
+`0s` は「タイムアウトを無効化する」ことを意味する（GEP-2257）。
+
+**残っているリスク**: この `0s` 設定は Kong (KIC) 側で実際にタイムアウトなしとして
+機能することを実機で確認した記録がまだない。長時間ストリーミングする用途で問題が
+出た場合、まずここを疑うこと。また `0s` は「無制限」なので、応答が返らないまま
+接続が張られ続けるリソースリークの可能性もゼロではない。

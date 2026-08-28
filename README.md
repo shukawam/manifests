@@ -19,7 +19,7 @@ Argo CD の App of Apps で以下のプラットフォーム基盤を構築・�
 | OpenTelemetry Operator / Collector | クラスタのメトリクス・ログ・トレースを Google Cloud の可観測性基盤へ送る |
 | Kong Ingress (`kong/ingress` Helm chart) | Kong Ingress Controller (KIC) による Gateway API の実装と、Kong Gateway データプレーンの両方を 1 chart で提供する（Kong Operator は廃止済み） |
 | Kong Gateway (Gateway API) | クラスタの外部公開口。`https://argocd.gke.shukawam.me` を `HTTPRoute` で公開する |
-| Kong AI Gateway | Konnect が管理する AI 用データプレーン。独立した LoadBalancer で `http://aigw.gke.shukawam.me:8000` を公開する |
+| Kong AI Gateway | Konnect が管理する AI 用データプレーン。Kong Gateway 経由で `https://aigw.gke.shukawam.me` を公開する |
 
 `bootstrap/` はクラスタと Argo CD が立ち上がるまでの、GitOps に乗せられない手前の 2 段
 （`bootstrap/gke` = Terraform, `bootstrap/argocd` = Argo CD 初回インストール）。
@@ -147,18 +147,15 @@ argocd login argocd.gke.shukawam.me --grpc-web
 
 ## 6. セキュリティ上の注意（Kong AI Gateway）
 
-Kong AI Gateway（`http://aigw.gke.shukawam.me:8000`）は、LLM のストリーミング応答やタイムアウトに
-関する不確実性を避けるため、独立した LoadBalancer で公開している。**この構成では
-TLS を付けていない（平文 HTTP でインターネットに露出する）。**
+Kong AI Gateway は `https://aigw.gke.shukawam.me` として、Gateway API
+（`kong-gateway`）の `https` listener 経由で公開している（2026-08-28、独立
+LoadBalancer での平文公開から移行。経緯は
+[`docs/known-issues.md` の 9](docs/known-issues.md)）。TLS は Kong Gateway 側の
+ワイルドカード証明書（`*.gke.shukawam.me`）で終端する。
 
 背後には LLM プロバイダのクレデンシャルがあるため、**Konnect 側で key-auth などの認証
 プラグインを必ず有効にすること。** Argo CD / Kubernetes 側にはこれを強制する仕組みがない
 （Konnect 上の設定は `kongctl` による手動反映であり、GitOps の管理対象外）。
-
-検証用途に限り、必要であれば Service の `loadBalancerSourceRanges` で送信元 IP を
-絞ることも検討する。詳細は
-[設計ドキュメント §6.10](docs/superpowers/specs/2026-08-24-argocd-platform-design.md#610-kong-ai-gateway)
-を参照。
 
 ## 検証
 

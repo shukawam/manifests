@@ -25,21 +25,12 @@ image:
   tag: "2.0.2"
 
 proxy:
-  type: LoadBalancer
-  annotations:
-    cloud.google.com/l4-rbs: "enabled"
-    networking.gke.io/load-balancer-ip-addresses: shukawam-gke-aigw
-  # 公開ポートを 8000 に固定し、443 (TLS) を無効化する。
-  #
-  # 削除済み aigateway-dataplane.yaml (Kong Operator の AIGatewayDataPlane) は
-  # ports: [{name: http, port: 8000, targetPort: 8000}] を固定していたが、
-  # chart 既定は proxy.http.servicePort: 80 / proxy.tls.enabled: true
-  # (servicePort: 443)。既定のままレンダリングすると契約が壊れる:
-  #   - README.md の 2 箇所が http://aigw.gke.shukawam.me:8000 と明記
-  #   - bootstrap/gke/dns.tf がこの名前を該当 IP に向けている
-  # さらに 443 を Kong の自己署名証明書で開くのは、README が明記する
-  # 「TLS を付けていない」状態より悪い (利用者が有効な TLS だと誤認しうる)。
-  # そのため http.servicePort を 8000 に変更し、tls を無効化する。
+  # 2026-08-28: 専用 LoadBalancer での直接公開から、Kong Gateway
+  # (platform/kong-gateway, Gateway API) 経由の HTTPRoute 公開に切り替えた。
+  # TLS 終端は Gateway 側のワイルドカード証明書 (*.gke.shukawam.me) が行うため、
+  # この Service はクラスタ内部からのみ到達できればよい。
+  # ルーティング定義は platform/kong-gateway/httproute-aigw.yaml。
+  type: ClusterIP
   http:
     servicePort: 8000
   tls:
