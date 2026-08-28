@@ -29,10 +29,14 @@ spec:
           name: kong-ai-gateway-kong-ai-gateway-proxy
           port: 8000
           weight: 1
-      # LLM のストリーミング応答は完了までに要する時間が読めないため、
-      # request/backendRequest ともに 0s (Gateway API 仕様上「タイムアウト無効化」)
-      # にする。README の従来方針 (AI Gateway を Gateway API から切り離す) は
-      # このタイムアウト無効化とセットで撤回した — 撤回の経緯は known-issues.md 参照。
+      # LLM のストリーミング応答は完了までに要する時間が読めないため、長めのタイムアウトにする。
+      # Gateway API 仕様上は 0s で「タイムアウト無効化」を表せるが、KIC 3.5.13 はこれを
+      # そのまま Kong の Service エンティティ (connect_timeout/write_timeout/read_timeout,
+      # 単位ミリ秒) に 0 として渡してしまい、Kong のスキーマ (1〜2147483646 のみ許容) に
+      # 弾かれる。宣言的設定は 1 トランザクションのため、この Service 1 件の拒否だけで
+      # aigw HTTPRoute を含む設定投入が丸ごと失敗し、無関係な証明書エラーが巻き添えで
+      # 表示される（docs/known-issues.md 参照）。0s ではなく実用上十分に長い有限値
+      # (1時間) を明示する。
       timeouts:
-        request: 0s
-        backendRequest: 0s
+        request: 3600s
+        backendRequest: 3600s
