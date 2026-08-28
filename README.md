@@ -20,6 +20,7 @@ Argo CD の App of Apps で以下のプラットフォーム基盤を構築・�
 | Kong Ingress (`kong/ingress` Helm chart) | Kong Ingress Controller (KIC) による Gateway API の実装と、Kong Gateway データプレーンの両方を 1 chart で提供する（Kong Operator は廃止済み） |
 | Kong Gateway (Gateway API) | クラスタの外部公開口。`https://argocd.gke.shukawam.me` を `HTTPRoute` で公開する |
 | Kong AI Gateway | Konnect が管理する AI 用データプレーン。Kong Gateway 経由で `https://aigw.gke.shukawam.me` を公開する |
+| PII Sanitizer (`kong/ai-pii/service`) | LLM リクエスト/レスポンス中の PII を検出・マスキングする Kong 製サービス。日英両方の spaCy モデルに対応 |
 
 `bootstrap/` はクラスタと Argo CD が立ち上がるまでの、GitOps に乗せられない手前の 2 段
 （`bootstrap/gke` = Terraform, `bootstrap/argocd` = Argo CD 初回インストール）。
@@ -156,6 +157,31 @@ LoadBalancer での平文公開から移行。経緯は
 背後には LLM プロバイダのクレデンシャルがあるため、**Konnect 側で key-auth などの認証
 プラグインを必ず有効にすること。** Argo CD / Kubernetes 側にはこれを強制する仕組みがない
 （Konnect 上の設定は `kongctl` による手動反映であり、GitOps の管理対象外）。
+
+## 7. PII Sanitizer の imagePullSecret（手動、Secret Manager 登録のみ）
+
+`platform/pii-sanitizer` は `docker.cloudsmith.io/kong/ai-pii/service`（プライベート
+レジストリ）を使う。認証情報の値そのものは GitOps の管理対象外だが、クラスタへの
+同期は ESO（`platform/pii-sanitizer/externalsecret.yaml`）が行うため、手動作業は
+Secret Manager にシークレットを 1 個作るところまで。
+
+```bash
+kubectl create secret docker-registry pii-sanitizer-cloudsmith \
+  --dry-run=client \
+  --docker-server=docker.cloudsmith.io \
+  --docker-username=<Cloudsmith のユーザー名> \
+  --docker-password=<Cloudsmith のトークン> \
+  -o jsonpath='{.data.\.dockerconfigjson}' | base64 -d > /tmp/pii-sanitizer-dockerconfig.json
+
+gcloud secrets create pii-sanitizer-cloudsmith-dockerconfigjson \
+  --project gcp-fieldeng-dev --replication-policy automatic
+gcloud secrets versions add pii-sanitizer-cloudsmith-dockerconfigjson \
+  --project gcp-fieldeng-dev --data-file=/tmp/pii-sanitizer-dockerconfig.json
+rm -f /tmp/pii-sanitizer-dockerconfig.json
+```
+
+このシークレットが存在しない状態で `pii-sanitizer` Application を同期すると、
+`ExternalSecret` が解決できず Pod は `ImagePullBackOff` のまま止まる。
 
 ## 検証
 

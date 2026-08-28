@@ -155,7 +155,7 @@ skipped_dirs=""
 # values.yaml 自体の妥当性は上の「helm template」検証 (render_targets) で見る。
 for d in projects apps platform/cert-manager-issuers platform/secret-stores \
          platform/opentelemetry-collector platform/kong-gateway \
-         bootstrap/argocd; do
+         platform/pii-sanitizer bootstrap/argocd; do
   [ -d "$d" ] || continue
   shopt -s nullglob
   files=("$d"/*.yaml)

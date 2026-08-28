@@ -1,0 +1,80 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pii-sanitizer
+  namespace: kong
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: pii-sanitizer
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: pii-sanitizer
+    spec:
+      imagePullSecrets:
+        - name: pii-sanitizer-cloudsmith
+      initContainers:
+        - name: fetch-en-model
+          image: docker.cloudsmith.io/kong/ai-pii/service:v0.2.2-ja
+          # 日本語モデルのみでは英語テキストの人名・組織名等がNER検出できないため英語モデルも追加する
+          command:
+            - python
+            - -m
+            - spacy
+            - download
+            - en_core_web_lg
+            - --target
+            - /models
+          volumeMounts:
+            - name: en-model
+              mountPath: /models
+      containers:
+        - name: pii-sanitizer
+          image: docker.cloudsmith.io/kong/ai-pii/service:v0.2.2-ja
+          ports:
+            - name: http
+              containerPort: 8080
+          env:
+            # spaCy モデル 2 つをメモリに持つため worker は 1 固定
+            - name: GUNICORN_WORKERS
+              value: "1"
+            - name: PYTHONPATH
+              value: /models
+          volumeMounts:
+            - name: en-model
+              mountPath: /models
+            - name: nlp-engine-conf
+              mountPath: /app/ai_pii_service/nlp_engine_conf.yml
+              subPath: nlp_engine_conf.yml
+          startupProbe:
+            httpGet:
+              path: /llm/v1/status
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            failureThreshold: 30
+          readinessProbe:
+            httpGet:
+              path: /llm/v1/status
+              port: http
+            periodSeconds: 15
+          livenessProbe:
+            httpGet:
+              path: /llm/v1/status
+              port: http
+            periodSeconds: 15
+          resources:
+            requests:
+              cpu: 500m
+              memory: 2Gi
+            limits:
+              cpu: "2"
+              memory: 6Gi
+      volumes:
+        - name: en-model
+          emptyDir: {}
+        - name: nlp-engine-conf
+          configMap:
+            name: pii-sanitizer-nlp-engine-conf

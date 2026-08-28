@@ -1,0 +1,15 @@
+# v0.2.2-ja は既定で日本語モデルしか登録しない。
+# 英語は deployment.yaml のinitContainer が取得し、ここで両方を spaCy に登録する。
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pii-sanitizer-nlp-engine-conf
+  namespace: kong
+data:
+  nlp_engine_conf.yml: |
+    nlp_engine_name: spacy
+    models:
+      - lang_code: ja
+        model_name: ja_core_news_lg
+      - lang_code: en
+        model_name: en_core_web_lg
