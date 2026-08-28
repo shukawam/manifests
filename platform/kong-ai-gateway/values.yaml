@@ -33,11 +33,14 @@ image:
 # として認証され (= 権限を一切持たない)、ノードの既定 SA には決してフォールバックしない。
 # bootstrap/gke (terraform) の google_service_account.kong_ai_gateway 側で
 # roles/aiplatform.user と roles/iam.workloadIdentityUser を対で設定している。
+# チャートでは serviceAccount は deployment 配下 (templates/service-account.yaml が
+# .Values.deployment.serviceAccount を参照する) にネストされている点に注意。
 # ─────────────────────────────────────────────────────────────────────────
-serviceAccount:
-  create: true
-  annotations:
-    iam.gke.io/gcp-service-account: shukawam-kong-ai-gateway@gcp-fieldeng-dev.iam.gserviceaccount.com
+deployment:
+  serviceAccount:
+    create: true
+    annotations:
+      iam.gke.io/gcp-service-account: shukawam-kong-ai-gateway@gcp-fieldeng-dev.iam.gserviceaccount.com
 
 proxy:
   # 2026-08-28: 専用 LoadBalancer での直接公開から、Kong Gateway
