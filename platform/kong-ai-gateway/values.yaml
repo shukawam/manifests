@@ -12,6 +12,8 @@ env:
   cluster_server_name: "d15b661be0.us.cp.konghq.com"
   cluster_telemetry_endpoint: "d15b661be0.us.tp.konghq.com:443"
   cluster_telemetry_server_name: "d15b661be0.us.tp.konghq.com"
+  # Konnect の Data plane nodes 一覧に表示されるラベル (key:value のカンマ区切り)
+  cluster_dp_labels: "env:sandbox"
   # cert-manager が発行するクラスタ mTLS 証明書のマウント先。
   # (certificates.cluster.enabled: true にすると、このパスへ自動的に
   #  Secret がマウントされる。secretVolumes は使わない — 詳細は下記コメント参照)
