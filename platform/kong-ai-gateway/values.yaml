@@ -2,15 +2,16 @@
 # Konnect hybrid 接続設定。
 # オペレータ版では KonnectAIGateway CR がエンドポイントを解決していたが、
 # Helm 版では values に直接書く。
-# 値は Konnect 上の AI Gateway 87ffec73-4403-49c8-bc99-81dc47fce093 の実測値。
+# 値は Konnect 上の AI Gateway d4ba2035-8c02-445c-916b-f5184fc905c9
+# (sandbox-ai-gateway) の実測値。
 # ─────────────────────────────────────────────────────────────────────────
 env:
   konnect_mode: "on"
   cluster_mtls: pki
-  cluster_control_plane: "fa722e22fb.us.cp.konghq.com:443"
-  cluster_server_name: "fa722e22fb.us.cp.konghq.com"
-  cluster_telemetry_endpoint: "fa722e22fb.us.tp.konghq.com:443"
-  cluster_telemetry_server_name: "fa722e22fb.us.tp.konghq.com"
+  cluster_control_plane: "883d5210f5.us.cp.konghq.com:443"
+  cluster_server_name: "883d5210f5.us.cp.konghq.com"
+  cluster_telemetry_endpoint: "883d5210f5.us.tp.konghq.com:443"
+  cluster_telemetry_server_name: "883d5210f5.us.tp.konghq.com"
   # cert-manager が発行するクラスタ mTLS 証明書のマウント先。
   # (certificates.cluster.enabled: true にすると、このパスへ自動的に
   #  Secret がマウントされる。secretVolumes は使わない — 詳細は下記コメント参照)
