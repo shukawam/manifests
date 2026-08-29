@@ -44,9 +44,10 @@ Argo CD の App of Apps で以下のプラットフォーム基盤を構築・�
 2. (手動・一度きり)  : dnsv.jp に gke の NS レコードを登録
 3. (手動)            : gcloud container clusters get-credentials
 4. (手動)            : Secret Manager に konnect-api-token を作成
-5. bootstrap/argocd  : ./bootstrap.sh            → Argo CD + root app
-6. (自動)            : App of Apps が残り全部を同期
-7. (手動)            : kongctl で Konnect 側の設定を反映
+5. (手動・一度きり)  : Auth0 にアプリを 2 つ作成 + Secret Manager に client secret を登録
+6. bootstrap/argocd  : ./bootstrap.sh            → Argo CD + root app
+7. (自動)            : App of Apps が残り全部を同期
+8. (手動)            : kongctl で Konnect 側の設定を反映
 ```
 
 手順 2 の NS 委任は、後段の cert-manager による証明書取得（DNS-01 チャレンジ）の前提になる。
@@ -182,6 +183,66 @@ rm -f /tmp/pii-sanitizer-dockerconfig.json
 
 このシークレットが存在しない状態で `pii-sanitizer` Application を同期すると、
 `ExternalSecret` が解決できず Pod は `ImagePullBackOff` のまま止まる。
+
+## 8. Argo CD の認証（Auth0 OIDC）
+
+Argo CD のログインは Auth0 の OIDC に委譲している（Dex は使わない）。設定は
+`platform/argo-cd/values.yaml` の `configs.cm.oidc.config` と `configs.rbac`。
+ローカル `admin` アカウントは Auth0 側が壊れたときの break-glass として残してある。
+
+### 8.1 Auth0 側（手動、一度きり）
+
+前提として、カスタムドメイン `auth0.shukawam.me` が Branding → Custom Domains で
+Verified になっていること。**Auth0 のカスタムドメインは social connection の
+developer keys と併用できない**ため、Google ログインを使うなら Authentication →
+Social → Google に自前の Google OAuth クライアントを設定しておく。
+
+アプリケーションを 2 つ作る。`argocd` CLI は client secret を送れないので、Web UI 用
+（confidential client）と CLI 用（public client）を分ける必要がある。
+
+| | Web UI 用 | CLI 用 |
+| --- | --- | --- |
+| Name | `Argo CD (gke.shukawam.me)` | `Argo CD CLI` |
+| Application Type | Regular Web Applications | Native |
+| Allowed Callback URLs | `https://argocd.gke.shukawam.me/auth/callback` | `http://localhost:8085/auth/callback` |
+| Allowed Logout URLs | `https://argocd.gke.shukawam.me` | （不要） |
+| Allowed Web Origins | `https://argocd.gke.shukawam.me` | （不要） |
+| 控える値 | Client ID / Client Secret | Client ID のみ |
+
+CLI 側の `8085` は `argocd login --sso-port` の既定値。
+
+2 つの Client ID は秘密情報ではないため、`values.yaml` に平文で書く
+（`clientID` と `cliClientID`）。id_token の `aud` は経路によって Web 用 / CLI 用の
+どちらかになるが、Argo CD は `allowedAudiences` 未指定時に両方を許可するため設定は要らない。
+
+### 8.2 Secret Manager（手動、一度きり）
+
+Client Secret のみ Secret Manager に置き、ESO でクラスタへ同期する
+（`values.yaml` の `extraObjects` にある `ExternalSecret`）。
+
+```bash
+printf '%s' '<Web UI 用アプリの Client Secret>' \
+  | gcloud secrets create argocd-auth0-client-secret \
+      --project gcp-fieldeng-dev --replication-policy automatic --data-file=-
+```
+
+このシークレットが無いと `$argocd-auth0:clientSecret` が解決できず、Auth0 ログインだけが
+失敗する（`admin` でのログインには影響しない）。フルブートストラップ時は ESO と
+`ClusterSecretStore` が sync-wave 1 で立つまでこの `ExternalSecret` は解決を待つ。
+
+### 8.3 権限
+
+`configs.rbac` で `shukawam@gmail.com` のみ `role:admin`、それ以外は権限なし
+（`policy.default: ""`）。ユーザーの識別に `sub` ではなく email クレームを使うため
+`scopes: "[email]"` を指定している。
+
+### 8.4 CLI からのログイン
+
+```bash
+argocd login argocd.gke.shukawam.me --grpc-web --sso
+```
+
+ブラウザが開いて Auth0 の認証画面に飛ぶ。`--grpc-web` が要る理由は 5 と同じ。
 
 ## 検証
 

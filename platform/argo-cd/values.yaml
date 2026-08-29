@@ -10,6 +10,26 @@ configs:
     # label 方式は app.kubernetes.io/instance を書き換えてチャートの selector と衝突する
     application.resourceTrackingMethod: annotation
     timeout.reconciliation: 180s
+    oidc.config: |
+      name: Auth0
+      # 末尾スラッシュ必須。Auth0 が発行する id_token の iss がスラッシュ付き
+      issuer: https://auth0.shukawam.me/
+      clientID: OCfwUsaLHVTJbL2jmJPECxDZzFZYXikF
+      clientSecret: $argocd-auth0:clientSecret
+      # argocd CLI は client secret を送れないため Auth0 側は Native (public client)
+      # の別アプリを使う。CLI は常に PKCE を付けるので追加設定は要らない
+      cliClientID: GHWX5PMpprlue1FOj74BZGQdteNLwjCG
+      # 既定値は groups を含むが、Auth0 に groups スコープは無い
+      requestedScopes:
+        - openid
+        - profile
+        - email
+  rbac:
+    # 既定の [groups] のままでは Auth0 が groups を返さず policy.csv の g 行が当たらない
+    scopes: "[email]"
+    policy.csv: |
+      g, shukawam@gmail.com, role:admin
+    policy.default: ""
 
 server:
   service:
@@ -42,3 +62,28 @@ dex:
 
 notifications:
   enabled: false
+
+# argo-cd Application は Helm chart 単体ソースのため、platform/argo-cd/ 配下に素の
+# YAML を置いても同期されない。チャートの extraObjects に載せる
+extraObjects:
+  - apiVersion: external-secrets.io/v1
+    kind: ExternalSecret
+    metadata:
+      name: argocd-auth0
+      namespace: argocd
+    spec:
+      secretStoreRef:
+        kind: ClusterSecretStore
+        name: gcp-secret-manager
+      refreshInterval: 1h
+      target:
+        name: argocd-auth0
+        template:
+          metadata:
+            # このラベルが無いと argocd-cm の $argocd-auth0:clientSecret が解決されない
+            labels:
+              app.kubernetes.io/part-of: argocd
+      data:
+        - secretKey: clientSecret
+          remoteRef:
+            key: argocd-auth0-client-secret
