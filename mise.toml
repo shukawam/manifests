@@ -1,0 +1,42 @@
+[tasks."kongctl:diff"]
+description = "Diff kongctl settings"
+dir = "{{ config_root }}/config"
+run = """
+kongctl diff -f kongctl.yaml
+"""
+
+[tasks."kongctl:sync"]
+description = "Sync kongctl settings"
+dir = "{{ config_root }}/config"
+run = """
+kongctl sync konnect -f kongctl.yaml --auto-approve
+"""
+
+[tasks."terraform:plan"]
+description = "Terraform plan"
+dir = "{{ config_root }}/bootstrap/gke"
+run = """
+terraform plan
+"""
+
+[tasks."terraform:apply"]
+description = "Terraform apply"
+dir = "{{ config_root }}/bootstrap/gke"
+run = """
+terraform apply -auto-approve
+"""
+
+[tasks."gcp:get-gke-credential"]
+description = "Get GKE credentials"
+run = """
+gcloud container clusters get-credentials shukawam-gke --region asia-northeast1 --project gcp-fieldeng-dev
+"""
+
+[tasks."argo-cd:login"]
+description = "Login to Argo CD"
+run = """
+argocd login argocd.gke.shukawam.me --grpc-web --sso
+"""
+
+[env]
+mise.file = ".env"
