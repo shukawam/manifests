@@ -21,6 +21,7 @@ Argo CD の App of Apps で以下のプラットフォーム基盤を構築・�
 | Kong Gateway (Gateway API) | クラスタの外部公開口。`https://argocd.gke.shukawam.me` を `HTTPRoute` で公開する |
 | Kong AI Gateway | Konnect が管理する AI 用データプレーン。Kong Gateway 経由で `https://aigw.gke.shukawam.me` を公開する |
 | PII Sanitizer (`kong/ai-pii/service`) | LLM リクエスト/レスポンス中の PII を検出・マスキングする Kong 製サービス。日英両方の spaCy モデルに対応 |
+| Memorystore for Valkey | Kong のセマンティック系プラグイン（`ai-semantic-cache` 等）が参照するベクター DB。`bootstrap/gke` の Terraform が作る |
 
 `bootstrap/` はクラスタと Argo CD が立ち上がるまでの、GitOps に乗せられない手前の 2 段
 （`bootstrap/gke` = Terraform, `bootstrap/argocd` = Argo CD 初回インストール）。
@@ -40,7 +41,7 @@ Argo CD の App of Apps で以下のプラットフォーム基盤を構築・�
 ## 2. 実行順
 
 ```
-1. bootstrap/gke     : terraform apply           → クラスタ + IAM + DNS ゾーン + 静的 IP
+1. bootstrap/gke     : terraform apply           → クラスタ + IAM + DNS ゾーン + 静的 IP + Valkey
 2. (手動・一度きり)  : dnsv.jp に gke の NS レコードを登録
 3. (手動)            : gcloud container clusters get-credentials
 4. (手動)            : Secret Manager に konnect-api-token を作成
@@ -94,6 +95,13 @@ Konnect API トークンを Secret Manager に登録する（`printf` で末尾�
 gcloud secrets create konnect-api-token --project gcp-fieldeng-dev --replication-policy automatic
 printf '%s' "$KONNECT_TOKEN" | gcloud secrets versions add konnect-api-token \
   --project gcp-fieldeng-dev --data-file=-
+```
+
+Kong のセマンティック系プラグインから参照する Valkey の接続先を確認する。Konnect 側のプラグイン設定（`kongctl`）に手で書き写す必要がある。
+
+```bash
+terraform output valkey_host   # プラグインの vectordb.redis.host に入れる
+terraform output valkey_port   # 同 vectordb.redis.port
 ```
 
 Terraform 単体の詳細は [`bootstrap/gke/README.md`](bootstrap/gke/README.md) を参照。

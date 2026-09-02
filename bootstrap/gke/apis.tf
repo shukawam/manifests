@@ -14,6 +14,9 @@ locals {
     "artifactregistry.googleapis.com",
     "secretmanager.googleapis.com",
     "dns.googleapis.com",
+    "memorystore.googleapis.com",
+    # Valkey へ到達するための Private Service Connect のサービス接続ポリシーに必要
+    "networkconnectivity.googleapis.com",
   ]
 }
 

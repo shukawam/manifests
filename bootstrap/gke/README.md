@@ -16,11 +16,12 @@ Autopilot はノードを GKE 側が完全管理するため、`hostPath` / `hos
 | `versions.tf` | Terraform / プロバイダのバージョン制約 |
 | `variables.tf` | 入力変数 |
 | `apis.tf` | 必要な Google Cloud API の有効化 |
-| `network.tf` | GKE 専用 VPC・サブネット (Pod / Service セカンダリレンジ付き) |
+| `network.tf` | GKE 専用 VPC・サブネット (Pod / Service セカンダリレンジ付き)、Private Service Connect 用サブネット |
 | `service-accounts.tf` | ノード用 SA、OpenTelemetry Collector 用 SA、External Secrets Operator 用 SA、cert-manager 用 SA (いずれも Workload Identity) |
 | `static-ip.tf` | Kong Gateway / Kong AI Gateway 用のリージョナル静的外部 IP |
 | `dns.tf` | gke.shukawam.me のパブリックゾーンと A レコード (ワイルドカード / aigw) |
 | `gke.tf` | GKE Standard クラスタ本体とノードプール |
+| `memorystore.tf` | Memorystore for Valkey と、その到達に必要な PSC のサービス接続ポリシー |
 | `outputs.tf` | 出力値 |
 
 作成されるリソースはすべて `format("%s-xxx", var.resource_prefix)` で命名されるため、
@@ -30,6 +31,7 @@ Autopilot はノードを GKE 側が完全管理するため、`hostPath` / `hos
 | --- | --- |
 | VPC | `<prefix>-gke-vpc` |
 | サブネット | `<prefix>-gke-subnet` |
+| PSC 用サブネット | `<prefix>-psc-subnet` |
 | Pod セカンダリレンジ | `<prefix>-gke-pods` |
 | Service セカンダリレンジ | `<prefix>-gke-services` |
 | クラスタ | `<prefix>-gke` |
@@ -41,6 +43,8 @@ Autopilot はノードを GKE 側が完全管理するため、`hostPath` / `hos
 | Kong Gateway 用静的 IP | `<prefix>-gke-gateway` |
 | Kong AI Gateway 用静的 IP | `<prefix>-gke-aigw` |
 | Cloud DNS マネージドゾーン | `<prefix>-gke-zone` (`gke.shukawam.me.`) |
+| PSC サービス接続ポリシー | `<prefix>-memorystore` |
+| Valkey インスタンス | `<prefix>-valkey` |
 
 ## 使い方
 
@@ -59,6 +63,36 @@ terraform apply
 
 ```bash
 $(terraform output -raw get_credentials_command)
+```
+
+## Memorystore for Valkey
+
+Kong のセマンティック系プラグイン (`ai-semantic-cache` など) がベクター DB として参照する
+Valkey インスタンス。`create_memorystore_valkey = false` にすると一式作られない。
+
+Memorystore for Valkey は Private Service Connect の自動接続でしか到達できず、消費者側 VPC に
+`service_class = gcp-memorystore` のサービス接続ポリシーが無いとインスタンスの作成自体が失敗する。
+そのため `google_network_connectivity_service_connection_policy` が実質的な前提リソースになっている。
+エンドポイントの IP はポリシーが指すサブネットから割り当てられるが、ノード用サブネットを共用すると
+オートスケールで増えるノード IP とレンジを取り合うため、`psc_subnet_cidr` (既定 `10.23.0.0/24`) で
+専用サブネットを切っている。
+
+VPC 内からしか到達できない検証用インスタンスなので AUTH も TLS も掛けていない。どちらも immutable で、
+後から有効化するとインスタンスの再作成になる。同様に `mode = CLUSTER_DISABLED` (単一ノード) にしているのは、
+Kong 側の redis 設定を `host` / `port` だけで済ませるため。CLUSTER モードでは `cluster_nodes` の列挙が必要になる。
+
+接続先は output で取得し、Konnect 側のプラグイン設定 (`kongctl`) に手で書き写す。
+
+```bash
+terraform output valkey_host
+terraform output valkey_port
+```
+
+Pod からの疎通確認:
+
+```bash
+kubectl run -it --rm valkey-check --image redis:7-alpine --restart Never -- \
+  redis-cli -h "$(terraform output -raw valkey_host)" -p "$(terraform output -raw valkey_port)" PING
 ```
 
 ## 主なポイント

@@ -110,3 +110,13 @@ output "get_credentials_command" {
   )
   description = "kubectl のコンテキストを取得するコマンド"
 }
+
+output "valkey_host" {
+  value       = var.create_memorystore_valkey ? google_memorystore_instance.valkey[0].endpoints[0].connections[0].psc_auto_connection[0].ip_address : null
+  description = "Memorystore for Valkey の PSC エンドポイント IP (Kong のセマンティック系プラグインの redis.host に入れる)"
+}
+
+output "valkey_port" {
+  value       = var.create_memorystore_valkey ? google_memorystore_instance.valkey[0].endpoints[0].connections[0].psc_auto_connection[0].port : null
+  description = "Memorystore for Valkey の PSC エンドポイントポート"
+}

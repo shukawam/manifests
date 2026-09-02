@@ -28,3 +28,18 @@ resource "google_compute_subnetwork" "gke" {
 
   private_ip_google_access = true
 }
+
+# ---------------------------------------
+# Private Service Connect 用サブネット
+#   ノード用サブネットを共用するとオートスケールで増えるノード IP とレンジを
+#   取り合うため、Valkey のエンドポイント用に切り分けている
+# ---------------------------------------
+resource "google_compute_subnetwork" "psc" {
+  count = var.create_memorystore_valkey ? 1 : 0
+
+  project       = var.project_id
+  name          = format("%s-psc-subnet", var.resource_prefix)
+  region        = var.region
+  network       = google_compute_network.gke.id
+  ip_cidr_range = var.psc_subnet_cidr
+}

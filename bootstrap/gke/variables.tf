@@ -62,6 +62,16 @@ variable "services_cidr" {
   default     = "10.22.0.0/20"
 }
 
+variable "psc_subnet_cidr" {
+  type        = string
+  description = <<-EOT
+    Private Service Connect のエンドポイント用サブネットの CIDR。
+    Memorystore for Valkey のエンドポイントがここから IP を取る。
+    ノード用サブネットを共用するとオートスケール時のノード IP とレンジを取り合うため分けている。
+  EOT
+  default     = "10.23.0.0/24"
+}
+
 variable "master_authorized_networks" {
   type = list(object({
     cidr_block   = string
@@ -190,4 +200,36 @@ variable "otel_collector_ksa_name" {
   type        = string
   description = "OpenTelemetry Collector が使う Kubernetes ServiceAccount 名"
   default     = "otel-collector"
+}
+
+# ---------------------------------------
+# Memorystore for Valkey
+# ---------------------------------------
+variable "create_memorystore_valkey" {
+  type        = bool
+  description = "Kong のセマンティック系プラグインがベクター DB として使う Memorystore for Valkey を作成するか"
+  default     = true
+}
+
+variable "valkey_node_type" {
+  type        = string
+  description = "Valkey インスタンスのノードタイプ"
+  default     = "SHARED_CORE_NANO"
+
+  validation {
+    condition     = contains(["SHARED_CORE_NANO", "STANDARD_SMALL", "HIGHMEM_MEDIUM", "HIGHMEM_XLARGE"], var.valkey_node_type)
+    error_message = "valkey_node_type は SHARED_CORE_NANO / STANDARD_SMALL / HIGHMEM_MEDIUM / HIGHMEM_XLARGE のいずれか"
+  }
+}
+
+variable "valkey_shard_count" {
+  type        = number
+  description = "Valkey インスタンスのシャード数。mode = CLUSTER_DISABLED では 1 のみ有効"
+  default     = 1
+}
+
+variable "valkey_replica_count" {
+  type        = number
+  description = "シャードあたりのレプリカ数"
+  default     = 0
 }
