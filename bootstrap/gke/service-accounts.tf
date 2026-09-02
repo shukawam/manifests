@@ -12,10 +12,8 @@ resource "google_service_account" "gke_node" {
 }
 
 locals {
-  # ノードが最低限必要とするロール
-  #   - logging.logWriter / monitoring.metricWriter: kubelet・システムコンポーネントのテレメトリ送信
-  #   - monitoring.viewer / stackdriver.resourceMetadata.writer: GKE メタデータエージェント
-  #   - artifactregistry.reader: Artifact Registry からのイメージ pull
+  # monitoring.viewer / stackdriver.resourceMetadata.writer は GKE メタデータ
+  # エージェントが使う
   gke_node_roles = [
     "roles/logging.logWriter",
     "roles/monitoring.metricWriter",
@@ -35,8 +33,6 @@ resource "google_project_iam_member" "gke_node" {
 
 # ---------------------------------------
 # OpenTelemetry Collector 用サービスアカウント
-#   DaemonSet として動く Collector が Cloud Trace / Monitoring / Logging に
-#   エクスポートするための Workload Identity 連携
 # ---------------------------------------
 resource "google_service_account" "otel_collector" {
   count = var.create_otel_collector_service_account ? 1 : 0
@@ -65,7 +61,6 @@ resource "google_project_iam_member" "otel_collector" {
   member  = format("serviceAccount:%s", google_service_account.otel_collector[0].email)
 }
 
-# Kubernetes ServiceAccount → Google Service Account の借用を許可する
 resource "google_service_account_iam_member" "otel_collector_workload_identity" {
   count = var.create_otel_collector_service_account ? 1 : 0
 
@@ -81,8 +76,6 @@ resource "google_service_account_iam_member" "otel_collector_workload_identity" 
 
 # ---------------------------------------
 # External Secrets Operator 用サービスアカウント
-#   Secret Manager 上のシークレットを ExternalSecret 経由で取得するための
-#   Workload Identity 連携
 # ---------------------------------------
 resource "google_service_account" "external_secrets" {
   project      = var.project_id
@@ -99,9 +92,8 @@ resource "google_project_iam_member" "external_secrets" {
   member  = format("serviceAccount:%s", google_service_account.external_secrets.email)
 }
 
-# Kubernetes ServiceAccount → Google Service Account の借用を許可する
-#   バインド先の namespace / ServiceAccount 名 (external-secrets/external-secrets) は
-#   マニフェスト側の Helm values で固定されるため、変数化せず定数で埋め込む
+# バインド先の namespace / ServiceAccount 名はマニフェスト側の Helm values で
+# 固定されるため、変数化せず定数で埋め込む
 resource "google_service_account_iam_member" "external_secrets_workload_identity" {
   service_account_id = google_service_account.external_secrets.name
   role               = "roles/iam.workloadIdentityUser"
@@ -113,8 +105,6 @@ resource "google_service_account_iam_member" "external_secrets_workload_identity
 
 # ---------------------------------------
 # cert-manager 用サービスアカウント
-#   Cloud DNS の DNS-01 チャレンジで gke.shukawam.me 配下の証明書を発行するための
-#   Workload Identity 連携
 # ---------------------------------------
 resource "google_service_account" "cert_manager" {
   project      = var.project_id
@@ -125,16 +115,12 @@ resource "google_service_account" "cert_manager" {
   depends_on = [google_project_service.this]
 }
 
-# roles/dns.admin は使わない。cert-manager にはこの Terraform が管理するゾーンに対する
-# レコード操作のみを許可すれば十分だが、dns.admin はプロジェクト内の全ゾーン
-# (無関係な shukawam-zdf-gke クラスタが持つ private zone を含む) の作成・削除まで許してしまう。
-# roles/dns.editor もゾーンの削除権限 (dns.managedZones.delete) を持つため不採用。
-# 必要な操作だけに絞ったカスタムロールを定義する。
+# roles/dns.admin も dns.editor も、プロジェクト内の無関係なゾーン
+# (shukawam-zdf-gke の private zone 等) の削除まで許してしまうため使わない。
 #
-# dns.managedZones.list はプロジェクトスコープのまま残す必要がある。
-# ClusterIssuer が hostedZoneName を指定していないため、cert-manager は DNS-01
-# チャレンジのたびに対象ゾーンを list で自動発見する。ゾーンレベルの IAM 付与では
-# list 操作 (プロジェクト全体を対象にするコレクション操作) を許可できない。
+# dns.managedZones.list だけはプロジェクトスコープで残す必要がある。ClusterIssuer が
+# hostedZoneName を指定しておらず cert-manager が毎回ゾーンを list で自動発見するが、
+# list はコレクション操作なのでゾーンレベルの IAM 付与では許可できない。
 resource "google_project_iam_custom_role" "cert_manager_dns" {
   project     = var.project_id
   role_id     = "certManagerDns01"
@@ -161,8 +147,7 @@ resource "google_project_iam_member" "cert_manager" {
   member  = format("serviceAccount:%s", google_service_account.cert_manager.email)
 }
 
-# バインド先の namespace / ServiceAccount 名 (cert-manager/cert-manager) は
-# マニフェスト側の Helm values で固定されるため、変数化せず定数で埋め込む
+# バインド先はマニフェスト側の Helm values で固定されるため定数で埋め込む
 resource "google_service_account_iam_member" "cert_manager_workload_identity" {
   service_account_id = google_service_account.cert_manager.name
   role               = "roles/iam.workloadIdentityUser"
@@ -174,9 +159,7 @@ resource "google_service_account_iam_member" "cert_manager_workload_identity" {
 
 # ---------------------------------------
 # Kong AI Gateway 用サービスアカウント
-#   config/kongctl.yaml (Konnect 側) の use_gcp_service_account: true が指す
-#   Workload Identity 連携先。Vertex AI Model Garden 上の Anthropic モデル
-#   (claude-opus-5 / claude-sonnet-5) を呼び出すために aiplatform.user が必要。
+#   Konnect 側 config の use_gcp_service_account: true が指す連携先
 # ---------------------------------------
 resource "google_service_account" "kong_ai_gateway" {
   project      = var.project_id
@@ -193,8 +176,7 @@ resource "google_project_iam_member" "kong_ai_gateway" {
   member  = format("serviceAccount:%s", google_service_account.kong_ai_gateway.email)
 }
 
-# バインド先の namespace / ServiceAccount 名 (kong/kong-ai-gateway-kong-ai-gateway、
-# Helm chart のフルネーム規則で決まる) は変数化せず定数で埋め込む
+# バインド先の ServiceAccount 名は Helm chart のフルネーム規則で決まるため定数で埋め込む
 resource "google_service_account_iam_member" "kong_ai_gateway_workload_identity" {
   service_account_id = google_service_account.kong_ai_gateway.name
   role               = "roles/iam.workloadIdentityUser"

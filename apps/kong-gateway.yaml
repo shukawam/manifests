@@ -23,15 +23,9 @@ spec:
     syncOptions:
       - CreateNamespace=true
       - ServerSideApply=true
-      # 差分計算もサーバサイド dry-run apply で行う。
-      # このアプリの Gateway / HTTPRoute は「自分が書いていないフィールド」を
-      # 大量に持つ:
-      #   - Gateway: KIC が konghq.com/publish-service アノテーションを追記する
-      #   - HTTPRoute: CRD の既定値で matches / weight / group / kind が入る
-      # クライアントサイド差分ではこれらが常に差分として残り、selfHeal が
-      # 永久に再 apply を繰り返す（Application が OutOfSync のまま固定される）。
-      # ServerSideDiff は managedFields を見て他マネージャ所有のフィールドと
-      # API サーバの既定値を差分から除外するため、これらが収束する。
+      # Gateway / HTTPRoute には KIC が書き足すアノテーションと CRD 既定値が
+      # 入るため、クライアントサイド差分だと恒久 OutOfSync になり selfHeal が
+      # 再 apply を繰り返す。
       - ServerSideDiff=true
       - ApplyOutOfSyncOnly=true
     retry:

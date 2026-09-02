@@ -16,7 +16,6 @@ resource "google_compute_subnetwork" "gke" {
   network       = google_compute_network.gke.id
   ip_cidr_range = var.subnet_cidr
 
-  # VPC-native クラスタ用のセカンダリレンジ (Pod / Service)
   secondary_ip_range {
     range_name    = format("%s-gke-pods", var.resource_prefix)
     ip_cidr_range = var.pods_cidr
@@ -27,6 +26,5 @@ resource "google_compute_subnetwork" "gke" {
     ip_cidr_range = var.services_cidr
   }
 
-  # Pod/Service レンジまで含めたフローログは不要なので private_ip_google_access のみ有効化
   private_ip_google_access = true
 }

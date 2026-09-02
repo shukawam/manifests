@@ -43,14 +43,10 @@ spec:
             - k8s.deployment.name
             - k8s.node.name
             - k8s.container.name
-        # k8s.pod.ip と from: connection は使わない（設計書 §6.7）。
-        # node collector 経由で届くデータの接続元は発信元 Pod ではなく
-        # node collector（otel-node-collector）自身になるため、connection
-        # 規則を残すと k8s_cluster receiver の node メトリクス（k8s.node.name
-        # しか持たず規則 1・2 に一致しない）が otel-node-collector という
-        # Pod のメトリクスとして誤って記録されてしまう（エラーも欠落も出ない
-        # ため気付きにくい）。UID / (namespace, pod 名) で解決できないデータは
-        # 関連付けを諦め、素通しさせる。
+        # from: connection は使わない。node collector 経由のデータは接続元が
+        # 発信元 Pod ではなく node collector 自身になるため、k8s_cluster の
+        # node メトリクスが otel-node-collector の Pod メトリクスとして
+        # 誤記録される (エラーも欠落も出ないため気付けない)。
         pod_association:
           - sources:
               - from: resource_attribute

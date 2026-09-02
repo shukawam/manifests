@@ -4,8 +4,7 @@ metadata:
   name: gateway-api-crds
   namespace: argocd
   annotations:
-    # KIC より前に導入する必要がある。KIC は起動時点で CRD が無いと
-    # Gateway API リソースを一切 reconcile しない (公式ドキュメント)。
+    # KIC は起動時点で CRD が無いと Gateway API リソースを一切 reconcile しない
     argocd.argoproj.io/sync-wave: "0"
   finalizers:
     - resources-finalizer.argocd.argoproj.io

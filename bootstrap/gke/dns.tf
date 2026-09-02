@@ -1,11 +1,9 @@
 # ---------------------------------------
 # Cloud DNS: gke.shukawam.me サブドメイン用パブリックゾーン
 #
-#   shukawam.me 本体の権威 DNS は 01.dnsv.jp / 02.dnsv.jp にあり Cloud DNS の
-#   管理下にない。gke サブドメインだけを Cloud DNS へ NS 委任する構成のため、
-#   shukawam.me 本体の設定には一切触れない。
-#   NS 委任自体 (dnsv.jp 側の作業) はこの Terraform の範囲外の手動作業。
-#   apply 後は dns_zone_name_servers の出力値を dnsv.jp 側に設定すること。
+#   shukawam.me 本体の権威 DNS は dnsv.jp 側にあり、gke サブドメインだけを
+#   Cloud DNS へ NS 委任している。委任は Terraform の範囲外の手動作業なので、
+#   apply 後に dns_zone_name_servers の出力値を dnsv.jp 側へ設定すること。
 # ---------------------------------------
 resource "google_dns_managed_zone" "gke" {
   project     = var.project_id
@@ -14,26 +12,20 @@ resource "google_dns_managed_zone" "gke" {
   description = "gke.shukawam.me サブドメイン用パブリックゾーン"
   visibility  = "public"
 
-  # cert-manager が DNS-01 チャレンジ時に _acme-challenge の TXT レコードを書き込む。
-  # チャレンジが失敗して消し忘れたレコードが残っていると、ゾーンが空でないため
-  # terraform destroy が失敗する。このゾーンに Terraform 管理外で存在し得るのは
-  # ACME の一時レコードだけなので、force_destroy で destroy を通す。
+  # cert-manager が DNS-01 で書く _acme-challenge の TXT が消し残るとゾーンが
+  # 空にならず destroy が失敗する。管理外で存在し得るのはこの一時レコードだけ。
   force_destroy = true
 
   depends_on = [google_project_service.this]
 }
 
-# ワイルドカード: argocd.gke.shukawam.me / aigw.gke.shukawam.me など個別レコードの
-# ないホスト名はすべて Kong Gateway (Gateway API DataPlane) 用 IP に解決する。
-# aigw は 2026-08-28 まで専用の個別 A レコードを持っていたが、Kong AI Gateway を
-# Gateway API 経由の HTTPRoute 公開に統合したためワイルドカードに一本化した。
+# 個別レコードを持たないホスト名はすべて Kong Gateway 用の IP に解決する
 resource "google_dns_record_set" "wildcard" {
   project      = var.project_id
   managed_zone = google_dns_managed_zone.gke.name
   name         = "*.gke.shukawam.me."
   type         = "A"
-  # 静的 IP の annotation が実機で効かない場合、手動で IP を張り替えて反復する
-  # 可能性があるため、既定 (300 秒) より短い 60 秒にして反映待ちを短縮する。
+  # 手動で IP を張り替えて反復する可能性があるため既定 (300 秒) より短くする
   ttl     = 60
   rrdatas = [google_compute_address.gateway.address]
 }

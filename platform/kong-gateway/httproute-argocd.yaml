@@ -7,26 +7,14 @@ metadata:
   namespace: argocd
   annotations:
     argocd.argoproj.io/sync-wave: "3"
-    # Kong ネイティブの HTTP -> HTTPS リダイレクト。
-    # この HTTPRoute は https listener だけに attach するので Kong ルートは
-    # protocols=["https"] になる。Kong は https 専用ルートに HTTP で来た
-    # リクエストへ https_redirect_status_code を返す（既定 426）。
-    # ここを 301 にすることで、リダイレクト専用の HTTPRoute を別に作らずに
-    # HTTP アクセスを HTTPS へ誘導できる。
-    #
-    # リダイレクト専用ルートを分けてはいけない。Kong は
-    # KONG_ROUTER_FLAVOR=traditional で動いており、traditional ルーターは
-    # protocols=["http"] のルートから HTTPS リクエストを除外しない。
-    # 同一 host/path の http ルートと https ルートを両方作ると HTTPS でも
-    # リダイレクト側にマッチしてしまい、無限リダイレクトになる。
-    #
-    # KIC は kongstate.Route.overrideByAnnotation で HTTPRoute の
-    # アノテーションを読むため、Gateway API でもこの annotation が効く。
+    # https listener 専用ルートに HTTP で来たリクエストへ Kong が返すコード
+    # (既定 426) を 301 にして、リダイレクト用の HTTPRoute を別に作らずに済ませる。
+    # 分けてはいけない: traditional ルーターは protocols=["http"] のルートから
+    # HTTPS を除外しないため、同一 host/path の両ルートがあると無限リダイレクトになる。
     konghq.com/https-redirect-status-code: "301"
 spec:
-  # group / kind / weight / matches は CRD の既定値だが、あえて明示する。
-  # 省略すると API サーバが既定値を埋めた実機と git の間に恒常的な差分が生じ、
-  # Application が OutOfSync のまま固定され selfHeal が再 apply を繰り返す。
+  # group / kind / weight / matches は CRD 既定値だが、省略すると実機と git に
+  # 恒常差分が出て Application が OutOfSync のまま固定される。
   parentRefs:
     - group: gateway.networking.k8s.io
       kind: Gateway

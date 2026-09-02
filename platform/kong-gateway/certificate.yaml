@@ -4,22 +4,15 @@ metadata:
   name: gke-shukawam-me
   namespace: kong
   annotations:
-    # gateway.yaml と同じ wave にする。Argo CD は cert-manager.io/Certificate
-    # のヘルスチェックを持つため、wave を分けると Let's Encrypt の発行が
-    # 終わるまで Gateway (延いては Kong の DataPlane / LoadBalancer) が
-    # 作られなくなる。発行は手動の NS 委任が前提のため、それが済むまで
-    # 静的 IP の annotation 確認すらできなくなってしまう。同じ wave なら
-    # Gateway は即座に作られ、Secret が現れた時点で Kong が listener を
-    # Programmed にする (下の secretTemplate のラベルが付いていることが前提)。
+    # gateway.yaml と同じ wave にする。Argo CD は Certificate のヘルスチェックを
+    # 持つため、wave を分けると発行完了まで Gateway が作られない。発行は手動の
+    # NS 委任が前提なので、それが済むまで何も進まなくなる。
     argocd.argoproj.io/sync-wave: "2"
 spec:
   secretName: gke-shukawam-me-tls
-  # Kong Operator は Secret の informer キャッシュを konghq.com/secret=true で
-  # 絞り込んでいる。このラベルが無い Secret はオペレータから**一切見えず**、
-  # Gateway の listener が InvalidCertificateRef ("Secret ... not found") のまま
-  # 永久に止まる。kubectl get では取得できるので発覚しにくい。
-  # Konnect が出力する Secret にこのラベルが付いているのはこのためで、
-  # cert-manager が発行する TLS Secret にも同じラベルが要る。
+  # Kong は Secret の informer キャッシュを konghq.com/secret=true で絞り込む。
+  # このラベルが無い Secret は一切見えず、listener が InvalidCertificateRef
+  # ("Secret ... not found") のまま止まる。kubectl get では引けるので気づきにくい。
   secretTemplate:
     labels:
       konghq.com/secret: "true"
@@ -28,7 +21,6 @@ spec:
     name: letsencrypt-prod
   commonName: "*.gke.shukawam.me"
   dnsNames:
-    # apex (gke.shukawam.me) は含めない。ワイルドカードは自分自身の owner name には
-    # マッチせず、apex 用の A レコードも存在せず、gateway.yaml の listener hostname
-    # (*.gke.shukawam.me) も apex を含まない。構造上使えない SAN のため外している。
+    # apex (gke.shukawam.me) は含めない。A レコードも listener hostname も
+    # apex を持たないため、SAN に入れても使えない。
     - "*.gke.shukawam.me"

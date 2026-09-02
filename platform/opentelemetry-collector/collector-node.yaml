@@ -39,22 +39,15 @@ spec:
         endpoint: "${env:K8S_NODE_NAME}:10250"
         insecure_skip_verify: true
         metric_groups: [node, pod, container, volume]
-      # hostmetrics は使わない。/hostfs のマウントと root_path が無いままだと
-      # cpu / load / memory / network の各スクレイパーは「ノード」ではなく
-      # Collector コンテナ自身の cgroup 視点の値（100m / 512Mi に制限された
-      # Pod の使用量）を返してしまい、それがノードのメトリクスとして
-      # Cloud Monitoring に記録される。disk / filesystem を外したのと同じ理由。
-      # ノードの cpu / memory / network は kubeletstats の node メトリクス
-      # グループで正しく取れるため、hostmetrics 自体を削除する
-      # （失うのは load average のみ。/hostfs 全体をマウントする権限昇格も避けられる）。
+      # hostmetrics は使わない。/hostfs のマウントが無いと Collector コンテナ自身の
+      # cgroup 視点の値をノードのメトリクスとして記録してしまう。ノードの
+      # cpu / memory / network は kubeletstats の node グループで取れる
+      # (失うのは load average のみ)。
       filelog:
         include: ["/var/log/pods/*/*/*.log"]
-        # Collector 自身（otel-node-collector）と、その先で中継している
-        # otel-gateway-collector のログを除外する。gateway 側だけ除外を
-        # 忘れると、gateway のログが収集されて gateway 自身を経由して
-        # エクスポートされ、エクスポートでエラーが出た際にそのログ行が
-        # 同じ exporter に戻る増幅ループになる（無限ループではないが、
-        # 最もノイズを見たくないタイミングで最も騒がしくなる）。
+        # gateway 側も除外する。忘れると gateway のログが gateway 自身を経由して
+        # エクスポートされ、エクスポート失敗時にそのログ行が同じ exporter へ戻る
+        # 増幅ループになる。
         exclude:
           - "/var/log/pods/opentelemetry_otel-node-collector*/*/*.log"
           - "/var/log/pods/opentelemetry_otel-gateway-collector*/*/*.log"

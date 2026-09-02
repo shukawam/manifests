@@ -1,63 +1,24 @@
-# kong/ingress は薄いラッパで、実体は kong サブチャートを
-# controller (KIC) と gateway (Kong Gateway) の 2 エイリアスで
-# 2 回インスタンス化する構成になっている。
+# kong/ingress は kong サブチャートを controller (KIC) / gateway (Kong Gateway) の
+# 2 エイリアスで 2 回インスタンス化する薄いラッパ。
 
 controller:
   ingressController:
-    # admission webhook (ValidatingWebhookConfiguration) を無効化する。
-    #
-    # charts/kong/templates/admission-webhook.yaml は genCA と lookup を
-    # 使って CA・証明書を生成する。Argo CD の repo-server はクラスタ接続なしで
-    # `helm template` を実行するため lookup は常に nil を返し、reconcile の
-    # たびに新しい CA/証明書が生成される。結果、
-    #   - Secret の内容が diff のたびに変わり続け、恒久 OutOfSync になる
-    #   - KIC がマウントする証明書の世代と、apiserver が保持する
-    #     ValidatingWebhookConfiguration.caBundle の世代がずれ、
-    #     webhook の TLS ハンドシェイクが失敗する
-    # という状態になる。しかも chart 既定は failurePolicy: Ignore のため、
-    # 失敗しても apiserver は検証をスキップして通してしまい、
-    # 「壊れているのに気づけない」状態が常態化する。
-    #
-    # このリポジトリは同じ欠陥 (lookup 依存 + Argo CD の宣言的レンダリング
-    # という組み合わせ) を Kong Operator で一度踏んで修正済み
-    # (削除済み platform/kong-operator/values.yaml 参照)。
-    #
-    # 無効化の判断根拠:
-    #   - クラスタに KongPlugin / KongConsumer / KongClusterPlugin の CR が
-    #     0 件で、admission webhook が守る対象がそもそも存在しない
-    #   - failurePolicy: Ignore である以上、有効化していても検証は
-    #     元々保証になっていない (壊れても apiserver は素通りさせる)
+    # チャートは genCA と lookup で webhook の証明書を生成するが、Argo CD の
+    # repo-server はクラスタ接続なしで helm template するため lookup が常に nil に
+    # なり、reconcile のたびに CA が再生成されて恒久 OutOfSync と webhook の TLS
+    # 失敗を招く。failurePolicy: Ignore なので壊れても素通りし気づけない。
+    # 守る対象の CR (KongPlugin / KongConsumer 等) もクラスタに 0 件。
     admissionWebhook:
       enabled: false
     image:
-      # ★ 浮動タグ (3.5) を使わないこと。
-      # KIC 3.4.0 で混入した SNI 生成の不具合により、TLS 証明書を付けた Gateway が
-      # 宣言的設定の投入を全件失敗させ、その Gateway のルーティングが全停止する
-      # (docs/known-issues.md 参照)。3.5.5 の
-      # "Fixed an issue with SNI generation in dbless mode. (#7853)" で修正済み。
-      # Kong Operator ではこのバージョンを選べず、本移行の目的そのものが
-      # 「KIC のバージョンを自分で決めること」である。パッチまで固定する。
+      # 浮動タグ (3.5) を使わないこと。KIC 3.4.0 で混入した SNI 生成の不具合により、
+      # TLS 証明書を付けた Gateway の宣言的設定投入が全件失敗する
+      # (docs/known-issues.md)。3.5.5 で修正済み。
       tag: "3.5.13"
-    # KIC (ingress-controller コンテナ) はクラスタ全体を watch する常駐
-    # コントローラであり、Kong Operator が OOMKilled で 23 回 CrashLoopBackOff
-    # した (docs/known-issues.md) のと同じ性質のワークロード。resources 未設定
-    # だと BestEffort QoS クラスになり、このクラスタ (ノード 1 台構成、KIC は
-    # Argo CD の公開経路を担う) ではノードのリソース圧迫時に真っ先に evict
-    # される対象になるため、requests/limits の両方を明示する。
-    #
-    # 実測値ではなく机上の見積もり (このクラスタでの KIC の実測メモリ使用量は
-    # 未計測)。Kong Operator の実績 (limits.memory: 256Mi では OOM、1Gi に
-    # 上げて安定。安定時の実測使用量は 127Mi) を参考値として、KIC は watch 対象の
-    # リソース種別が Kong Operator よりさらに多い (Ingress/Gateway API 全般 +
-    # Service/Endpoints/Secret/ConfigMap 等をクラスタ全体で watch) ため、それ
-    # 以上の余裕を見込んだ。
-    # - requests: chart 同梱のコメント例 (cpu: 50m / memory: 128Mi) よりやや
-    #   手厚く、Kong Operator の安定時実測 (127Mi) の 2 倍相当の 256Mi とした。
-    # - limits: memory は Kong Operator が安定した 1Gi よりさらに余裕を持たせ
-    #   2Gi。cpu は full re-sync 時の負荷を見込み、gateway (proxy) と同水準の
-    #   500m とした。requests と同値にはしない (Kong Operator の事故は
-    #   「requests だけ上書きし limits を chart 既定のまま残し、実質
-    #   requests=limits で余裕ゼロになった」ことが直接原因だったため)。
+    # 未設定だと BestEffort QoS になり、ノード 1 台構成のこのクラスタでは
+    # リソース圧迫時に真っ先に evict される。値は実測ではなく Kong Operator の実績
+    # (256Mi で OOM、1Gi で安定・実測 127Mi) からの見積もりで、watch 対象が
+    # さらに多い KIC 向けに余裕を積んだもの。
     resources:
       requests:
         cpu: 100m
@@ -67,57 +28,33 @@ controller:
         memory: 2Gi
 
 gateway:
-  # Kong Manager 用の NodePort Service (kong-ingress-gateway-manager) を無効化する。
-  # chart 既定 (manager.enabled: true, type: NodePort) のままだと、Kong Manager が
-  # クラスタの全ノードに露出する。旧構成 (Kong Operator) にこの露出は無く、
-  # 本移行はその状態を変える理由を持たないため、明示的に無効化する。
+  # チャート既定 (NodePort) のままだと Kong Manager が全ノードに露出する。
+  # 旧構成に無かった露出なので無効化する。
   manager:
     enabled: false
   image:
-    # ★ こちらも浮動タグ (3.9) を使わないこと。
-    # 同じチャートが KIC (controller) と Kong Gateway (gateway) の 2 イメージを
-    # 別々のタグ設定として持つ。KIC 側だけ固定して Kong Gateway 側を chart 既定の
-    # 浮動タグに任せると、KIC で拒否したのと同じ型のリスク（意図しないマイナー/パッチ
-    # を引いて壊れる）をデータプレーン側で再導入してしまう。3.9 系最新パッチで固定する。
-    #
-    # ★★ エディション変更に注意: 現在稼働中のデータプレーンは
-    # kong/kong-gateway:3.14 (Enterprise) だが、この chart の image.repository
-    # 既定は kong (OSS)。3.9.3 は本 chart の appVersion (3.9) に一致する
-    # 妥当なパッチ版だが、Enterprise -> OSS へのエディション変更を伴う。
-    # Enterprise 専用プラグイン (RBAC, OIDC/OAuth2 Introspection, Rate Limiting
-    # Advanced 等) は移行後使用できなくなる。稼働中の設定がこれらの
-    # Enterprise 専用機能に依存していないことを、移行実施前に別途確認すること。
+    # controller と同じ理由で浮動タグ (3.9) を避ける。
+    # 注意: 稼働中の DP は kong/kong-gateway (Enterprise) だが、このチャートの
+    # image.repository 既定は kong (OSS)。Enterprise 専用プラグイン
+    # (RBAC / OIDC / Rate Limiting Advanced 等) は使えなくなる。
     tag: "3.9.3"
-  # 旧 platform/kong-gateway/gatewayconfiguration.yaml (Kong Operator の
-  # GatewayConfiguration, Task 4 で削除) が持っていた設定を引き継ぐ。
-  # replicas: 2 は移行前と同一。Kong のデータプレーンは Argo CD 自身の公開経路
-  # でもあり、Pod 1 つの再起動で到達不能になる single point of failure を
-  # 作らないため、chart 既定の 1 のままにはしない。
+  # Kong は Argo CD 自身の公開経路でもあるため、Pod 1 つの再起動で到達不能になる
+  # single point of failure を作らないよう、チャート既定の 1 にはしない。
   replicaCount: 2
   resources:
     requests:
-      # 移行前 (旧 gatewayconfiguration.yaml) と同一の値。
       cpu: 200m
       memory: 512Mi
     limits:
-      # requests と同値にしない。過去に Kong Operator で「requests だけ上書きし
-      # limits を chart 既定のまま残した結果、実質 requests=limits で余裕ゼロに
-      # なり OOMKilled で 23 回 CrashLoopBackOff した」事故があるため
-      # (docs/known-issues.md 参照)、limits は必ず明示しつつ requests から
-      # 十分な余白を確保する。
-      #
-      # ★ 実測ベースラインに合わせる: 現在稼働中のデータプレーン
-      # (kong/kong-gateway:3.14) の実測 limits は cpu: 2 / memory: 2000Mi。
-      # 当初案の cpu: 500m / memory: 1Gi のままだと、移行だけで cpu が 1/4、
-      # memory が 1/2 に落ちる。移行はエディション変更 (C-2 参照) や設定の
-      # 持ち替えが目的であり、データプレーンのキャパシティを削る意図は無いため、
-      # 実測値そのものに寄せる。
+      # requests と同値にはしない。Kong Operator で「requests だけ上書きし limits を
+      # チャート既定のまま残した」結果 OOMKilled で 23 回 CrashLoopBackOff した事故が
+      # ある (docs/known-issues.md)。値は移行前の DP の実測 limits に合わせており、
+      # 移行でキャパシティを削らないための下限でもある。
       cpu: 2
       memory: 2000Mi
   proxy:
     type: LoadBalancer
     annotations:
-      # Terraform が予約した静的 IP を固定する。この annotation が GKE で
-      # 実際に機能することは実機検証済み (35.221.95.244 が割り当たる)。
+      # Terraform が予約した静的 IP を固定する
       cloud.google.com/l4-rbs: "enabled"
       networking.gke.io/load-balancer-ip-addresses: shukawam-gke-gateway

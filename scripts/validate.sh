@@ -11,17 +11,15 @@ ok()   { printf '\033[32mOK\033[0m   %s\n' "$*"; }
 bad()  { printf '\033[31mFAIL\033[0m %s\n' "$*"; fail=1; }
 
 # --- 1. Helm リポジトリを冪等に登録 -------------------------------------
-# --force-update: 同名エイリアスが既に別 URL で登録されていた場合、それを
-# 黙って温存すると以後誤ったリポジトリから pull し続けてしまうため、
-# 常に URL を上書きする。
+# --force-update: 同名エイリアスが別 URL で登録済みだと、以後誤ったリポジトリから
+# pull し続けてしまうため常に上書きする。
 helm repo add argo             https://argoproj.github.io/argo-helm                  --force-update >/dev/null 2>&1 || true
 helm repo add jetstack         https://charts.jetstack.io                            --force-update >/dev/null 2>&1 || true
 helm repo add external-secrets https://charts.external-secrets.io                    --force-update >/dev/null 2>&1 || true
 helm repo add open-telemetry   https://open-telemetry.github.io/opentelemetry-helm-charts --force-update >/dev/null 2>&1 || true
 helm repo add kong             https://charts.konghq.com                             --force-update >/dev/null 2>&1 || true
-# ここで失敗しても `|| true` は付けない。付けると set -e に頼った暗黙の
-# 中断ができなくなり、古い/不在のチャートに対して以降の検証を通してしまう
-# （中断より悪い）。失敗した場合はメッセージを出してから明示的に終了する。
+# ここは `|| true` を付けない。付けると古い/不在のチャートに対して以降の検証を
+# 通してしまう。
 if ! helm repo update >/tmp/helm-repo-update-err.txt 2>&1; then
   bad "helm repo update に失敗しました"
   sed 's/^/       /' /tmp/helm-repo-update-err.txt
@@ -42,13 +40,10 @@ for t in "${render_targets[@]}"; do
   IFS='|' read -r vals chart ver ns <<<"$t"
   [ -f "$vals" ] || { note "skip (未作成): $vals"; continue; }
 
-  # Argo CD が実際に使うリリース名は spec.sources[0].helm.releaseName
-  # があればそれ、無ければ metadata.name (apps/*.yaml)。固定名 "release"
-  # でレンダリングすると、例えば cert-manager のコントローラ SA が
-  # "release-cert-manager" になり、Workload Identity のバインディングを
-  # 壊す名前を検証してしまう。values.yaml のディレクトリ名 (例:
-  # platform/cert-manager) は apps/*.yaml のファイル名 (apps/cert-manager.yaml)
-  # と一致する規約なので、それで対応する apps ファイルを引く。
+  # 固定名 "release" でレンダリングすると、例えば cert-manager のコントローラ SA が
+  # release-cert-manager になり、Workload Identity のバインディングを壊す名前を
+  # 検証してしまう。values.yaml のディレクトリ名は apps/*.yaml のファイル名と
+  # 一致する規約なので、そこから実際のリリース名を引く。
   apps_file="apps/$(basename "$(dirname "$vals")").yaml"
   release="release"
   if [ -f "$apps_file" ]; then
@@ -62,22 +57,11 @@ for t in "${render_targets[@]}"; do
     note "warn: $apps_file が無いため release name を release にフォールバック ($vals)"
   fi
 
-  # --include-crds: Argo CD は既定でこれを渡す (helm.skipCrds の既定は
-  # false)。付けないと crds/ ディレクトリに CRD を置くサブチャート
-  # (例: kong-operator の gwapi-standard-crds) の CRD がまるごと
-  # 検証対象外になる。
-  #
-  # --api-versions cert-manager.io/v1: 付けないと Capabilities.APIVersions.Has
-  # で gate されたブロックが黙ってレンダリングされない。実例:
-  # kong-ai-gateway の templates/certificate.yaml は
-  # `{{- if and (.Capabilities.APIVersions.Has "cert-manager.io/v1") ... }}`
-  # で全体を囲んでおり、これが無いと本 diff で最も繊細な certificates
-  # ブロックが一切検証対象に入らず、clusterIssuer の綴り間違いや duration の
-  # 単位間違いをこの helm template が一切検出できない (「黙ってスキップする
-  # 検証」がこのリポジトリで 3 度目)。他のチャート (argo-cd, cert-manager
-  # 本体, external-secrets, opentelemetry-operator, kong-ingress) は
-  # cert-manager.io/v1 の有無で分岐するテンプレートを持たないため無害
-  # (実測でレンダリング結果に差分無しを確認済み)。
+  # --include-crds: Argo CD の既定と揃える。無いと crds/ に CRD を置く
+  # サブチャートの CRD が検証対象外になる。
+  # --api-versions cert-manager.io/v1: 無いと kong-ai-gateway の
+  # templates/certificate.yaml が Capabilities.APIVersions.Has で丸ごと gate され、
+  # certificates ブロックが黙って未検証になる。他チャートには影響しない。
   if helm template "$release" "$chart" --version "$ver" -n "$ns" -f "$vals" --include-crds --api-versions cert-manager.io/v1 >/dev/null 2>/tmp/helm-err.txt; then
     ok "helm template $chart (release: $release)"
   else
@@ -86,10 +70,8 @@ for t in "${render_targets[@]}"; do
 done
 
 # --- 3. argo-cd のチャート版・リリース名が bootstrap.sh と一致しているか --
-# チャート版 10.4.0 は bootstrap/argocd/bootstrap.sh・apps/argo-cd.yaml・
-# この validate.sh (render_targets) の 3 箇所に、リリース名 argocd は
-# 前 2 者に重複している。どちらかがずれると Argo CD がもう一組立ち上がり、
-# HTTPRoute の backend が解決しなくなる（過去に実際に起きた重大欠陥）。
+# ずれると Argo CD がもう一組立ち上がり、HTTPRoute の backend が解決しなくなる
+# (過去に実際に起きた)。
 if [ -f apps/argo-cd.yaml ] && [ -f bootstrap/argocd/bootstrap.sh ]; then
   apps_argocd_version="$(yq eval '.spec.sources[0].targetRevision' apps/argo-cd.yaml)"
   apps_argocd_release="$(yq eval '.spec.sources[0].helm.releaseName' apps/argo-cd.yaml)"
@@ -114,10 +96,8 @@ else
 fi
 
 # --- 4. 素の YAML が構文的に妥当か -------------------------------------
-# クラスタへの到達性をループに入る前に 1 回だけ安価に確認する。
-# 到達できない場合（kubeconfig の認証切れ等、マニフェストの正しさとは無関係な
-# 理由）は kubectl --dry-run=client を一切実行せず、YAML 構文チェックのみに
-# 縮退する。構文が壊れていればこの場合でも従来どおり fail にする。
+# 到達できない場合 (kubeconfig の認証切れ等、マニフェストの正しさとは無関係な理由)
+# は YAML 構文チェックのみに縮退する。
 timeout_bin=""
 if command -v timeout >/dev/null 2>&1; then
   timeout_bin="timeout"
@@ -128,9 +108,8 @@ fi
 cluster_reachable=0
 reach_reason="unreachable"
 if [ -z "$timeout_bin" ]; then
-  # timeout/gtimeout がどちらも無いと、exec credential plugin がハングした場合に
-  # プローブ自体を安全に打ち切れない。ハングするくらいなら、判定せずに
-  # 到達不能とみなしてスキップする方が安全（フェイルセーフ）。
+  # timeout が無いと exec credential plugin のハングを打ち切れない。
+  # ハングするくらいなら到達不能とみなす方が安全。
   reach_reason="no-timeout-bin"
 elif "$timeout_bin" 5 kubectl cluster-info --request-timeout=3s >/dev/null 2>&1; then
   cluster_reachable=1
@@ -147,12 +126,9 @@ if [ "$cluster_reachable" -eq 0 ]; then
 fi
 
 skipped_dirs=""
-# platform/kong-ai-gateway はここに含めない。Task 4 で AIGatewayDataPlane
-# (生の k8s マニフェスト) を Helm 化し、ディレクトリの中身が values.yaml
-# (Helm values、kind/apiVersion を持たない) だけになったため。ここに入れると
-# kubectl apply --dry-run=client が values.yaml を k8s マニフェストとして
-# 検証しようとして "apiVersion not set, kind not set" で必ず fail する。
-# values.yaml 自体の妥当性は上の「helm template」検証 (render_targets) で見る。
+# platform/kong-ai-gateway は Helm values しか持たないため含めない
+# (kubectl --dry-run=client が "kind not set" で必ず fail する)。妥当性は
+# 上の helm template 検証で見ている。
 for d in projects apps platform/cert-manager-issuers platform/secret-stores \
          platform/opentelemetry-collector platform/kong-gateway \
          platform/pii-sanitizer bootstrap/argocd; do
@@ -179,9 +155,7 @@ for d in projects apps platform/cert-manager-issuers platform/secret-stores \
     if ! yq eval-all 'true' "$d"/*.yaml >/dev/null 2>&1; then
       bad "YAML 構文エラー: $d"; sed 's/^/       /' /tmp/kubectl-err.txt | head -10
     else
-      # kubectl のエラーが「CRD 未導入」由来の行だけで構成されているかを見る。
-      # それ以外のエラー（フィールド名の誤り・型違反・必須フィールド欠落など）が
-      # 1 行でも混ざっていれば、CRD 未導入を理由に握りつぶさず fail にする。
+      # CRD 未導入由来以外のエラーが 1 行でも混ざっていれば握りつぶさず fail にする
       other_errors=$(grep -vE 'no matches for kind|ensure CRDs are installed|resource mapping not found for name' \
                        /tmp/kubectl-err.txt | sed '/^[[:space:]]*$/d' || true)
       if [ -n "$other_errors" ]; then
@@ -200,15 +174,10 @@ if [ "$cluster_reachable" -eq 0 ] && [ -n "$skipped_dirs" ]; then
 fi
 
 # --- 5. repoURL が全ファイルで一致しているか ---------------------------
-# github.com の repoURL は本来このリポジトリ自身を指しているべき、という前提の
-# チェック（フォーク時の参照ずれ等、意図しない repoURL の混入を捕まえるのが目的）。
-# ただし CRD 等を upstream から直接取り込む設計（例: Gateway API 標準 CRD）は
-# 意図的に別の github.com リポジトリを参照するため、明示的な許可リストで例外化する。
-# 許可リストにも本リポジトリにも一致しない github.com の repoURL は従来どおり FAIL。
+# フォーク時の参照ずれなど、意図しない repoURL の混入を捕まえる。upstream から
+# 直接 CRD を引く設計は許可リストで例外化する。
 ALLOWED_EXTERNAL_GITHUB_REPOS=(
-  # Gateway API 標準 CRD を upstream から直接引く apps/gateway-api-crds.yaml 用。
-  # kong/ingress は Gateway API CRD を同梱しないため、この Application が
-  # KIC より前の wave で CRD を供給する。
+  # kong/ingress は Gateway API CRD を同梱しないため upstream から直接引く
   "https://github.com/kubernetes-sigs/gateway-api"
 )
 
@@ -263,10 +232,8 @@ if [ -f bootstrap/argocd/bootstrap.sh ]; then
 fi
 
 # --- 8. bootstrap/gke (Terraform) の静的検証と、マニフェスト側定数との整合 ------
-# GSA の email やアドレス名は Terraform の命名規則 (format("%s-xxx", resource_prefix)) から
-# 手打ちで書き写した文字列で、Terraform 側との自動的な結び付きが無い。ズレてもエラーには
-# ならず、Workload Identity や LoadBalancer の静的 IP 紐付けが黙って壊れる
-# （本プロジェクトで繰り返し起きている「沈黙する失敗」の典型形）ため、ここで突き合わせる。
+# マニフェスト側の GSA email や静的 IP 名は Terraform の命名規則から手で書き写した
+# 文字列で、ズレてもエラーにならず Workload Identity や IP 紐付けが黙って壊れる。
 if command -v terraform >/dev/null 2>&1; then
   if [ -d bootstrap/gke/.terraform ]; then
     if terraform -chdir=bootstrap/gke fmt -check >/tmp/tf-fmt-err.txt 2>&1; then
@@ -304,9 +271,7 @@ if [ -f bootstrap/gke/variables.auto.tfvars ]; then
       "platform/cert-manager/values.yaml|cert-manager|gsa"
       "platform/opentelemetry-collector/serviceaccount.yaml|otel-collector|gsa"
       "platform/kong-ingress/values.yaml|gke-gateway|address"
-      # kong-ai-gateway は 2026-08-28 に専用 LoadBalancer/静的 IP をやめ、
-      # kong-gateway 経由の HTTPRoute (ClusterIP) に統合した。専用の静的 IP
-      # アドレスは持たなくなったため、この突き合わせ対象から外す。
+      # kong-ai-gateway は HTTPRoute (ClusterIP) 公開で専用の静的 IP を持たない
     )
     for c in "${tf_const_checks[@]}"; do
       IFS='|' read -r file suffix kind <<<"$c"

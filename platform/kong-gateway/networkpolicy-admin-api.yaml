@@ -1,40 +1,10 @@
-# Admin API (8444) への到達を KIC の Pod のみに制限する。
+# kong/ingress チャートの Admin API (8444) にはクライアント証明書検証が無く、
+# チャート同梱の NetworkPolicy も無い。素のままだとクラスタ内の任意の Pod が
+# Admin API に到達し、Argo CD を front する Gateway の設定を書き換えられるため、
+# ネットワーク到達性で塞ぐ。
 #
-# 移行で失う 2 つの保護:
-#   1. 稼働中のデータプレーン (Kong Operator 管理) は
-#      KONG_NGINX_ADMIN_SSL_VERIFY_CLIENT=on で Admin API に mTLS を要求していたが、
-#      kong/ingress チャートのレンダリング結果は
-#      KONG_ADMIN_LISTEN=0.0.0.0:8444 http2 ssl のみで、クライアント証明書検証が無い。
-#   2. Kong Operator が生成していた NetworkPolicy
-#      (kong-m75vx-limit-admin-api-* 相当、8444 をオペレータ Pod のみに制限)
-#      は kong/ingress チャートには存在しない。
-# この 2 つが同時に失われると、クラスタ内の任意の Pod が
-# kong-ingress-gateway-admin.kong.svc:8444 に到達でき、Argo CD を front する
-# Gateway の宣言的設定を書き換えられてしまう。mTLS 相当の代替が無い以上、
-# NetworkPolicy でネットワーク到達性そのものを塞ぐ。
-#
-# セレクタは実際に helm template でレンダリングした Pod ラベルから確認したもの
-# (2026-08-27時点、kong/ingress 0.24.0, release name "kong-ingress"):
-#   - Admin API を持つデータプレーン (gateway) Pod:
-#       app.kubernetes.io/name: gateway
-#       app.kubernetes.io/instance: kong-ingress
-#       app.kubernetes.io/component: app
-#   - Admin API を呼ぶ KIC (controller) Pod:
-#       app.kubernetes.io/name: controller
-#       app.kubernetes.io/instance: kong-ingress
-#       app.kubernetes.io/component: app
-# 推測ではなく実際のレンダリング結果 (Deployment.spec.template.metadata.labels) に
-# 合わせているため、release name (Argo CD Application 名 = kong-ingress) が
-# 変わった場合はここも合わせて変更すること。
-#
-# kong/ingress チャート自体が KIC と gateway の 2 インスタンスを同一 namespace
-# (kong) に展開する構成のため、podSelector のみで namespaceSelector は不要
-# (NetworkPolicyPeer に namespaceSelector を書かない場合、NetworkPolicy と
-# 同一 namespace の Pod のみが対象になる)。
-#
-# wave はこの NetworkPolicy が保護する Service/Pod を生成する kong-ingress
-# Application (apps/kong-ingress.yaml, sync-wave: "1") および同ディレクトリの
-# gatewayclass.yaml (sync-wave: "1") と合わせる。
+# セレクタは helm template のレンダリング結果 (Deployment の Pod ラベル) に
+# 合わせている。release name を変えたらここも変えること。
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:

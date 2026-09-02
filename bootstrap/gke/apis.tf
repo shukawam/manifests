@@ -1,7 +1,6 @@
 # ---------------------------------------
 # GKE 構築に必要な API
-#   disable_on_destroy = false: terraform destroy でクラスタを消しても、
-#   同一プロジェクト上の他リソースを巻き込まないよう API 自体は無効化しない
+#   destroy 時も API 自体は無効化しない (同一プロジェクトの他リソースを巻き込むため)
 # ---------------------------------------
 locals {
   required_apis = [
@@ -13,10 +12,6 @@ locals {
     "monitoring.googleapis.com",
     "cloudtrace.googleapis.com",
     "artifactregistry.googleapis.com",
-    # secretmanager: External Secrets Operator が Secret Manager からシークレットを取得するために必要
-    # dns: cert-manager の DNS-01 チャレンジおよび gke.shukawam.me ゾーンの管理に必要
-    # (このプロジェクトでは既に有効化済みのため apply 時は no-op になるが、
-    #  設定の自己完結性のためここにも列挙する)
     "secretmanager.googleapis.com",
     "dns.googleapis.com",
   ]

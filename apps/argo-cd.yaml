@@ -14,12 +14,9 @@ spec:
       chart: argo-cd
       targetRevision: 10.4.0
       helm:
-        # bootstrap.sh の `helm upgrade --install argocd` とリリース名を一致させる。
-        # 指定しないと Argo CD は Application 名 (argo-cd) をリリース名として使い、
-        # チャートの nameOverride (argocd) との組み合わせで argo-cd-argocd-server 等が
-        # レンダリングされ、bootstrap が導入した argocd-* を引き取れずに
-        # 別名の Argo CD をもう一組作ってしまう。Application 名は暗黙の結合対象にせず、
-        # ここで明示的に固定する。
+        # bootstrap.sh の helm リリース名と揃える。省略すると Application 名が
+        # リリース名になり、bootstrap が入れた argocd-* を引き取らずに
+        # 別名の Argo CD をもう一組作ってしまう。
         releaseName: argocd
         valueFiles:
           - $values/platform/argo-cd/values.yaml

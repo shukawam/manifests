@@ -21,7 +21,7 @@ spec:
       tls:
         mode: Terminate
         certificateRefs:
-          # group も CRD 既定値（コア API グループ = 空文字）だが明示する。
+          # 既定値だが、省略すると API サーバが埋めた値と git に差分が出る
           - group: ""
             kind: Secret
             name: gke-shukawam-me-tls

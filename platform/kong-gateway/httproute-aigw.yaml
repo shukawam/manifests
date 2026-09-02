@@ -1,5 +1,5 @@
-# argocd の HTTPRoute と同じ理由でここに置く（Gateway API CRD が
-# argo-cd の sync-wave -1 時点でまだ存在しない）。
+# argocd の HTTPRoute と同じ理由でここに置く (sync-wave -1 の時点では
+# Gateway API の CRD がまだ無い)。
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
@@ -7,7 +7,7 @@ metadata:
   namespace: kong
   annotations:
     argocd.argoproj.io/sync-wave: "3"
-    # http -> https のネイティブリダイレクト。詳細は httproute-argocd.yaml のコメント参照。
+    # http -> https のリダイレクト。詳細は httproute-argocd.yaml 参照。
     konghq.com/https-redirect-status-code: "301"
 spec:
   parentRefs:
@@ -29,14 +29,10 @@ spec:
           name: kong-ai-gateway-kong-ai-gateway-proxy
           port: 8000
           weight: 1
-      # LLM のストリーミング応答は完了までに要する時間が読めないため、長めのタイムアウトにする。
-      # Gateway API 仕様上は 0s で「タイムアウト無効化」を表せるが、KIC 3.5.13 はこれを
-      # そのまま Kong の Service エンティティ (connect_timeout/write_timeout/read_timeout,
-      # 単位ミリ秒) に 0 として渡してしまい、Kong のスキーマ (1〜2147483646 のみ許容) に
-      # 弾かれる。宣言的設定は 1 トランザクションのため、この Service 1 件の拒否だけで
-      # aigw HTTPRoute を含む設定投入が丸ごと失敗し、無関係な証明書エラーが巻き添えで
-      # 表示される（docs/known-issues.md 参照）。0s ではなく実用上十分に長い有限値
-      # (1時間) を明示する。
+      # LLM のストリーミング応答は所要時間が読めないため長めにする。0s
+      # (仕様上は無効化) は KIC 3.5.13 が Kong の timeout に 0 として渡し、
+      # スキーマに弾かれて設定投入が丸ごと失敗するので使えない
+      # (docs/known-issues.md 参照)。
       timeouts:
         request: 3600s
         backendRequest: 3600s

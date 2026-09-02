@@ -1,29 +1,21 @@
 # ---------------------------------------
 # GKE Standard クラスタ
 #
-#   Autopilot ではなく Standard モードを使う理由:
-#     Autopilot はノードの管理を GKE 側に委ねるため、hostPath / hostNetwork /
-#     特権コンテナを伴う DaemonSet に強い制約がかかる。
-#     OpenTelemetry Collector をノードごとの DaemonSet として配置し、
-#     kubelet / ノードのファイルシステムからテレメトリを収集するには
-#     ノードを自前で管理できる Standard モードが必要。
+#   Autopilot は hostPath / hostNetwork / 特権コンテナを伴う DaemonSet に強い
+#   制約をかけるため、ノードのファイルシステムからテレメトリを収集する
+#   OpenTelemetry Collector を置けない。
 # ---------------------------------------
 resource "google_container_cluster" "gke" {
   project = var.project_id
   name    = format("%s-gke", var.resource_prefix)
 
-  # location にリージョンを指定してリージョナルクラスタにする
-  # (コントロールプレーンが冗長化され、ノードは node_locations のゾーンに配置される)
   location       = var.region
   node_locations = var.zones
 
-  # Standard モード
-  #   enable_autopilot は明示しない。Google プロバイダでは enable_autopilot と
-  #   remove_default_node_pool が排他扱いになるため、false を書くとエラーになる。
-  #   属性を省略した場合の既定が Standard モード。
+  # enable_autopilot は書かない。remove_default_node_pool と排他扱いのため
+  # false を書くとエラーになり、省略時の既定が Standard モードになる。
 
-  # 既定ノードプールは作成直後に削除し、下の google_container_node_pool で管理する
-  # (Terraform 上でノードプールをライフサイクル管理するための定石)
+  # 既定ノードプールは作成直後に捨て、下の google_container_node_pool で管理する
   remove_default_node_pool = true
   initial_node_count       = 1
 
@@ -41,9 +33,6 @@ resource "google_container_cluster" "gke" {
     channel = var.release_channel
   }
 
-  # Workload Identity
-  #   OpenTelemetry Collector が鍵ファイルなしで Google Cloud の
-  #   Trace / Monitoring / Logging にエクスポートするために必須
   workload_identity_config {
     workload_pool = format("%s.svc.id.goog", var.project_id)
   }
@@ -90,9 +79,8 @@ resource "google_container_cluster" "gke" {
     }
   }
 
-  # private_cluster_config は指定しない
-  #   → コントロールプレーン・ノードともパブリック。手元から kubectl が直接通り、
-  #     イメージ pull や外部への OTLP エクスポートもインターネットに直接出るため Cloud NAT 不要
+  # private_cluster_config は指定しない。手元から kubectl が直接通り、外向き通信も
+  # インターネットへ直接出るため Cloud NAT が要らない。
   deletion_protection = var.deletion_protection
 
   depends_on = [google_project_service.this]
@@ -100,7 +88,6 @@ resource "google_container_cluster" "gke" {
 
 # ---------------------------------------
 # ノードプール
-#   OpenTelemetry Collector の DaemonSet はここに載るノード全台に 1 Pod ずつ配置される
 # ---------------------------------------
 resource "google_container_node_pool" "primary" {
   project  = var.project_id
@@ -135,16 +122,15 @@ resource "google_container_node_pool" "primary" {
 
     service_account = google_service_account.gke_node.email
 
-    # 個別スコープではなく cloud-platform を付与し、実際の権限は上の IAM ロールで絞る
-    # (Google が推奨する構成)
+    # 個別スコープではなく cloud-platform を付与し、実際の権限は SA の IAM ロールで
+    # 絞る (Google が推奨する構成)
     oauth_scopes = [
       "https://www.googleapis.com/auth/cloud-platform",
     ]
 
     labels = var.node_labels
 
-    # Pod が Workload Identity 経由でのみ認証情報を取得できるようにする
-    # (ノードのメタデータサーバへの直接アクセスを遮断)
+    # ノードのメタデータサーバへの直接アクセスを遮断する
     workload_metadata_config {
       mode = "GKE_METADATA"
     }

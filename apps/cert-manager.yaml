@@ -24,11 +24,9 @@ spec:
     namespace: cert-manager
   syncPolicy:
     automated:
-      # CRD を誤って消さないため、このアプリだけ prune しない。
-      # crds.keep: true (values.yaml) が付与する helm.sh/resource-policy: keep
-      # を Argo CD の prune は尊重しないため、prune: true のままだと
-      # Application 削除時に cert-manager の CRD が消え、クラスタ内の
-      # 全 Certificate / ClusterIssuer が連鎖削除される。
+      # Argo CD の prune は crds.keep が付ける helm.sh/resource-policy: keep を
+      # 尊重しない。true のままだと CRD ごと消え、全 Certificate / ClusterIssuer が
+      # 連鎖削除される。
       prune: false
       selfHeal: true
     syncOptions:

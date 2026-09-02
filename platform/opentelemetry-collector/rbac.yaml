@@ -10,10 +10,8 @@ rules:
       - pods
       - namespaces
       - nodes
-      # kubeletstats は endpoint: "${env:K8S_NODE_NAME}:10250" で kubelet を
-      # 直接叩くため nodes/stats で足りる。nodes/proxy は任意の kubelet
-      # エンドポイントへの GET を許すため runAsUser: 0 の DaemonSet には
-      # 過剰付与であり、k8sclusterreceiver の公式 ClusterRole にも含まれない。
+      # kubeletstats は kubelet を直接叩くため nodes/stats で足りる。nodes/proxy は
+      # 任意の kubelet エンドポイントへの GET を許すため付与しない。
       - nodes/stats
       - services
       - endpoints
@@ -22,9 +20,7 @@ rules:
       - resourcequotas
       - persistentvolumes
       - persistentvolumeclaims
-      # k8sclusterreceiver の公式 ClusterRole が baseline 要件として挙げている
-      # subresource。無いと informer が実行時に 403 になり、クラスタメトリクス
-      # が静かに欠落する。
+      # 無いと informer が実行時に 403 になり、クラスタメトリクスが静かに欠落する
       - namespaces/status
       - nodes/spec
       - pods/status
