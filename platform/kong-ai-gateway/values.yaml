@@ -17,7 +17,7 @@ env:
 image:
   repository: kong/kong-ai-gateway
   # チャート既定の repository は kong/kong-ai-gateway-dev
-  tag: "2.0.2"
+  tag: "2.0.3"
 
 # ノードプールが GKE_METADATA のため、このアノテーションが無い Pod は未マッピングの
 # Workload Identity 連合 ID として認証され (権限を一切持たない)、ノードの既定 SA には
