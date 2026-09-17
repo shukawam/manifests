@@ -120,3 +120,12 @@ output "valkey_port" {
   value       = var.create_memorystore_valkey ? google_memorystore_instance.valkey[0].endpoints[0].connections[0].psc_auto_connection[0].port : null
   description = "Memorystore for Valkey の PSC エンドポイントポート"
 }
+
+output "new_relic_license_key_secret_command" {
+  value = format(
+    "printf '%%s' '<ingest-license-key>' | gcloud secrets versions add %s --project %s --data-file=-",
+    google_secret_manager_secret.new_relic_license_key.secret_id,
+    var.project_id,
+  )
+  description = "New Relic の Ingest License Key を Secret Manager へ投入するコマンド (値は手動投入)"
+}

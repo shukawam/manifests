@@ -22,6 +22,7 @@ Autopilot はノードを GKE 側が完全管理するため、`hostPath` / `hos
 | `dns.tf` | gke.shukawam.me のパブリックゾーンと A レコード (ワイルドカード / aigw) |
 | `gke.tf` | GKE Standard クラスタ本体とノードプール |
 | `memorystore.tf` | Memorystore for Valkey と、その到達に必要な PSC のサービス接続ポリシー |
+| `secrets.tf` | Secret Manager の箱 (値は手動投入) |
 | `outputs.tf` | 出力値 |
 
 作成されるリソースはすべて `format("%s-xxx", var.resource_prefix)` で命名されるため、
@@ -46,6 +47,19 @@ Autopilot はノードを GKE 側が完全管理するため、`hostPath` / `hos
 | PSC サービス接続ポリシー | `<prefix>-memorystore` |
 | Valkey インスタンス | `<prefix>-valkey` |
 
+Secret Manager の箱だけは ESO の `remoteRef.key` と一致させる必要があるため、prefix を付けない。
+いずれも箱だけを管理し、値 (バージョン) は手で投入する。既存の 2 つは手動作成だったものを
+`terraform import` で取り込んだ。どれも値をリポジトリから再生成できないため
+`deletion_protection = true` を付けてある。これは **Terraform 側のガードでしかない** (API の
+フィールドではない) ので、`terraform destroy` は止まるが `gcloud secrets delete` は止まらない。
+消すときは HCL を `false` に倒して apply してから destroy する。
+
+| リソース | 名前 | 参照元 |
+| --- | --- | --- |
+| New Relic Ingest License Key | `new-relic-license-key` | `platform/opentelemetry-collector/externalsecret.yaml` |
+| Argo CD の Auth0 クライアントシークレット | `argocd-auth0-client-secret` | `platform/argo-cd/values.yaml` |
+| pii-sanitizer の Cloudsmith 認証情報 | `pii-sanitizer-cloudsmith-dockerconfigjson` | `platform/pii-sanitizer/externalsecret.yaml` |
+
 ## 使い方
 
 ```bash
@@ -57,6 +71,12 @@ gcloud auth application-default login
 terraform init
 terraform plan
 terraform apply
+
+# Secret Manager の箱には値が入っていない。バージョンが 1 つも無いと ESO は
+# SecretSyncedError のまま Secret を作らないので、apply 後に投入する
+terraform output -raw new_relic_license_key_secret_command
+printf '%s' '<ingest-license-key>' | \
+  gcloud secrets versions add new-relic-license-key --project gcp-fieldeng-dev --data-file=-
 ```
 
 適用後、kubectl のコンテキストを取得する:

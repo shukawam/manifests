@@ -10,6 +10,12 @@ spec:
   # k8s_cluster receiver は重複計上を避けるため必ず 1 レプリカ
   replicas: 1
   serviceAccount: otel-collector
+  env:
+    - name: NEW_RELIC_LICENSE_KEY
+      valueFrom:
+        secretKeyRef:
+          name: new-relic
+          key: license-key
   resources:
     requests:
       cpu: 200m
@@ -63,6 +69,15 @@ spec:
       batch:
         send_batch_size: 1000
         timeout: 10s
+      # Kong は「その値が最後に更新された時刻」を datapoint のタイムスタンプに使う。
+      # 起動時に一度だけ立つゲージ (kong.cp.connection.status など) はそのまま古くなり続け、
+      # New Relic の受け付ける時間窓から外れて捨てられるので、送信時刻で上書きする。
+      # GMP 向けのパイプラインには入れない (本来の収集時刻を失う)
+      transform/kong:
+        metric_statements:
+          - context: datapoint
+            statements:
+              - set(datapoint.time, Now())
     exporters:
       # メトリクスは GMP へ。googlecloud だと custom.googleapis.com の
       # メトリクス記述子上限とコストに当たる。
@@ -72,17 +87,29 @@ spec:
         project: gcp-fieldeng-dev
         log:
           default_log_name: opentelemetry-collector
+      otlp_http/newrelic:
+        endpoint: https://otlp.nr-data.net
+        headers:
+          api-key: ${env:NEW_RELIC_LICENSE_KEY}
+        retry_on_failure:
+          enabled: true
     service:
       pipelines:
         metrics:
           receivers: [otlp, k8s_cluster]
           processors: [memory_limiter, k8sattributes, resourcedetection, batch]
           exporters: [googlemanagedprometheus]
+        # transform/kong のためだけに GMP 側と分けている。receiver ID が同一なので
+        # k8s_cluster は 1 インスタンスが両パイプラインへ fan-out する (二重収集にならない)
+        metrics/newrelic:
+          receivers: [otlp, k8s_cluster]
+          processors: [memory_limiter, k8sattributes, resourcedetection, transform/kong, batch]
+          exporters: [otlp_http/newrelic]
         traces:
           receivers: [otlp]
           processors: [memory_limiter, k8sattributes, resourcedetection, batch]
-          exporters: [googlecloud]
+          exporters: [googlecloud, otlp_http/newrelic]
         logs:
           receivers: [otlp]
           processors: [memory_limiter, k8sattributes, resourcedetection, batch]
-          exporters: [googlecloud]
+          exporters: [googlecloud, otlp_http/newrelic]

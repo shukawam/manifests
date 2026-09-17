@@ -13,6 +13,11 @@ env:
   # マウントされる (secretVolumes は使わない)
   cluster_cert: /etc/cert-manager/cluster/tls.crt
   cluster_cert_key: /etc/cert-manager/cluster/tls.key
+  # 既定は off。これが無いと opentelemetry policy の traces_endpoint を設定しても
+  # スパンが 1 本も生成されない (メトリクスとログは影響を受けない)
+  tracing_instrumentations: all
+  # サンドボックスなので全件。本番相当の負荷をかけるときは下げること
+  tracing_sampling_rate: "1.0"
 
 image:
   repository: kong/kong-ai-gateway
