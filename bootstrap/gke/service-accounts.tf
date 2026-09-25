@@ -176,6 +176,12 @@ resource "google_project_iam_member" "kong_ai_gateway" {
   member  = format("serviceAccount:%s", google_service_account.kong_ai_gateway.email)
 }
 
+resource "google_project_iam_member" "kong_ai_gateway_model_armor" {
+  project = var.project_id
+  role    = "roles/modelarmor.user"
+  member  = format("serviceAccount:%s", google_service_account.kong_ai_gateway.email)
+}
+
 # バインド先の ServiceAccount 名は Helm chart のフルネーム規則で決まるため定数で埋め込む
 resource "google_service_account_iam_member" "kong_ai_gateway_workload_identity" {
   service_account_id = google_service_account.kong_ai_gateway.name
