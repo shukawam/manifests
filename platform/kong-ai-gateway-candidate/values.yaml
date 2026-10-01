@@ -3,7 +3,7 @@
 fullnameOverride: kong-ai-gateway-candidate
 image:
   repository: kong/kong-ai-gateway
-  tag: "2.1.0"
+  tag: "2.2.0"
 replicaCount: 1
 autoscaling:
   enabled: false
