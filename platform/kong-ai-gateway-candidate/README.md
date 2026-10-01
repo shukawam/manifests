@@ -6,7 +6,7 @@
 
 `apps/kong-ai-gateway-candidate.yaml` は自動同期しない。
 Application の追加だけでは Deployment は起動しない。レビュー後に Argo CD で手動同期する。
-Service `kong-ai-gateway-candidate-proxy:8000` は ClusterIP のみで、既存 HTTPRoute の宛先は現行版のまま。
+Service `kong-ai-gateway-candidate-proxy:8000` は ClusterIP のみ。公開 HTTPRoute は通常は現行版だけを参照し、段階切替中のみ `backendRefs` の重みで候補版へ振り分ける（`platform/kong-gateway/httproute-aigw.yaml`）。
 
 初回は現行版と同じ `2.1.0` で A/A 比較する。新版は Renovate がこの overlay のタグにだけ PR を作る。
 Renovate App / bot の有効化は別途必要。自動マージしない。

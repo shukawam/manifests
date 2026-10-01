@@ -68,7 +68,8 @@ def check(stable, candidate, app, route):
         need(all(yes["spec"]["template"]["metadata"]["labels"].get(k) == v for k, v in selector.items()), "service selects wrong pods")
         need(not all(no["spec"]["template"]["metadata"]["labels"].get(k) == v for k, v in selector.items()), "service mixes old/new pods")
     names = {r["name"] for rule in route["spec"]["rules"] for r in rule.get("backendRefs", [])}
-    need(names == {old_svc["metadata"]["name"]}, "public route must still use stable only")
+    need(old_svc["metadata"]["name"] in names, "public route must keep the stable service")
+    need(names <= {old_svc["metadata"]["name"], new_svc["metadata"]["name"]}, "public route points at an unknown service")
 
 
 def main():
@@ -90,7 +91,7 @@ def main():
         need(metadata["name"] == "kong-ai-gateway" and str(metadata["version"]) == version, "wrong cached chart")
         check(render(apps[0], chart), render(apps[1], chart), apps[1],
               yaml.safe_load((ROOT / "platform/kong-gateway/httproute-aigw.yaml").read_text()))
-    print("PASS: candidate rendering, selectors, certificate, identity, readiness and stable routing")
+    print("PASS: candidate rendering, selectors, certificate, identity, readiness and public routing")
 
 
 if __name__ == "__main__":
