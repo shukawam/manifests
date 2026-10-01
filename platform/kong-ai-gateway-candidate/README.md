@@ -26,7 +26,7 @@ KSA、証明書の参照、Service selector、公開ルートの維持、readine
 
 新旧 HTTP/SSE 比較・GitHub runner 設定・昇格と切戻しは
 [minna-bank の運用手順](https://github.com/KongHQ-CX-JPN/minna-bank/blob/main/upgrade/README.md) を参照。
-現行版 Pod の終了猶予は元の30秒のままなので、長い SSE の切替前に現行側も drain 設定を整備する。
+readiness の補正と drain 設定（grace 3630 秒、`kong quit --wait=15 --timeout=3600`）は現行 values に置き、候補 overlay はそれを継承する。
 このスモークテストのみでは429、Redis残量継続、ガードレール拒否、監視基盤への到達を検証しない。
 
 候補 Application に削除 finalizer はない。廃棄時は Argo CD でリソース削除を明示し、

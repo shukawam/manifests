@@ -10,6 +10,7 @@ env:
   cluster_cert_key: /etc/cert-manager/cluster/tls.key
   tracing_instrumentations: all
   tracing_sampling_rate: "1.0"
+  nginx_main_worker_shutdown_timeout: "3600s"
 
 image:
   repository: kong/kong-ai-gateway
@@ -39,3 +40,19 @@ certificates:
   cluster:
     enabled: true
     clusterIssuer: selfsigned
+
+# chart 0.1.0 は AI Gateway 2.x を Gateway 3.3 未満と判定し、/status/ready を
+# /status に文字列置換する。クエリ文字列を付けると置換を外れ、設定ロード後に
+# だけ Ready になる (nginx の location マッチはクエリを見ない)。
+readinessProbe:
+  httpGet:
+    path: /status/ready?source=kubelet
+    port: status
+    scheme: HTTP
+# 長い SSE を切らずに drain する。--wait は endpoint 伝播待ち、--timeout が
+# 強制終了までの猶予 (chart 既定の --wait=15 のみだと 10 秒で強制終了される)。
+terminationGracePeriodSeconds: 3630
+lifecycle:
+  preStop:
+    exec:
+      command: [kong, quit, "--wait=15", "--timeout=3600"]
