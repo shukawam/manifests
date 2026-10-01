@@ -1,0 +1,29 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kong-ai-gateway-candidate
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+spec:
+  project: platform
+  sources:
+    - repoURL: https://charts.konghq.com
+      chart: kong-ai-gateway
+      targetRevision: 0.1.0
+      helm:
+        releaseName: kong-ai-gateway-candidate
+        valueFiles:
+          - $values/platform/kong-ai-gateway/values.yaml
+          - $values/platform/kong-ai-gateway-candidate/values.yaml
+    - repoURL: https://github.com/shukawam/manifests.git
+      targetRevision: main
+      ref: values
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kong
+  # Deliberately manual: adding this Application must not deploy a candidate.
+  syncPolicy:
+    syncOptions:
+      - ServerSideApply=true
+      - ApplyOutOfSyncOnly=true

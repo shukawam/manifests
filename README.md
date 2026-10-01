@@ -254,6 +254,10 @@ argocd login argocd.gke.shukawam.me --grpc-web --sso
 
 ## 検証
 
+AI Gateway の候補版・更新 PR は [候補版の手順](platform/kong-ai-gateway-candidate/README.md) を参照。
+候補版は手動同期で、既存の公開ルートは現行版だけを参照します。
+候補版の検証には Python 3.12+ と `PyYAML==6.0.3` が必要です。
+
 全マニフェストの静的検証は `scripts/validate.sh` に集約している。CI・ローカルとも
 これ 1 本を実行する。
 

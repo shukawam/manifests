@@ -1,0 +1,19 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "enabledManagers": ["helm-values"],
+  "helm-values": {
+    "managerFilePatterns": ["/^platform/kong-ai-gateway-candidate/values\\.yaml$/"]
+  },
+  "packageRules": [
+    {"matchPackageNames": ["*"], "enabled": false},
+    {
+      "matchManagers": ["helm-values"],
+      "matchFileNames": ["platform/kong-ai-gateway-candidate/values.yaml"],
+      "matchPackageNames": ["kong/kong-ai-gateway"],
+      "enabled": true,
+      "automerge": false,
+      "separateMinorPatch": true,
+      "prBodyNotes": ["Run the AI Gateway smoke comparison and the promotion gates in upgrade/README.md in KongHQ-CX-JPN/minna-bank. This PR changes only the manually synced candidate; promote the stable image in a separate reviewed PR."]
+    }
+  ]
+}

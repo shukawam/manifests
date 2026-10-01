@@ -304,4 +304,12 @@ else
   note "skip (bootstrap/gke/variables.auto.tfvars が無い。gitignore 対象のため他マシンには存在しない)"
 fi
 
+# --- 9. AI Gateway 候補版の継承・分離を実際の Argo values で検証 ----------
+# Python 3.12+ / PyYAML 6.0.3 が必要。CI も同じ検証器を利用する。
+if python3 scripts/validate-aigw-upgrade.py; then
+  ok "AI Gateway candidate: values 継承・Service 分離・証明書・readiness"
+else
+  bad "AI Gateway candidate の検証に失敗しました"
+fi
+
 exit $fail
