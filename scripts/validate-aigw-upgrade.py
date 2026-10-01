@@ -54,10 +54,13 @@ def check(stable, candidate, app, route):
     mounts = {v["name"]: v["mountPath"] for v in proxy["volumeMounts"]}
     need(env(pod_new)["KONG_CLUSTER_CERT"] == mounts[certs[0]] + "/tls.crt", "certificate path not mounted")
     need(env(pod_new)["KONG_CLUSTER_CERT_KEY"] == mounts[certs[0]] + "/tls.key", "key path not mounted")
-    need(proxy["readinessProbe"]["httpGet"]["path"].split("?")[0] == "/status/ready", "readiness does not gate configuration")
-    need(pod_new["terminationGracePeriodSeconds"] >= 3630, "stream draining grace period too short")
-    need(env(pod_new).get("KONG_NGINX_MAIN_WORKER_SHUTDOWN_TIMEOUT") == "3600s", "NGINX draining timeout differs")
-    need(proxy["lifecycle"]["preStop"]["exec"]["command"] == ["kong", "quit", "--wait=15", "--timeout=3600"], "graceful quit timeout differs")
+    # Both releases drain long SSE streams the same way; the stable one is what the public route hits.
+    for pod in (pod_old, pod_new):
+        container = next(c for c in pod["containers"] if c["name"] == "proxy")
+        need(container["readinessProbe"]["httpGet"]["path"].split("?")[0] == "/status/ready", "readiness does not gate configuration")
+        need(pod["terminationGracePeriodSeconds"] >= 3630, "stream draining grace period too short")
+        need(env(pod).get("KONG_NGINX_MAIN_WORKER_SHUTDOWN_TIMEOUT") == "3600s", "NGINX draining timeout differs")
+        need(container["lifecycle"]["preStop"]["exec"]["command"] == ["kong", "quit", "--wait=15", "--timeout=3600"], "graceful quit timeout differs")
     old_svc, new_svc = one(stable, "Service"), one(candidate, "Service")
     need(new_svc["spec"]["type"] == "ClusterIP", "candidate must stay internal")
     for svc, yes, no in ((old_svc, old, new), (new_svc, new, old)):

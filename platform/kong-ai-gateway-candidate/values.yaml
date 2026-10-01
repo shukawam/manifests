@@ -1,5 +1,6 @@
 # Overlay on platform/kong-ai-gateway/values.yaml; never use by itself.
 # Start with an A/A rehearsal. Renovate proposes updates to this file only.
+# Readiness and drain settings are inherited from the stable values.
 fullnameOverride: kong-ai-gateway-candidate
 image:
   repository: kong/kong-ai-gateway
@@ -21,21 +22,7 @@ env:
   cluster_cert: /etc/secrets/kong-ai-gateway-kong-ai-gateway-cluster-cert/tls.crt
   cluster_cert_key: /etc/secrets/kong-ai-gateway-kong-ai-gateway-cluster-cert/tls.key
   cluster_dp_labels: "env:sandbox,track:candidate"
-  nginx_main_worker_shutdown_timeout: "3600s"
 proxy:
   type: ClusterIP
   ingress:
     enabled: false
-# Chart 0.1.0 compares AI Gateway 2.x with Gateway 3.3 and rewrites the exact
-# string /status/ready to /status. A query string preserves the readiness
-# handler (NGINX location matching ignores query arguments). Remove when fixed.
-readinessProbe:
-  httpGet:
-    path: /status/ready?source=kubelet
-    port: status
-    scheme: HTTP
-terminationGracePeriodSeconds: 3630
-lifecycle:
-  preStop:
-    exec:
-      command: [kong, quit, "--wait=15", "--timeout=3600"]
