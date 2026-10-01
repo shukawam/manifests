@@ -23,12 +23,18 @@ spec:
         - path:
             type: PathPrefix
             value: /
+      # 段階切替中。候補を外すときは backendRefs を現行 1 件に戻す
       backendRefs:
         - group: ""
           kind: Service
           name: kong-ai-gateway-kong-ai-gateway-proxy
           port: 8000
-          weight: 1
+          weight: 95
+        - group: ""
+          kind: Service
+          name: kong-ai-gateway-candidate-proxy
+          port: 8000
+          weight: 5
       # LLM のストリーミング応答は所要時間が読めないため長めにする。0s
       # (仕様上は無効化) は KIC 3.5.13 が Kong の timeout に 0 として渡し、
       # スキーマに弾かれて設定投入が丸ごと失敗するので使えない
