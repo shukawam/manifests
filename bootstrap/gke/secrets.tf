@@ -54,3 +54,18 @@ resource "google_secret_manager_secret" "pii_sanitizer_cloudsmith_dockerconfigjs
 
   depends_on = [google_project_service.this]
 }
+
+# Headroom (プロンプト圧縮サービス) の proxy token。
+# 参照元は platform/headroom/externalsecret.yaml
+resource "google_secret_manager_secret" "headroom_proxy_token" {
+  project   = var.project_id
+  secret_id = "headroom-proxy-token"
+
+  deletion_protection = true
+
+  replication {
+    auto {}
+  }
+
+  depends_on = [google_project_service.this]
+}

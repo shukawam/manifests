@@ -21,6 +21,7 @@ Argo CD の App of Apps で以下のプラットフォーム基盤を構築・�
 | Kong Gateway (Gateway API) | クラスタの外部公開口。`https://argocd.gke.shukawam.me` を `HTTPRoute` で公開する |
 | Kong AI Gateway | Konnect が管理する AI 用データプレーン。Kong Gateway 経由で `https://aigw.gke.shukawam.me` を公開する |
 | PII Sanitizer (`kong/ai-pii/service`) | LLM リクエスト/レスポンス中の PII を検出・マスキングする Kong 製サービス。日英両方の spaCy モデルに対応 |
+| Headroom (`ghcr.io/headroomlabs-ai/headroom`) | AI Gateway の `ai-prompt-compressor` ポリシー（`provider: headroom`）が呼ぶプロンプト圧縮サービス。Tech Preview の検証用 |
 | Memorystore for Valkey | Kong のセマンティック系プラグイン（`ai-semantic-cache` 等）が参照するベクター DB。`bootstrap/gke` の Terraform が作る |
 
 `bootstrap/` はクラスタと Argo CD が立ち上がるまでの、GitOps に乗せられない手前の 2 段
@@ -192,7 +193,34 @@ rm -f /tmp/pii-sanitizer-dockerconfig.json
 このシークレットが存在しない状態で `pii-sanitizer` Application を同期すると、
 `ExternalSecret` が解決できず Pod は `ImagePullBackOff` のまま止まる。
 
-## 8. Argo CD の認証（Auth0 OIDC）
+## 8. Headroom の proxy token（手動、Secret Manager 登録 + Konnect 設定）
+
+`platform/headroom` は `/v1/compress` をクラスタ内に公開するため
+`HEADROOM_PROXY_TOKEN` で認証を掛けている。値は ESO
+（`platform/headroom/externalsecret.yaml`）が Secret Manager から同期するので、
+手動作業はトークンを生成して登録するところまで。
+
+```bash
+openssl rand -hex 32 | tr -d '\n' | gcloud secrets versions add headroom-proxy-token \
+  --project gcp-fieldeng-dev --data-file=-
+```
+
+同じ値を Konnect 側の `ai-prompt-compressor` ポリシーにも設定する（`kongctl` による
+手動反映）。
+
+```yaml
+config:
+  provider: headroom
+  compressor_url: http://headroom.kong.svc.cluster.local:8787/v1/compress
+  headroom:
+    proxy_token: <上で生成した値>
+```
+
+Headroom はセッションの圧縮状態をプロセス内に持つため、**replicas は 1 から増やさない
+こと**（`strategy: Recreate` もそのため）。AI Gateway の stable / candidate はどちらも
+この 1 インスタンスを共有する。
+
+## 9. Argo CD の認証（Auth0 OIDC）
 
 Argo CD のログインは Auth0 の OIDC に委譲している（Dex は使わない）。設定は
 `platform/argo-cd/values.yaml` の `configs.cm.oidc.config` と `configs.rbac`。

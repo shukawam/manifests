@@ -131,7 +131,7 @@ skipped_dirs=""
 # 上の helm template 検証で見ている。
 for d in projects apps platform/cert-manager-issuers platform/secret-stores \
          platform/opentelemetry-collector platform/kong-gateway \
-         platform/pii-sanitizer bootstrap/argocd; do
+         platform/pii-sanitizer platform/headroom bootstrap/argocd; do
   [ -d "$d" ] || continue
   shopt -s nullglob
   files=("$d"/*.yaml)
