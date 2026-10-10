@@ -22,8 +22,6 @@ env:
   cluster_cert: /etc/secrets/kong-ai-gateway-kong-ai-gateway-cluster-cert/tls.crt
   cluster_cert_key: /etc/secrets/kong-ai-gateway-kong-ai-gateway-cluster-cert/tls.key
   cluster_dp_labels: "env:sandbox,track:candidate"
-  # AG-1914 の検証: 同一 Pod 内のワーカー間で JSON 再エンコードのキー順がずれるか見るため一時的に増やす
-  nginx_worker_processes: "8"
 proxy:
   type: ClusterIP
   ingress:
