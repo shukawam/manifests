@@ -12,6 +12,9 @@ metadata:
 spec:
   algorithm: consistent-hashing
   hashOn:
-    header: X-Session-Key
+    # クライアントは X-Session-Key を送る。Kong 3.9 はヘッダー名をそのまま ngx.var["http_<名>"] で
+    # 引くため、ハイフン入りの名前だと値が取れず IP フォールバックに落ちて全員 1 Pod に寄る
+    # （Kong/kong#14447、実測）。nginx 側はハイフンを _ に読み替えて照合するので _ 表記で書く。
+    header: x_session_key
   hashOnFallback:
     input: ip
