@@ -24,6 +24,10 @@ deployment:
 
 proxy:
   type: ClusterIP
+  # 公開 HTTPRoute の同じルールに candidate と並ぶため同じポリシーが必要。片方だけだと KIC が
+  # Conflicted として両方で無視する（実測）
+  annotations:
+    konghq.com/upstream-policy: aigw-sticky
   http:
     servicePort: 8000
   tls:
