@@ -5,7 +5,8 @@ fullnameOverride: kong-ai-gateway-candidate
 image:
   repository: kong/kong-ai-gateway
   tag: "2.2.0"
-replicaCount: 1
+# AG-1914 の検証: Pod またぎで全損し、アフィニティで止まることを見るため 2 にしている
+replicaCount: 2
 autoscaling:
   enabled: false
 deployment:
@@ -22,7 +23,12 @@ env:
   cluster_cert: /etc/secrets/kong-ai-gateway-kong-ai-gateway-cluster-cert/tls.crt
   cluster_cert_key: /etc/secrets/kong-ai-gateway-kong-ai-gateway-cluster-cert/tls.key
   cluster_dp_labels: "env:sandbox,track:candidate"
+  # AG-1914 の検証: どの Pod が処理したかを応答ヘッダーで見るため一時的に付ける
+  nginx_proxy_add_header: "X-Served-By $hostname"
 proxy:
   type: ClusterIP
+  annotations:
+    # platform/kong-gateway/kongupstreampolicy-aigw-sticky.yaml
+    konghq.com/upstream-policy: aigw-sticky
   ingress:
     enabled: false
