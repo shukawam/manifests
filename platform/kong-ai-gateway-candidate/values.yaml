@@ -22,9 +22,6 @@ env:
   cluster_cert: /etc/secrets/kong-ai-gateway-kong-ai-gateway-cluster-cert/tls.crt
   cluster_cert_key: /etc/secrets/kong-ai-gateway-kong-ai-gateway-cluster-cert/tls.key
   cluster_dp_labels: "env:sandbox,track:candidate"
-  # AG-1914 の検証: どのワーカーが処理したかを応答ヘッダーで見るため一時的に付ける（ワーカーも 8 に）
-  nginx_worker_processes: "8"
-  nginx_proxy_add_header: "X-Worker-Pid $pid"
 proxy:
   type: ClusterIP
   ingress:
