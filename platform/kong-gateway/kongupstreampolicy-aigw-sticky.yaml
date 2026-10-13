@@ -1,0 +1,17 @@
+# AG-1914 の暫定策: DP の Pod ごとに JSON のキー順が違い Vertex のプロンプトキャッシュが
+# 別物になるため、同じ利用者を同じ Pod に固定する。Claude Code は Cookie を保持しないので
+# ヘッダー（ANTHROPIC_CUSTOM_HEADERS で付与）でハッシュする。Authorization は OIDC トークン
+# 更新のたびに値が変わり振り直されるので使わない。
+apiVersion: configuration.konghq.com/v1beta1
+kind: KongUpstreamPolicy
+metadata:
+  name: aigw-sticky
+  namespace: kong
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+spec:
+  algorithm: consistent-hashing
+  hashOn:
+    header: X-Session-Key
+  hashOnFallback:
+    input: ip
