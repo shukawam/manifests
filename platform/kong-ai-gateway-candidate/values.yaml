@@ -3,8 +3,9 @@
 # Readiness and drain settings are inherited from the stable values.
 fullnameOverride: kong-ai-gateway-candidate
 image:
-  repository: kong/kong-ai-gateway
-  tag: "2.2.0"
+  # RC は -dev にしか無い。Renovate は kong/kong-ai-gateway しか追わないので、GA 後は手で戻す
+  repository: kong/kong-ai-gateway-dev
+  tag: "2.3.0-rc.1"
 # AG-1914 の検証: Pod またぎで全損し、アフィニティで止まることを見るため 2 にしている
 replicaCount: 2
 autoscaling:
