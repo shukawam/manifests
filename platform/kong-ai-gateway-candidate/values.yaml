@@ -3,14 +3,21 @@
 # Readiness and drain settings are inherited from the stable values.
 fullnameOverride: kong-ai-gateway-candidate
 image:
-  # RC は -dev にしか無い。Renovate は kong/kong-ai-gateway しか追わないので、GA 後は手で戻す
-  repository: kong/kong-ai-gateway-dev
-  tag: "2.3.0-rc.1"
+  # 現行が ubuntu 系の 2.2.0 なので、distroless 化も候補でまとめて検証する
+  repository: kong/kong-ai-gateway
+  tag: "2.3.0-distroless"
 # AG-1914 の検証: Pod またぎで全損し、アフィニティで止まることを見るため 2 にしている
 replicaCount: 2
 autoscaling:
   enabled: false
 deployment:
+  # distroless 像には rm が無く、チャート既定の clear-stale-pid init container が exec で落ちる。
+  # distroless の entrypoint は kong start を経由せず nginx を直接 exec するので、stale pid で
+  # 起動を拒否されることもなく、消す必要自体がない
+  kong:
+    initContainers:
+      clearStalePid:
+        enabled: false
   serviceAccount:
     create: false
     name: kong-ai-gateway-kong-ai-gateway
