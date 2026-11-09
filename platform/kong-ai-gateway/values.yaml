@@ -14,9 +14,16 @@ env:
 
 image:
   repository: kong/kong-ai-gateway
-  tag: "2.2.0"
+  tag: "2.3.0-distroless"
 
 deployment:
+  # distroless 像には rm が無く、チャート既定の clear-stale-pid init container が exec で落ちる。
+  # distroless の entrypoint は kong start を経由せず nginx を直接 exec するので、stale pid で
+  # 起動を拒否されることもなく、消す必要自体がない
+  kong:
+    initContainers:
+      clearStalePid:
+        enabled: false
   serviceAccount:
     create: true
     annotations:
